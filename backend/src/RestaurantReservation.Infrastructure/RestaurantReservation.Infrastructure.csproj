@@ -10,4 +10,10 @@
       <ProjectReference Include="..\RestaurantReservation.Application\RestaurantReservation.Application.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Persistence\Configurations\" />
+      <Folder Include="Persistence\Migrations\" />
+      <Folder Include="Repositories\" />
+    </ItemGroup>
+
 </Project>
