@@ -19,8 +19,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(100);
 
-        builder.HasIndex(u => u.Email)
-            .IsUnique();
+        builder.HasIndex(u => u.Email).IsUnique();
 
         builder.Property(u => u.PasswordHash)
             .IsRequired()
@@ -36,7 +35,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 
-        // Navigation: User (1) -> Reservations (many)
+        // Navigation
         builder.HasMany(u => u.ReservationsCreated)
             .WithOne(r => r.CreatedByUser)
             .HasForeignKey(r => r.CreatedByUserId)

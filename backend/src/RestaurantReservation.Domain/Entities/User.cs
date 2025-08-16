@@ -13,5 +13,5 @@ public class User
     public DateTime CreatedAt { get; set; }
 
     // Navigation
-    public ICollection<Reservation> ReservationsCreated  { get; set; } = new List<Reservation>();
+    public ICollection<Reservation> ReservationsCreated { get; set; } = new List<Reservation>();
 }
