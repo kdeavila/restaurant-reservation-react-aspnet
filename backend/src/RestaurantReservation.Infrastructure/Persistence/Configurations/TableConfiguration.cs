@@ -32,12 +32,9 @@ public class TableConfiguration : IEntityTypeConfiguration<Table>
         builder.Property(t => t.CreatedAt)
             .HasDefaultValueSql("GETUTCDATE()");
 
-        // Navigation: Table (many) -> TableType (1)
         builder.HasOne(t => t.TableType)
             .WithMany(tt => tt.Tables)
             .HasForeignKey(t => t.TableTypeId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        
     }
 }
