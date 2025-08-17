@@ -1,3 +1,5 @@
+using RestaurantReservation.Domain.Enums;
+
 namespace RestaurantReservation.Domain.Entities;
 
 public class Reservation
@@ -11,7 +13,7 @@ public class Reservation
     public int NumberOfGuests { get; set; }
     public decimal BasePrice { get; set; }
     public decimal TotalPrice { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public Status Status { get; set; }
     public string Notes { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

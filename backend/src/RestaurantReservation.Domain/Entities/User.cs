@@ -9,7 +9,7 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public UserRole Role { get; set; }
-    public string Status { get; set; } = string.Empty;
+    public Status Status { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Navigation
