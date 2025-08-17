@@ -30,6 +30,7 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
 
         builder.Property(c => c.Status)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(20);
 
         builder.Property(c => c.CreatedAt)

@@ -30,6 +30,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.Property(u => u.Status)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(20);
 
         builder.Property(u => u.CreatedAt)

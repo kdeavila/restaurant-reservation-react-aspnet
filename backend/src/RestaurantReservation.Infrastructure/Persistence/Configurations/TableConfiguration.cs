@@ -14,6 +14,8 @@ public class TableConfiguration : IEntityTypeConfiguration<Table>
         builder.Property(t => t.Code)
             .IsRequired()
             .HasMaxLength(20);
+        
+        builder.HasIndex(t => t.Code).IsUnique();
 
         builder.Property(t => t.Capacity)
             .IsRequired();
@@ -27,6 +29,7 @@ public class TableConfiguration : IEntityTypeConfiguration<Table>
 
         builder.Property(t => t.Status)
             .IsRequired()
+            .HasConversion<string>()
             .HasMaxLength(20);
 
         builder.Property(t => t.CreatedAt)

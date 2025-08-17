@@ -33,6 +33,7 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
 
         builder.Property(r => r.Status)
             .HasMaxLength(20)
+            .HasConversion<string>()
             .IsRequired();
 
         builder.Property(r => r.Notes)
