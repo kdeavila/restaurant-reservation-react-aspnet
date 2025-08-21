@@ -10,7 +10,7 @@ public class ClientRepository(RestaurantReservationDbContext context) : IClientR
     private readonly RestaurantReservationDbContext _context = context;
 
     public async Task<Client?> GetByIdAsync(int id, CancellationToken ct = default)
-        => await _context.Clients.FirstOrDefaultAsync(c => c.Id == id, ct);
+        => await _context.Clients.FindAsync(id, ct);
 
     public async Task<Client?> GetByEmailAsync(string email, CancellationToken ct = default)
         => await _context.Clients.FirstOrDefaultAsync(c => c.Email == email, ct);
@@ -43,11 +43,10 @@ public class ClientRepository(RestaurantReservationDbContext context) : IClientR
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var client = await _context.Clients.FindAsync(id, ct);
-        if (client is not null)
-        {
-            _context.Clients.Remove(client);
-            await _context.SaveChangesAsync(ct);
-        }
+        if (client is null) return;
+        
+        _context.Clients.Remove(client);
+        await _context.SaveChangesAsync(ct);
     }
 
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)

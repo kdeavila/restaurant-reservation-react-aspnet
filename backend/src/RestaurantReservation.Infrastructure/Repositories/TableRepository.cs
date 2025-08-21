@@ -49,10 +49,9 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var table = await _context.Tables.FindAsync(id, ct);
-        if (table is not null)
-        {
-            _context.Tables.Remove(table);
-            await _context.SaveChangesAsync(ct);
-        }
+        if (table is null) return;
+
+        _context.Tables.Remove(table);
+        await _context.SaveChangesAsync(ct);
     }
 }
