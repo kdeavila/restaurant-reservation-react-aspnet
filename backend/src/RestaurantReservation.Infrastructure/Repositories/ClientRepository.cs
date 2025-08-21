@@ -21,10 +21,10 @@ public class ClientRepository(RestaurantReservationDbContext context) : IClientR
             .OrderBy(c => c.LastName).ThenBy(c => c.FirstName)
             .ToListAsync(ct);
 
-    public async Task<IEnumerable<Reservation>> GetReservationsAsync(int ClientId, CancellationToken ct = default)
+    public async Task<IEnumerable<Reservation>> GetReservationsAsync(int clientId, CancellationToken ct = default)
         => await _context.Reservations
             .AsNoTracking()
-            .Where(r => r.ClientId == ClientId)
+            .Where(r => r.ClientId == clientId)
             .OrderByDescending(r => r.Date).ThenBy(r => r.StartTime)
             .ToListAsync(ct);
 
@@ -42,11 +42,12 @@ public class ClientRepository(RestaurantReservationDbContext context) : IClientR
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        var client = await _context.Clients.FirstOrDefaultAsync(c => c.Id == id, ct);
-        if (client is null) return;
-
-        _context.Remove(client);
-        await _context.SaveChangesAsync(ct);
+        var client = await _context.Clients.FindAsync(id, ct);
+        if (client is not null)
+        {
+            _context.Clients.Remove(client);
+            await _context.SaveChangesAsync(ct);
+        }
     }
 
     public async Task<bool> EmailExistsAsync(string email, CancellationToken ct = default)
