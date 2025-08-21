@@ -21,28 +21,43 @@ public class DataSeeder
                 Status = Status.Active,
                 CreatedAt = DateTime.UtcNow
             });
+            await context.SaveChangesAsync();
         }
+
+        TableType? vipType = null;
 
         if (!context.TableTypes.Any())
         {
-            context.TableTypes.AddRange(
-                new TableType
-                {
-                    Name = "Normal", Description = "Standard dining table", BasePricePerHour = 20, IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                },
-                new TableType
-                {
-                    Name = "VIP", Description = "Premium dining table", BasePricePerHour = 50, IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                }
-            );
+            var normal = new TableType
+            {
+                Name = "Normal",
+                Description = "Standard dining table",
+                BasePricePerHour = 20,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            var vip = new TableType
+            {
+                Name = "VIP",
+                Description = "Premium dining table",
+                BasePricePerHour = 50,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            context.TableTypes.AddRange(normal, vip);
+            await context.SaveChangesAsync();
+
+            vipType = vip;
+        }
+        else
+        {
+            vipType = await context.TableTypes.FirstOrDefaultAsync(t => t.Name == "VIP");
         }
 
-        if (!context.PricingRules.Any())
+        if (!context.PricingRules.Any() && vipType != null)
         {
-            var vipType = context.TableTypes.FirstOrDefault(t => t.Name == "VIP");
-
             var rule = new PricingRule
             {
                 RuleName = "Saturday Night Surcharge",
@@ -52,7 +67,7 @@ public class DataSeeder
                 SurchargePercentage = 0.20m,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddYears(5),
-                TableTypeId = vipType?.Id ?? 1,
+                TableTypeId = vipType.Id,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
@@ -65,8 +80,8 @@ public class DataSeeder
                 PricingRuleId = rule.Id,
                 DayOfWeek = DaysOfWeek.Saturday
             });
-        }
 
-        await context.SaveChangesAsync();
+            await context.SaveChangesAsync();
+        }
     }
 }
