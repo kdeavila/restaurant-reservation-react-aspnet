@@ -31,26 +31,49 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<UserDto?> AuthenticateAsync(LoginDto dto, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
+        if (user is null) return null;
+
+        var isValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
+        if (!isValid) return null;
+
+        return new UserDto(user.Id, user.Username, user.Email, user.Role.ToString(), user.Status.ToString());
     }
 
     public async Task<UserDto?> GetByIdAsync(int id, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByIdAsync(id, ct);
+        if (user is null) return null;
+
+        return new UserDto(user.Id, user.Username, user.Email, user.Role.ToString(), user.Status.ToString());
     }
 
     public async Task<IEnumerable<UserDto>> GetAllAsync(CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var users = await _userRepository.GetAllAsync(ct);
+        return users.Select(u => new UserDto(u.Id, u.Username, u.Email, u.Role.ToString(), u.Status.ToString()));
     }
 
     public async Task<bool> UpdateUserAsync(UpdateUserDto dto, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByIdAsync(dto.Id, ct);
+        if (user is null) return false;
+
+        user.Username = dto.Username ?? user.Username;
+        user.Email = dto.Email ?? user.Email;
+        user.Role = dto.Role ?? user.Role;
+
+        await _userRepository.UpdateAsync(user, ct);
+        return true;
     }
 
     public async Task<bool> DeactivateUserAsync(int id, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var user = await _userRepository.GetByIdAsync(id, ct);
+        if (user is null) return false;
+
+        user.Status = Status.Inactive;
+        await _userRepository.UpdateAsync(user, ct);
+        return true;
     }
 }
