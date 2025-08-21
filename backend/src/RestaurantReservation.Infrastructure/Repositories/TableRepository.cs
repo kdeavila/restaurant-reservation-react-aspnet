@@ -21,8 +21,7 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
 
     public async Task<IEnumerable<Table>> GetAvailableTablesAsync(DateTime date, DateTime startTime, DateTime endTime,
         int capacity, CancellationToken ct = default)
-    {
-        return await _context.Tables
+        => await _context.Tables
             .Include(t => t.TableType)
             .Where(t => t.Capacity >= capacity &&
                         !_context.Reservations.Any(r =>
@@ -32,7 +31,6 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
                         )
             )
             .ToListAsync(ct);
-    }
 
     public async Task AddAsync(Table table, CancellationToken ct = default)
     {

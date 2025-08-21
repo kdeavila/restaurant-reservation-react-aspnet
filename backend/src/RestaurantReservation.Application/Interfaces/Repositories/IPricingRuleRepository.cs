@@ -4,6 +4,10 @@ namespace RestaurantReservation.Application.Interfaces.Repositories;
 
 public interface IPricingRuleRepository
 {
-    Task<IReadOnlyList<PricingRule>> GetActiveRulesAsync(
-        DateTime date, TimeSpan start, TimeSpan end, int? tableTypeId);
+    Task<PricingRule?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<IEnumerable<PricingRule>> GetAllAsync(CancellationToken ct = default);
+    Task<IEnumerable<PricingRule>> GetActiveRulesAsync(CancellationToken ct = default);
+    Task AddAsync(PricingRule rule, CancellationToken ct = default);
+    Task UpdateAsync(PricingRule rule, CancellationToken ct = default);
+    Task DeleteAsync(int id, CancellationToken ct = default);
 }
