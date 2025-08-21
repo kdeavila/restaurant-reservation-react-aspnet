@@ -4,10 +4,15 @@ namespace RestaurantReservation.Application.Interfaces.Repositories;
 
 public interface IClientRepository
 {
-    Task<Client?> GetByIdAsync(int id);
-    Task<Client?> GetByEmailAsync(string email);
-    Task AddAsync(Client client);
-    Task UpdateAsync(Client client);
-    Task DeleteAsync(int id);
-    Task<IReadOnlyList<Reservation>> GetReservationsAsync(int clientId);
+    Task<Client?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<Client?> GetByEmailAsync(string email, CancellationToken ct = default);
+    Task<IEnumerable<Client>> GetAllAsync(CancellationToken ct = default);
+
+    Task<IEnumerable<Reservation>> GetReservationsAsync(int ClientId, CancellationToken ct = default);
+    
+    Task AddAsync(Client client, CancellationToken ct = default);
+    Task UpdateAsync(Client client, CancellationToken ct = default);
+    Task DeleteAsync(int id, CancellationToken ct = default);
+    
+    Task<bool> EmailExistsAsync(string email, CancellationToken ct = default);
 }
