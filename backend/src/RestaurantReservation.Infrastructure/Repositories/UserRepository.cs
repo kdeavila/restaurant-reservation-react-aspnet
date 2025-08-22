@@ -10,7 +10,7 @@ public class UserRepository(RestaurantReservationDbContext context) : IUserRepos
     private readonly RestaurantReservationDbContext _context = context;
 
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
-        => await _context.Users.FindAsync(id, ct);
+        => await _context.Users.FindAsync([id], ct);
 
     public async Task<User?> GetByEmailAsync(string email, CancellationToken ct = default)
         => await _context.Users
@@ -36,7 +36,7 @@ public class UserRepository(RestaurantReservationDbContext context) : IUserRepos
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        var user = await _context.Users.FindAsync(id, ct);
+        var user = await _context.Users.FindAsync([id], ct);
         if (user is null) return;
 
         _context.Users.Remove(user);

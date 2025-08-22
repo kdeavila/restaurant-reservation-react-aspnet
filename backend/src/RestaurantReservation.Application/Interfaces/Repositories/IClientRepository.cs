@@ -15,4 +15,5 @@ public interface IClientRepository
     Task DeleteAsync(int id, CancellationToken ct = default);
     
     Task<bool> EmailExistsAsync(string email, CancellationToken ct = default);
+    Task<bool> EmailExistsForOthersClients(string email, int clientId, CancellationToken ct = default);
 }

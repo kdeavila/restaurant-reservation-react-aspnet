@@ -50,7 +50,7 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
 
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
-        var reservation = await _context.Reservations.FindAsync(id, ct);
+        var reservation = await _context.Reservations.FindAsync([id], ct);
         if (reservation is null) return;
 
         _context.Remove(reservation);
