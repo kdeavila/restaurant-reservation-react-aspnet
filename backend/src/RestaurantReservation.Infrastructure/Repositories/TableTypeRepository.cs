@@ -12,6 +12,12 @@ public class TableTypeRepository(RestaurantReservationDbContext context) : ITabl
     public async Task<TableType?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.TableTypes.FindAsync([id], ct);
 
+    public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default)
+    {
+        var tableType = await _context.TableTypes.AnyAsync(tt => tt.Name == name, ct);
+        return tableType;
+    }
+
     public async Task<IEnumerable<TableType>> GetAllAsync(CancellationToken ct = default)
         => await _context.TableTypes
             .AsNoTracking()

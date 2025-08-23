@@ -15,6 +15,9 @@ public class TableTypeConfiguration : IEntityTypeConfiguration<TableType>
             .IsRequired()
             .HasMaxLength(100);
 
+        builder.HasIndex(tt => tt.Name)
+            .IsUnique();
+
         builder.Property(tt => tt.Description)
             .HasMaxLength(500);
 
