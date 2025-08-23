@@ -18,6 +18,12 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
         => await _context.Tables
             .Include(t => t.TableType)
             .ToListAsync(ct);
+    
+    public async Task<IEnumerable<Table>> GetByTableTypeIdAsync(int tableTypeId, CancellationToken ct = default)
+        => await _context.Tables
+            .Where(t => t.TableTypeId == tableTypeId)
+            .AsNoTracking()
+            .ToListAsync(ct);
 
     public async Task<IEnumerable<Table>> GetAvailableTablesAsync(DateTime date, DateTime startTime, DateTime endTime,
         int capacity, CancellationToken ct = default)
