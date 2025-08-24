@@ -18,7 +18,7 @@ public class DataSeeder
                 Email = "admin@example.com",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
                 Role = UserRole.Admin,
-                Status = Status.Active,
+                Status = UserStatus.Active,
                 CreatedAt = DateTime.UtcNow
             });
             await context.SaveChangesAsync();

@@ -1,9 +1,7 @@
 namespace RestaurantReservation.Domain.Enums;
 
-public enum Status
+public enum ReservationStatus
 {
-    Active,
-    Inactive,
     Confirmed,
     Cancelled,
     Pending,

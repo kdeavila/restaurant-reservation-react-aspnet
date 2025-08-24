@@ -21,7 +21,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
             LastName = dto.LastName,
             Email = dto.Email,
             Phone = dto.Phone ?? string.Empty,
-            Status = Status.Active,
+            Status = ClientStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -64,7 +64,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         client.LastName = dto.LastName ?? client.LastName;
         client.Phone = dto.Phone ?? client.Phone;
 
-        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<Status>(dto.Status, true, out var parsed))
+        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<ClientStatus>(dto.Status, true, out var parsed))
             client.Status = parsed;
 
         await _clientRepository.UpdateAsync(client, ct);

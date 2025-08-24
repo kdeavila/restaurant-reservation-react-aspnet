@@ -9,7 +9,7 @@ public class Table
     public int Capacity { get; set; }
     public string Location { get; set; } = string.Empty;
     public int TableTypeId { get; set; }
-    public Status Status { get; set; }
+    public TableStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Navigation

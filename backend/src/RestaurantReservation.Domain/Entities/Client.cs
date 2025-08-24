@@ -9,7 +9,7 @@ public class Client
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string? Phone { get; set; }
-    public Status Status { get; set; }
+    public ClientStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Navigation

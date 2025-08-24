@@ -21,7 +21,7 @@ public class UserService(IUserRepository userRepository) : IUserService
             Email = dto.Email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
             Role = dto.Role,
-            Status = Status.Active,
+            Status = UserStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -72,7 +72,7 @@ public class UserService(IUserRepository userRepository) : IUserService
         var user = await _userRepository.GetByIdAsync(id, ct);
         if (user is null) return false;
 
-        user.Status = Status.Inactive;
+        user.Status = UserStatus.Inactive;
         await _userRepository.UpdateAsync(user, ct);
         return true;
     }

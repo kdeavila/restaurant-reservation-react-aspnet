@@ -26,7 +26,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
             Capacity = dto.Capacity,
             Location = dto.Location,
             TableTypeId = dto.TableTypeId,
-            Status = Status.Active,
+            Status = TableStatus.Active,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -62,7 +62,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
         table.Location = dto.Location ?? table.Location;
         table.TableTypeId = dto.TableTypeId ?? table.TableTypeId;
 
-        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<Status>(dto.Status, true, out var parsed))
+        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<TableStatus>(dto.Status, true, out var parsed))
         {
             table.Status = parsed;
         }
