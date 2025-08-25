@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Interfaces.Repositories;
+using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Infrastructure.Persistence;
 using RestaurantReservation.Infrastructure.Persistence.Seeding;
 using RestaurantReservation.Infrastructure.Repositories;
@@ -14,7 +15,13 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<RestaurantReservationDbContext>(options => options.UseSqlServer
     (connectionString, x => x.MigrationsAssembly("RestaurantReservation.Infrastructure")));
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
+builder.Services.AddScoped<IPricingRuleDaysRepository, PricingRuleDaysRepository>();
+builder.Services.AddScoped<IPricingRuleRepository, PricingRuleRepository>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
 builder.Services.AddScoped<ITableRepository, TableRepository>();
+builder.Services.AddScoped<ITableTypeRepository, TableTypeRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUserRepository>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();

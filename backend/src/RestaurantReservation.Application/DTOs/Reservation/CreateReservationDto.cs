@@ -9,5 +9,4 @@ public class CreateReservationDto
     public DateTime EndTime { get; set; }
     public int NumberOfGuests { get; set; }
     public string? Notes { get; set; }
-
 }

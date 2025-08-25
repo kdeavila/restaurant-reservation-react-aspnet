@@ -7,6 +7,15 @@ public interface IPricingRuleRepository
     Task<PricingRule?> GetByIdAsync(int id, CancellationToken ct = default);
     Task<IEnumerable<PricingRule>> GetAllAsync(CancellationToken ct = default);
     Task<IEnumerable<PricingRule>> GetActiveRulesAsync(CancellationToken ct = default);
+
+    Task<IEnumerable<PricingRule>> GetActiveByTableTypeWithDaysAsync(
+        int tableTypeId,
+        DateTime date,
+        DateTime startTime,
+        DateTime endTime,
+        CancellationToken ct = default
+    );
+
     Task AddAsync(PricingRule rule, CancellationToken ct = default);
     Task UpdateAsync(PricingRule rule, CancellationToken ct = default);
     Task DeleteAsync(int id, CancellationToken ct = default);

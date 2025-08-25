@@ -20,6 +20,26 @@ public class PricingRuleRepository(RestaurantReservationDbContext context) : IPr
             .AsNoTracking()
             .ToListAsync(ct);
 
+    public async Task<IEnumerable<PricingRule>> GetActiveByTableTypeWithDaysAsync(
+        int tableTypeId,
+        DateTime date,
+        DateTime startTime,
+        DateTime endTime,
+        CancellationToken ct = default
+    )
+        => await _context.PricingRules
+            .Include(r => r.PricingRuleDays)
+            .Where(r =>
+                r.TableTypeId == tableTypeId &&
+                r.IsActive &&
+                date.Date >= r.StartDate.Date &&
+                date.Date <= r.EndDate.Date &&
+                endTime > r.StartTime &&
+                startTime < r.EndTime
+            )
+            .AsNoTracking()
+            .ToListAsync(ct);
+
     public async Task<IEnumerable<PricingRule>> GetActiveRulesAsync(CancellationToken ct = default)
         => await _context.PricingRules
             .Include(r => r.PricingRuleDays)

@@ -15,5 +15,5 @@ public record ReservationDto(
     decimal BasePrice,
     decimal TotalPrice,
     string Status,
-    string? Notes
+    string Notes
 );
