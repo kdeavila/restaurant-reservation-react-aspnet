@@ -64,7 +64,7 @@ public class DataSeeder
                 RuleType = "Weekend Surcharge",
                 StartTime = new DateTime(1, 1, 1, 18, 0, 0),
                 EndTime = new DateTime(1, 1, 1, 23, 59, 59),
-                SurchargePercentage = 0.20m,
+                SurchargePercentage = 20m,
                 StartDate = DateTime.UtcNow,
                 EndDate = DateTime.UtcNow.AddYears(5),
                 TableTypeId = vipType.Id,

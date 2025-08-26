@@ -1,4 +1,5 @@
 using RestaurantReservation.Application.Interfaces.Repositories;
+using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.Common.Helpers;
 
@@ -17,7 +18,6 @@ public class PricingCalculator(
     {
         var table = await _tableRepository.GetByIdAsync(tableId, ct);
         if (table is null) throw new InvalidOperationException("Invalid table");
-        ;
 
         var tableType = await _tableTypeRepository.GetByIdAsync(table.TableTypeId, ct);
         if (tableType is null) throw new InvalidOperationException("Invalid tableType");
@@ -28,18 +28,17 @@ public class PricingCalculator(
         var rules = await _pricingRuleRepository.GetActiveByTableTypeWithDaysAsync(
             tableType.Id, date, startTime, endTime, ct);
 
-        var reservationDayOfWeek = (int)date.DayOfWeek;
+        var reservationDay = (DaysOfWeek)(int)date.DayOfWeek;
 
         var applicableRules = rules
-            .Where(rule => rule.PricingRuleDays.Any(d =>
-                (int)d.DayOfWeek == reservationDayOfWeek
-            ))
-            .ToList();
+            .Where(r => r.PricingRuleDays.Any(d =>
+                d.DayOfWeek == reservationDay));
 
-        var totalPrice = basePrice;
-        foreach (var rule in applicableRules)
-            totalPrice += basePrice * (rule.SurchargePercentage / 100m);
-
+        var totalSurcharge = applicableRules
+            .Select(r => basePrice * (r.SurchargePercentage / 100m))
+            .Sum();
+        
+        var totalPrice = basePrice + totalSurcharge;
         return (basePrice, totalPrice);
     }
 }
