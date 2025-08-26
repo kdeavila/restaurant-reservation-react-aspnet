@@ -185,21 +185,35 @@ public class ReservationService(
             reservation.BasePrice = basePrice;
             reservation.TotalPrice = totalPrice;
         }
+
         reservation.UpdatedAt = DateTime.UtcNow;
 
         await _reservationRepository.UpdateAsync(reservation, ct);
         return true;
     }
 
+    public async Task<bool> CancelReservationAsync(int id, CancellationToken ct = default)
+    {
+        {
+            var reservation = await _reservationRepository.GetByIdAsync(id, ct);
+            if (reservation is null) return false;
+
+            reservation.Status = ReservationStatus.Cancelled;
+            reservation.UpdatedAt = DateTime.UtcNow;
+
+            await _reservationRepository.UpdateAsync(reservation, ct);
+            return true;
+        }
+    }
+
     public async Task<bool> DeleteReservationAsync(int id, CancellationToken ct = default)
     {
-        var reservation = await _reservationRepository.GetByIdAsync(id, ct);
-        if (reservation is null) return false;
+        {
+            var reservation = await _reservationRepository.GetByIdAsync(id, ct);
+            if (reservation is null) return false;
 
-        reservation.Status = ReservationStatus.Cancelled;
-        reservation.UpdatedAt = DateTime.UtcNow;
-
-        await _reservationRepository.UpdateAsync(reservation, ct);
-        return true;
+            await _reservationRepository.DeleteAsync(reservation.Id, ct);
+            return true;
+        }
     }
 }
