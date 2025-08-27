@@ -11,19 +11,19 @@ public class ReservationService(
     IReservationRepository reservationRepository,
     ITableRepository tableRepository,
     IClientRepository clientRepository,
-    PricingCalculator pricingCalculator
+    IPricingService pricingService
 ) : IReservationService
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
     private readonly IClientRepository _clientRepository = clientRepository;
     private readonly ITableRepository _tableRepository = tableRepository;
-    private readonly PricingCalculator _pricingCalculator = pricingCalculator;
+    private readonly IPricingService _pricingService = pricingService;
 
     public async Task<ReservationDto?> CreateReservationAsync(CreateReservationDto dto, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
         if (client is null || client.Status != ClientStatus.Active) return null;
-        
+
         var table = await _tableRepository.GetByIdAsync(dto.TableId, ct);
         if (table is null || table.Status != TableStatus.Active) return null;
 
@@ -32,7 +32,7 @@ public class ReservationService(
                 dto.EndTime, ct);
         if (overlap) return null;
 
-        var (basePrice, totalPrice) = await _pricingCalculator.CalculatePriceAsync(
+        var (basePrice, totalPrice) = await _pricingService.CalculatePriceAsync(
             dto.TableId,
             dto.Date,
             dto.StartTime,
@@ -174,7 +174,7 @@ public class ReservationService(
 
         if (dto.TableId.HasValue || dto.Date.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
         {
-            var (basePrice, totalPrice) = await _pricingCalculator.CalculatePriceAsync(
+            var (basePrice, totalPrice) = await _pricingService.CalculatePriceAsync(
                 reservation.TableId,
                 reservation.Date,
                 reservation.StartTime,

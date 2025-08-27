@@ -1,12 +1,13 @@
 using RestaurantReservation.Application.Interfaces.Repositories;
-using RestaurantReservation.Domain.Enums;
+using RestaurantReservation.Application.Interfaces.Services;
 
-namespace RestaurantReservation.Application.Common.Helpers;
+namespace RestaurantReservation.Application.Services;
 
-public class PricingCalculator(
+public class PricingService(
     ITableRepository tableRepository,
     ITableTypeRepository tableTypeRepository,
     IPricingRuleRepository pricingRuleRepository)
+    : IPricingService
 {
     private readonly ITableRepository _tableRepository = tableRepository;
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
@@ -25,20 +26,12 @@ public class PricingCalculator(
         var hours = (decimal)(endTime - startTime).TotalHours;
         var basePrice = tableType.BasePricePerHour * hours;
 
-        var rules = await _pricingRuleRepository.GetActiveByTableTypeWithDaysAsync(
-            tableType.Id, date, startTime, endTime, ct);
+        var applicableRules =
+            await _pricingRuleRepository.GetApplicableRulesAsync(table.TableTypeId, date, startTime, endTime, ct);
 
-        var reservationDay = (DaysOfWeek)(int)date.DayOfWeek;
+        var totalPrice = applicableRules
+            .Aggregate(basePrice, (current, rule) => current * (1 + (rule.SurchargePercentage / 100m)));
 
-        var applicableRules = rules
-            .Where(r => r.PricingRuleDays.Any(d =>
-                d.DayOfWeek == reservationDay));
-
-        var totalSurcharge = applicableRules
-            .Select(r => basePrice * (r.SurchargePercentage / 100m))
-            .Sum();
-        
-        var totalPrice = basePrice + totalSurcharge;
         return (basePrice, totalPrice);
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Domain.Entities;
+using RestaurantReservation.Domain.Enums;
 using RestaurantReservation.Infrastructure.Persistence;
 
 namespace RestaurantReservation.Infrastructure.Repositories;
@@ -18,6 +19,23 @@ public class PricingRuleRepository(RestaurantReservationDbContext context) : IPr
         => await _context.PricingRules
             .Include(r => r.PricingRuleDays)
             .AsNoTracking()
+            .ToListAsync(ct);
+
+    public async Task<IEnumerable<PricingRule>> GetApplicableRulesAsync(int tableTypeId, DateTime date,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        CancellationToken ct = default)
+        => await _context.PricingRules
+            .Include(r => r.PricingRuleDays)
+            .Where(r =>
+                r.IsActive &&
+                r.TableTypeId == tableTypeId &&
+                date.Date >= r.StartDate.Date &&
+                date.Date <= r.EndDate.Date &&
+                startTime >= r.StartTime &&
+                endTime <= r.EndTime &&
+                r.PricingRuleDays.Any(d => d.DayOfWeek == (DaysOfWeek)(int)date.DayOfWeek)
+            )
             .ToListAsync(ct);
 
     public async Task<IEnumerable<PricingRule>> GetActiveByTableTypeWithDaysAsync(
