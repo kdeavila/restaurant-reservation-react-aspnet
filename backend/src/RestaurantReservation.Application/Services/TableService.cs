@@ -56,8 +56,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
     {
         var table = await _tableRepository.GetByIdAsync(dto.Id, ct);
         if (table is null) return false;
-
-        table.Code = dto.Code ?? table.Code;
+        
         table.Capacity = dto.Capacity ?? table.Capacity;
         table.Location = dto.Location ?? table.Location;
         table.TableTypeId = dto.TableTypeId ?? table.TableTypeId;

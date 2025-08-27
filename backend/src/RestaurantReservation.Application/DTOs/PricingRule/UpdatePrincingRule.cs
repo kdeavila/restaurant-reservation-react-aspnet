@@ -1,14 +1,19 @@
+using System.ComponentModel.DataAnnotations;
 using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.DTOs.PricingRule;
 
 public class UpdatePricingRuleDto
 {
+    [Required]
     public int Id { get; set; }
+    [MaxLength(100)]
     public string? RuleName { get; set; }
+    [MaxLength(50)]
     public string? RuleType { get; set; }
     public TimeSpan? StartTime { get; set; }
     public TimeSpan? EndTime { get; set; }
+    [Range(0, 100)]
     public decimal? SurchargePercentage { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }
