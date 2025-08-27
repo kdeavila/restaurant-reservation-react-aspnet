@@ -23,8 +23,8 @@ public class PricingRuleRepository(RestaurantReservationDbContext context) : IPr
     public async Task<IEnumerable<PricingRule>> GetActiveByTableTypeWithDaysAsync(
         int tableTypeId,
         DateTime date,
-        DateTime startTime,
-        DateTime endTime,
+        TimeSpan startTime,
+        TimeSpan endTime,
         CancellationToken ct = default
     )
         => await _context.PricingRules

@@ -36,8 +36,8 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
             .AsNoTracking()
             .ToListAsync(ct);
 
-    public async Task<bool> ExistsOverlappingReservationAsync(int tableId, DateTime date, DateTime startTime,
-        DateTime endTime,
+    public async Task<bool> ExistsOverlappingReservationAsync(int tableId, DateTime date, TimeSpan startTime,
+        TimeSpan endTime,
         CancellationToken ct = default)
         => await _context.Reservations
             .AnyAsync(r =>

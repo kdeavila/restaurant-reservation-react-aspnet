@@ -11,8 +11,8 @@ public interface IPricingRuleRepository
     Task<IEnumerable<PricingRule>> GetActiveByTableTypeWithDaysAsync(
         int tableTypeId,
         DateTime date,
-        DateTime startTime,
-        DateTime endTime,
+        TimeSpan startTime,
+        TimeSpan endTime,
         CancellationToken ct = default
     );
 

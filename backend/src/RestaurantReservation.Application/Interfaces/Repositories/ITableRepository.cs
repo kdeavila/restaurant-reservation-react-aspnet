@@ -8,7 +8,7 @@ public interface ITableRepository
     Task<IEnumerable<Table>> GetAllAsync(CancellationToken ct = default);
     Task<IEnumerable<Table>> GetByTableTypeIdAsync(int tableTypeId, CancellationToken ct = default);
 
-    Task<IEnumerable<Table>> GetAvailableTablesAsync(DateTime date, DateTime startTime, DateTime endTime, int capacity,
+    Task<IEnumerable<Table>> GetAvailableTablesAsync(DateTime date, TimeSpan startTime, TimeSpan endTime, int capacity,
         CancellationToken ct = default);
 
     Task AddAsync(Table table, CancellationToken ct = default);

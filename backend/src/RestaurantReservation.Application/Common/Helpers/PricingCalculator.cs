@@ -14,7 +14,7 @@ public class PricingCalculator(
 
     // Calculate base and total price applying surcharges from pricing rules
     public async Task<(decimal BasePrice, decimal TotalPrice)> CalculatePriceAsync(
-        int tableId, DateTime date, DateTime startTime, DateTime endTime, CancellationToken ct = default)
+        int tableId, DateTime date, TimeSpan startTime, TimeSpan endTime, CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(tableId, ct);
         if (table is null) throw new InvalidOperationException("Invalid table");

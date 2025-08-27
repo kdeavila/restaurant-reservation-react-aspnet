@@ -23,7 +23,7 @@ public class ReservationService(
     {
         var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
         if (client is null || client.Status != ClientStatus.Active) return null;
-
+        
         var table = await _tableRepository.GetByIdAsync(dto.TableId, ct);
         if (table is null || table.Status != TableStatus.Active) return null;
 
