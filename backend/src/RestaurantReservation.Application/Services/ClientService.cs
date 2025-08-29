@@ -1,3 +1,4 @@
+using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.Client;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
@@ -10,10 +11,10 @@ public class ClientService(IClientRepository clientRepository) : IClientService
 {
     private readonly IClientRepository _clientRepository = clientRepository;
 
-    public async Task<ClientDto?> CreateClientAsync(CreateClientDto dto, CancellationToken ct = default)
+    public async Task<Result<ClientDto>> CreateClientAsync(CreateClientDto dto, CancellationToken ct = default)
     {
         var emailExists = await _clientRepository.EmailExistsAsync(dto.Email, ct);
-        if (emailExists) return null;
+        if (emailExists) return Result.Failure<ClientDto>("Email already in use");
 
         var client = new Client()
         {
@@ -26,17 +27,19 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         };
 
         await _clientRepository.AddAsync(client, ct);
-        return new ClientDto(client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
+        var clientDto = new ClientDto(client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
             client.Status.ToString());
+        return Result.Success(clientDto);
     }
 
-    public async Task<ClientDto?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<Result<ClientDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(id, ct);
-        if (client is null) return null;
+        if (client is null) return Result.Failure<ClientDto>("Client not found");
 
-        return new ClientDto(client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
+        var clientDto = new ClientDto(client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
             client.Status.ToString());
+        return Result.Success(clientDto);
     }
 
     public async Task<IEnumerable<ClientDto>> GetAllAsync(CancellationToken ct = default)
@@ -46,16 +49,15 @@ public class ClientService(IClientRepository clientRepository) : IClientService
             c.Status.ToString()));
     }
 
-    public async Task<bool> UpdateClientAsync(UpdateClientDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateClientAsync(UpdateClientDto dto, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(dto.Id, ct);
-        if (client is null) return false;
+        if (client is null) return Result.Failure("Client not found");
 
         if (!string.IsNullOrEmpty(dto.Email))
         {
-            // Check if the user exists
             var emailExists = await _clientRepository.EmailExistsForOthersClients(dto.Email, dto.Id, ct);
-            if (emailExists) return false;
+            if (emailExists) return Result.Failure("Email already in use");
 
             client.Email = dto.Email;
         }
@@ -68,15 +70,15 @@ public class ClientService(IClientRepository clientRepository) : IClientService
             client.Status = parsed;
 
         await _clientRepository.UpdateAsync(client, ct);
-        return true;
+        return Result.Success();
     }
 
-    public async Task<bool> DeleteClientAsync(int id, CancellationToken ct = default)
+    public async Task<Result> DeleteClientAsync(int id, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(id, ct);
-        if (client is null) return false;
+        if (client is null) return Result.Failure("Client not found");
 
         await _clientRepository.DeleteAsync(client.Id, ct);
-        return true;
+        return Result.Success();
     }
 }

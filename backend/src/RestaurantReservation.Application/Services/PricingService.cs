@@ -1,3 +1,4 @@
+using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 
@@ -13,15 +14,18 @@ public class PricingService(
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
     private readonly IPricingRuleRepository _pricingRuleRepository = pricingRuleRepository;
 
-    // Calculate base and total price applying surcharges from pricing rules
-    public async Task<(decimal BasePrice, decimal TotalPrice)> CalculatePriceAsync(
-        int tableId, DateTime date, TimeSpan startTime, TimeSpan endTime, CancellationToken ct = default)
+    public async Task<Result<(decimal BasePrice, decimal TotalPrice)>> CalculatePriceAsync(
+        int tableId,
+        DateTime date,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(tableId, ct);
-        if (table is null) throw new InvalidOperationException("Invalid table");
+        if (table is null) return Result.Failure<(decimal, decimal)>("Table not found");
 
         var tableType = await _tableTypeRepository.GetByIdAsync(table.TableTypeId, ct);
-        if (tableType is null) throw new InvalidOperationException("Invalid tableType");
+        if (tableType is null) return Result.Failure<(decimal, decimal)>("Table type not found");
 
         var hours = (decimal)(endTime - startTime).TotalHours;
         var basePrice = tableType.BasePricePerHour * hours;
@@ -32,6 +36,6 @@ public class PricingService(
         var totalPrice = applicableRules
             .Aggregate(basePrice, (current, rule) => current * (1 + (rule.SurchargePercentage / 100m)));
 
-        return (basePrice, totalPrice);
+        return Result.Success((basePrice, totalPrice));
     }
 }

@@ -1,4 +1,4 @@
-using RestaurantReservation.Application.Common.Helpers;
+using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.Reservation;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
@@ -19,26 +19,32 @@ public class ReservationService(
     private readonly ITableRepository _tableRepository = tableRepository;
     private readonly IPricingService _pricingService = pricingService;
 
-    public async Task<ReservationDto?> CreateReservationAsync(CreateReservationDto dto, CancellationToken ct = default)
+    public async Task<Result<ReservationDto>> CreateReservationAsync(
+        CreateReservationDto dto, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
-        if (client is null || client.Status != ClientStatus.Active) return null;
+        if (client is null || client.Status != ClientStatus.Active)
+            return Result.Failure<ReservationDto>("Client not found or inactive.");
 
         var table = await _tableRepository.GetByIdAsync(dto.TableId, ct);
-        if (table is null || table.Status != TableStatus.Active) return null;
+        if (table is null || table.Status != TableStatus.Active)
+            return Result.Failure<ReservationDto>("Table not found or inactive.");
 
         var overlap =
             await _reservationRepository.ExistsOverlappingReservationAsync(dto.TableId, dto.Date, dto.StartTime,
                 dto.EndTime, ct);
-        if (overlap) return null;
+        if (overlap) return Result.Failure<ReservationDto>("Table is already booked for the selected time.");
 
-        var (basePrice, totalPrice) = await _pricingService.CalculatePriceAsync(
+        var priceResult = await _pricingService.CalculatePriceAsync(
             dto.TableId,
             dto.Date,
             dto.StartTime,
             dto.EndTime,
             ct
         );
+        if (priceResult.IsFailure)
+            return Result.Failure<ReservationDto>(priceResult.Error);
+        var (basePrice, totalPrice) = priceResult.Value;
 
         var reservation = new Reservation()
         {
@@ -58,7 +64,7 @@ public class ReservationService(
 
         await _reservationRepository.AddAsync(reservation, ct);
 
-        return new ReservationDto(
+        var reservationDto = new ReservationDto(
             reservation.Id,
             reservation.ClientId,
             $"{client.FirstName} {client.LastName}",
@@ -73,14 +79,15 @@ public class ReservationService(
             reservation.Status.ToString(),
             reservation.Notes
         );
+        return Result.Success(reservationDto);
     }
 
-    public async Task<ReservationDto?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(id, ct);
-        if (reservation is null) return null;
+        if (reservation is null) return Result.Failure<ReservationDto>("Reservation not found.");
 
-        return new ReservationDto(
+        var reservationDto = new ReservationDto(
             reservation.Id,
             reservation.ClientId,
             $"{reservation.Client.FirstName} {reservation.Client.LastName}",
@@ -95,6 +102,7 @@ public class ReservationService(
             reservation.Status.ToString(),
             reservation.Notes
         );
+        return Result.Success(reservationDto);
     }
 
     public async Task<IEnumerable<ReservationDto>> GetAllAsync(CancellationToken ct = default)
@@ -157,10 +165,10 @@ public class ReservationService(
         ));
     }
 
-    public async Task<bool> UpdateReservationAsync(UpdateReservationDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateReservationAsync(UpdateReservationDto dto, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
-        if (reservation is null) return false;
+        if (reservation is null) return Result.Failure("Reservation not found.");
 
         reservation.TableId = dto.TableId ?? reservation.TableId;
         reservation.Date = dto.Date ?? reservation.Date;
@@ -174,13 +182,16 @@ public class ReservationService(
 
         if (dto.TableId.HasValue || dto.Date.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
         {
-            var (basePrice, totalPrice) = await _pricingService.CalculatePriceAsync(
+            var priceResult = await _pricingService.CalculatePriceAsync(
                 reservation.TableId,
                 reservation.Date,
                 reservation.StartTime,
                 reservation.EndTime,
                 ct
             );
+            if (priceResult.IsFailure)
+                return Result.Failure(priceResult.Error);
+            var (basePrice, totalPrice) = priceResult.Value;
 
             reservation.BasePrice = basePrice;
             reservation.TotalPrice = totalPrice;
@@ -189,31 +200,27 @@ public class ReservationService(
         reservation.UpdatedAt = DateTime.UtcNow;
 
         await _reservationRepository.UpdateAsync(reservation, ct);
-        return true;
+        return Result.Success();
     }
 
-    public async Task<bool> CancelReservationAsync(int id, CancellationToken ct = default)
+    public async Task<Result> CancelReservationAsync(int id, CancellationToken ct = default)
     {
-        {
-            var reservation = await _reservationRepository.GetByIdAsync(id, ct);
-            if (reservation is null) return false;
+        var reservation = await _reservationRepository.GetByIdAsync(id, ct);
+        if (reservation is null) return Result.Failure("Reservation not found.");
 
-            reservation.Status = ReservationStatus.Cancelled;
-            reservation.UpdatedAt = DateTime.UtcNow;
+        reservation.Status = ReservationStatus.Cancelled;
+        reservation.UpdatedAt = DateTime.UtcNow;
 
-            await _reservationRepository.UpdateAsync(reservation, ct);
-            return true;
-        }
+        await _reservationRepository.UpdateAsync(reservation, ct);
+        return Result.Success();
     }
 
-    public async Task<bool> DeleteReservationAsync(int id, CancellationToken ct = default)
+    public async Task<Result> DeleteReservationAsync(int id, CancellationToken ct = default)
     {
-        {
-            var reservation = await _reservationRepository.GetByIdAsync(id, ct);
-            if (reservation is null) return false;
+        var reservation = await _reservationRepository.GetByIdAsync(id, ct);
+        if (reservation is null) return Result.Failure("Reservation not found.");
 
-            await _reservationRepository.DeleteAsync(reservation.Id, ct);
-            return true;
-        }
+        await _reservationRepository.DeleteAsync(reservation.Id, ct);
+        return Result.Success();
     }
 }

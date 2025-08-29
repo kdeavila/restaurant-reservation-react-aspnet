@@ -1,8 +1,8 @@
+using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.PricingRule;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
-using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -15,10 +15,11 @@ public class PricingRuleService(
     private readonly IPricingRuleDaysRepository _pricingRuleDaysRepository = daysRepo;
 
 
-    public async Task<PricingRuleDto?> CreatePricingRuleAsync(CreatePricingRuleDto dto, CancellationToken ct = default)
+    public async Task<Result<PricingRuleDto>> CreatePricingRuleAsync(
+        CreatePricingRuleDto dto, CancellationToken ct = default)
     {
-        if (dto.DaysOfWeek is null || dto.DaysOfWeek.Count == 0)
-            throw new ArgumentException("At least one day of the week must be provided for the pricing rule.");
+        if (dto.DaysOfWeek.Any())
+            return Result.Failure<PricingRuleDto>("At least one day of the week must be specified.");
 
         var pricingRule = new PricingRule()
         {
@@ -45,25 +46,27 @@ public class PricingRuleService(
         foreach (var prd in pricingRuleDays)
             await _pricingRuleDaysRepository.AddAsync(prd, ct);
 
-        return new PricingRuleDto(
+        var pricingRuleDto = new PricingRuleDto(
             pricingRule.Id, pricingRule.RuleName, pricingRule.RuleType, pricingRule.StartTime, pricingRule.EndTime,
             pricingRule.SurchargePercentage, pricingRule.StartDate, pricingRule.EndDate, pricingRule.TableTypeId,
             pricingRule.IsActive, dto.DaysOfWeek
         );
+        return Result.Success(pricingRuleDto);
     }
 
-    public async Task<PricingRuleDto?> GetByIdAsync(int id, CancellationToken ct = default)
+    public async Task<Result<PricingRuleDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var rule = await _pricingRuleRepository.GetByIdAsync(id, ct);
-        if (rule is null) return null;
+        if (rule is null) return Result.Failure<PricingRuleDto>("Pricing rule not found.");
 
         var days = await _pricingRuleDaysRepository.GetByPricingRuleIdAsync(rule.Id, ct);
 
-        return new PricingRuleDto(
+        var pricingRuleDto = new PricingRuleDto(
             rule.Id, rule.RuleName, rule.RuleType, rule.StartTime, rule.EndTime,
             rule.SurchargePercentage, rule.StartDate, rule.EndDate, rule.TableTypeId,
             rule.IsActive, days.Select(d => d.DayOfWeek).ToList()
         );
+        return Result.Success(pricingRuleDto);
     }
 
     public async Task<IEnumerable<PricingRuleDto>> GetAllAsync(CancellationToken ct = default)
@@ -85,10 +88,10 @@ public class PricingRuleService(
         return result;
     }
 
-    public async Task<bool> UpdatePricingRuleAsync(UpdatePricingRuleDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdatePricingRuleAsync(UpdatePricingRuleDto dto, CancellationToken ct = default)
     {
         var rule = await _pricingRuleRepository.GetByIdAsync(dto.Id, ct);
-        if (rule is null) return false;
+        if (rule is null) return Result.Failure("Pricing rule not found.");
 
         rule.RuleName = dto.RuleName ?? rule.RuleName;
         rule.RuleType = dto.RuleType ?? rule.RuleType;
@@ -102,30 +105,27 @@ public class PricingRuleService(
 
         await _pricingRuleRepository.UpdateAsync(rule, ct);
 
-        if (dto.DaysOfWeek is not null && dto.DaysOfWeek.Count != 0)
+        if (dto.DaysOfWeek is null || !dto.DaysOfWeek.Any()) return Result.Success();
+        await _pricingRuleDaysRepository.DeleteByPricingRuleIdAsync(rule.Id, ct);
+
+        var dayEntities = dto.DaysOfWeek.Select(day => new PricingRuleDays
         {
-            await _pricingRuleDaysRepository.DeleteByPricingRuleIdAsync(rule.Id, ct);
+            PricingRuleId = rule.Id,
+            DayOfWeek = day
+        }).ToList();
 
-            var dayEntities = dto.DaysOfWeek.Select(day => new PricingRuleDays
-            {
-                PricingRuleId = rule.Id,
-                DayOfWeek = day
-            }).ToList();
-
-            await _pricingRuleDaysRepository.AddRangeAsync(dayEntities, ct);
-        }
-
-        return true;
+        await _pricingRuleDaysRepository.AddRangeAsync(dayEntities, ct);
+        return Result.Success();
     }
 
-    public async Task<bool> DeletePricingRuleAsync(int id, CancellationToken ct = default)
+    public async Task<Result> DeletePricingRuleAsync(int id, CancellationToken ct = default)
     {
         var rule = await _pricingRuleRepository.GetByIdAsync(id, ct);
-        if (rule is null) return false;
+        if (rule is null) return Result.Failure("Pricing rule not found.");
 
         await _pricingRuleDaysRepository.DeleteByPricingRuleIdAsync(rule.Id, ct);
         await _pricingRuleRepository.DeleteAsync(id, ct);
 
-        return true;
+        return Result.Success();
     }
 }
