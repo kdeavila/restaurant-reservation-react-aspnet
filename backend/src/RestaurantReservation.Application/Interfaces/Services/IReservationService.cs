@@ -1,11 +1,13 @@
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.Reservation;
+using RestaurantReservation.Domain.Entities;
 
 namespace RestaurantReservation.Application.Interfaces.Services;
 
 public interface IReservationService
 {
-    Task<Result<ReservationDto>> CreateReservationAsync(CreateReservationDto dto, CancellationToken ct = default);
+    Task<Result<Reservation>> CreateReservationAsync(CreateReservationDto dto, decimal basePrice, decimal totalPrice, CancellationToken ct = default);
+
     Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default);
     Task<IEnumerable<ReservationDto>> GetAllAsync(CancellationToken ct = default);
     Task<IEnumerable<ReservationDto>> GetByClientIdAsync(int clientId, CancellationToken ct = default);

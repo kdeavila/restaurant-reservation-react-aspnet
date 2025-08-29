@@ -15,36 +15,23 @@ public class ReservationService(
 ) : IReservationService
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
-    private readonly IClientRepository _clientRepository = clientRepository;
-    private readonly ITableRepository _tableRepository = tableRepository;
     private readonly IPricingService _pricingService = pricingService;
 
-    public async Task<Result<ReservationDto>> CreateReservationAsync(
-        CreateReservationDto dto, CancellationToken ct = default)
+    public async Task<Result<Reservation>> CreateReservationAsync(
+        CreateReservationDto dto, decimal basePrice, decimal totalPrice, CancellationToken ct = default)
     {
-        var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
-        if (client is null || client.Status != ClientStatus.Active)
-            return Result.Failure<ReservationDto>("Client not found or inactive.");
+        var duration = dto.EndTime - dto.StartTime;
+        if (duration.TotalMinutes < 30)
+            return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.");
 
-        var table = await _tableRepository.GetByIdAsync(dto.TableId, ct);
-        if (table is null || table.Status != TableStatus.Active)
-            return Result.Failure<ReservationDto>("Table not found or inactive.");
+        if (dto.Date.Date < DateTime.UtcNow.Date)
+            return Result.Failure<Reservation>("Reservation date cannot be in the past.");
 
-        var overlap =
-            await _reservationRepository.ExistsOverlappingReservationAsync(dto.TableId, dto.Date, dto.StartTime,
-                dto.EndTime, ct);
-        if (overlap) return Result.Failure<ReservationDto>("Table is already booked for the selected time.");
+        if (dto.StartTime >= dto.EndTime)
+            return Result.Failure<Reservation>("End time must be after start time.");
 
-        var priceResult = await _pricingService.CalculatePriceAsync(
-            dto.TableId,
-            dto.Date,
-            dto.StartTime,
-            dto.EndTime,
-            ct
-        );
-        if (priceResult.IsFailure)
-            return Result.Failure<ReservationDto>(priceResult.Error);
-        var (basePrice, totalPrice) = priceResult.Value;
+        if (basePrice < 0 || totalPrice < 0)
+            return Result.Failure<Reservation>("Prices must be non-negative.");
 
         var reservation = new Reservation()
         {
@@ -64,22 +51,7 @@ public class ReservationService(
 
         await _reservationRepository.AddAsync(reservation, ct);
 
-        var reservationDto = new ReservationDto(
-            reservation.Id,
-            reservation.ClientId,
-            $"{client.FirstName} {client.LastName}",
-            reservation.TableId,
-            table.Code,
-            reservation.Date,
-            reservation.StartTime,
-            reservation.EndTime,
-            reservation.NumberOfGuests,
-            reservation.BasePrice,
-            reservation.TotalPrice,
-            reservation.Status.ToString(),
-            reservation.Notes
-        );
-        return Result.Success(reservationDto);
+        return Result.Success(reservation);
     }
 
     public async Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default)
