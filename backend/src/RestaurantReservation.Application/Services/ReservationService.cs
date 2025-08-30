@@ -8,14 +8,10 @@ using RestaurantReservation.Domain.Enums;
 namespace RestaurantReservation.Application.Services;
 
 public class ReservationService(
-    IReservationRepository reservationRepository,
-    ITableRepository tableRepository,
-    IClientRepository clientRepository,
-    IPricingService pricingService
+    IReservationRepository reservationRepository
 ) : IReservationService
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
-    private readonly IPricingService _pricingService = pricingService;
 
     public async Task<Result<Reservation>> CreateReservationAsync(
         CreateReservationDto dto, decimal basePrice, decimal totalPrice, CancellationToken ct = default)
@@ -137,40 +133,8 @@ public class ReservationService(
         ));
     }
 
-    public async Task<Result> UpdateReservationAsync(UpdateReservationDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateReservationAsync(Reservation reservation, CancellationToken ct = default)
     {
-        var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
-        if (reservation is null) return Result.Failure("Reservation not found.");
-
-        reservation.TableId = dto.TableId ?? reservation.TableId;
-        reservation.Date = dto.Date ?? reservation.Date;
-        reservation.StartTime = dto.StartTime ?? reservation.StartTime;
-        reservation.EndTime = dto.EndTime ?? reservation.EndTime;
-        reservation.NumberOfGuests = dto.NumberOfGuests ?? reservation.NumberOfGuests;
-        reservation.Notes = dto.Notes ?? reservation.Notes;
-
-        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<ReservationStatus>(dto.Status, out var parsed))
-            reservation.Status = parsed;
-
-        if (dto.TableId.HasValue || dto.Date.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
-        {
-            var priceResult = await _pricingService.CalculatePriceAsync(
-                reservation.TableId,
-                reservation.Date,
-                reservation.StartTime,
-                reservation.EndTime,
-                ct
-            );
-            if (priceResult.IsFailure)
-                return Result.Failure(priceResult.Error);
-            var (basePrice, totalPrice) = priceResult.Value;
-
-            reservation.BasePrice = basePrice;
-            reservation.TotalPrice = totalPrice;
-        }
-
-        reservation.UpdatedAt = DateTime.UtcNow;
-
         await _reservationRepository.UpdateAsync(reservation, ct);
         return Result.Success();
     }

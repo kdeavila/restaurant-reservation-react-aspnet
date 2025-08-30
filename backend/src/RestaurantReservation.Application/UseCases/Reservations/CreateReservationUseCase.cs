@@ -6,7 +6,7 @@ using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.UseCases.Reservations;
 
-public class CreateReservationAsync(
+public class CreateReservationUseCase(
     IClientRepository clientRepository,
     ITableRepository tableRepository,
     IReservationRepository reservationRepository,
