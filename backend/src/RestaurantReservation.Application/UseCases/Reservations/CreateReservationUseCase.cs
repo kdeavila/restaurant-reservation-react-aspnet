@@ -18,12 +18,6 @@ public class CreateReservationUseCase(
     private readonly IReservationRepository _reservationRepository = reservationRepository;
     private readonly IPricingService _pricingService = pricingService;
     private readonly IReservationService _reservationService = reservationService;
-    
-    /// <summary>
-    /// Orquesta la creación de una reserva, validando cliente, mesa, disponibilidad y precios.
-    /// </summary>
-    /// <param name="dto">Datos de entrada para la reserva</param>
-    /// <returns>Resultado con el DTO de la reserva creada o error</returns>
 
     public async Task<Result<ReservationDto>> ExecuteAsync(CreateReservationDto dto, CancellationToken ct = default)
     {
@@ -51,7 +45,8 @@ public class CreateReservationUseCase(
             return Result.Failure<ReservationDto>(priceResult.Error);
         var (basePrice, totalPrice) = priceResult.Value;
 
-        var reservation = await _reservationService.CreateReservationAsync(dto, basePrice, totalPrice, ct);
+        var reservation = await
+            _reservationService.CreateReservationAsync(dto, basePrice, totalPrice, ct);
 
         if (reservation.IsFailure)
             return Result.Failure<ReservationDto>(reservation.Error);
@@ -72,7 +67,7 @@ public class CreateReservationUseCase(
             r.Status.ToString(),
             r.Notes
         );
-        
+
         return Result.Success(reservationDto);
     }
 }

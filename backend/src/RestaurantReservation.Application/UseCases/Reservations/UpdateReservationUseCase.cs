@@ -6,9 +6,13 @@ using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.UseCases.Reservations;
 
-public class UpdateReservationUseCase(IReservationRepository reservationRepository, IPricingService pricingService)
+public class UpdateReservationUseCase(
+    IReservationRepository reservationRepository,
+    IPricingService pricingService,
+    IReservationService reservationService)
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
+    private readonly IReservationService _reservationService = reservationService;
     private readonly IPricingService _pricingService = pricingService;
 
     public async Task<Result> ExecuteAsync(UpdateReservationDto dto, CancellationToken ct = default)
@@ -24,22 +28,11 @@ public class UpdateReservationUseCase(IReservationRepository reservationReposito
             var startTime = dto.StartTime ?? reservation.StartTime;
             var endTime = dto.EndTime ?? reservation.EndTime;
 
-            var isAvailable =
-                await _reservationRepository.ExistsOverlappingReservationAsync(tableId, date, startTime, endTime, ct);
-
+            var isAvailable = await _reservationRepository.ExistsOverlappingReservationAsync
+                (tableId, date, startTime, endTime, ct);
             if (!isAvailable) return Result.Failure("The selected table is not available at the specified time.");
-        }
 
-        if (dto.TableId.HasValue || dto.Date.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
-        {
-            var priceResult = await _pricingService.CalculatePriceAsync(
-                dto.TableId ?? reservation.TableId,
-                dto.Date ?? reservation.Date,
-                dto.StartTime ?? reservation.StartTime,
-                dto.EndTime ?? reservation.EndTime,
-                ct
-            );
-
+            var priceResult = await _pricingService.CalculatePriceAsync(tableId, date, startTime, endTime, ct);
             if (priceResult.IsFailure) return Result.Failure(priceResult.Error);
 
             var (basePrice, totalPrice) = priceResult.Value;
@@ -57,7 +50,7 @@ public class UpdateReservationUseCase(IReservationRepository reservationReposito
             reservation.Status = parsed;
         reservation.UpdatedAt = DateTime.UtcNow;
 
-        await _reservationRepository.UpdateAsync(reservation, ct);
+        await _reservationService.UpdateReservationAsync(reservation, ct);
         return Result.Success();
     }
 }
