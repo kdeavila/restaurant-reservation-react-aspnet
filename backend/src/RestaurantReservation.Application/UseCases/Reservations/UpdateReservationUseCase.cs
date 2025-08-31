@@ -23,34 +23,30 @@ public class UpdateReservationUseCase(
         if (dto.TableId.HasValue || dto.Date.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
         {
             var tableId = dto.TableId ?? reservation.TableId;
-            reservation.TableId = dto.TableId ?? reservation.TableId;
             var date = dto.Date ?? reservation.Date;
-            var startTime = dto.StartTime ?? reservation.StartTime;
-            var endTime = dto.EndTime ?? reservation.EndTime;
+            var start = dto.StartTime ?? reservation.StartTime;
+            var end = dto.EndTime ?? reservation.EndTime;
 
-            var isAvailable = await _reservationRepository.ExistsOverlappingReservationAsync
-                (tableId, date, startTime, endTime, ct);
-            if (!isAvailable) return Result.Failure("The selected table is not available at the specified time.");
+            var overlap = await _reservationRepository.ExistsOverlappingReservationAsync
+                (tableId, date, start, end, ct);
 
-            var priceResult = await _pricingService.CalculatePriceAsync(tableId, date, startTime, endTime, ct);
-            if (priceResult.IsFailure) return Result.Failure(priceResult.Error);
+            if (overlap)
+                return Result.Failure("The selected table is not available at the specified time.");
+
+            var priceResult = await _pricingService.CalculatePriceAsync(tableId, date, start, end, ct);
+
+            if (priceResult.IsFailure)
+                return Result.Failure(priceResult.Error);
 
             var (basePrice, totalPrice) = priceResult.Value;
-            reservation.BasePrice = basePrice;
-            reservation.TotalPrice = totalPrice;
+
+            var result = await _reservationService.UpdateReservationAsync(dto, basePrice, totalPrice, ct);
+            return result.IsFailure ? Result.Failure("Failed to update reservation.") : Result.Success();
         }
-
-        reservation.TableId = dto.TableId ?? reservation.TableId;
-        reservation.Date = dto.Date ?? reservation.Date;
-        reservation.StartTime = dto.StartTime ?? reservation.StartTime;
-        reservation.EndTime = dto.EndTime ?? reservation.EndTime;
-        reservation.NumberOfGuests = dto.NumberOfGuests ?? reservation.NumberOfGuests;
-        reservation.Notes = dto.Notes ?? reservation.Notes;
-        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<ReservationStatus>(dto.Status, out var parsed))
-            reservation.Status = parsed;
-        reservation.UpdatedAt = DateTime.UtcNow;
-
-        await _reservationService.UpdateReservationAsync(reservation, ct);
-        return Result.Success();
+        else
+        {
+            var result = await _reservationService.UpdateReservationAsync(dto, null, null, ct);
+            return result.IsFailure ? Result.Failure("Failed to update reservation.") : Result.Success();
+        }
     }
 }

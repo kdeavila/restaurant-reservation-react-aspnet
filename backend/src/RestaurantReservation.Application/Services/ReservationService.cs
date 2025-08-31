@@ -12,7 +12,7 @@ public class ReservationService(
 ) : IReservationService
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
-    
+
     public async Task<Result<Reservation>> CreateReservationAsync(CreateReservationDto dto, decimal basePrice,
         decimal totalPrice,
         CancellationToken ct = default)
@@ -50,9 +50,44 @@ public class ReservationService(
         return Result.Success(reservation);
     }
 
-    public async Task<Result> UpdateReservationAsync(Reservation reservation, CancellationToken ct = default)
+    public async Task<Result> UpdateReservationAsync
+        (UpdateReservationDto dto, decimal? basePrice, decimal? totalPrice, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
+        if (reservation is null) return Result.Failure("Reservation not found.");
+
+        if (dto is { EndTime: not null, StartTime: not null })
+        {
+            var duration = dto.EndTime.Value - dto.StartTime.Value;
+            if (duration.TotalMinutes < 30)
+                return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.");
+
+            if (dto.StartTime >= dto.EndTime)
+                return Result.Failure<Reservation>("End time must be after start time.");
+        }
+
+        reservation.TableId = dto.TableId ?? reservation.TableId;
+        reservation.Date = dto.Date ?? reservation.Date;
+        reservation.StartTime = dto.StartTime ?? reservation.StartTime;
+        reservation.EndTime = dto.EndTime ?? reservation.EndTime;
+        reservation.NumberOfGuests = dto.NumberOfGuests ?? reservation.NumberOfGuests;
+        reservation.Notes = dto.Notes ?? reservation.Notes;
+
+        if (!string.IsNullOrEmpty(dto.Status) &&
+            Enum.TryParse<ReservationStatus>(dto.Status, out var parsed))
+        {
+            reservation.Status = parsed;
+        }
+
+        if (basePrice.HasValue && totalPrice.HasValue)
+        {
+            reservation.BasePrice = basePrice.Value;
+            reservation.TotalPrice = totalPrice.Value;
+        }
+
+        reservation.UpdatedAt = DateTime.UtcNow;
+        await _reservationRepository.UpdateAsync(reservation, ct);
+        return Result.Success();
     }
 
     public async Task<Result> CancelReservationAsync(int id, CancellationToken ct = default)
