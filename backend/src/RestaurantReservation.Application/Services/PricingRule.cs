@@ -13,13 +13,13 @@ public class PricingRuleService(
 {
     private readonly IPricingRuleRepository _pricingRuleRepository = ruleRepo;
     private readonly IPricingRuleDaysRepository _pricingRuleDaysRepository = daysRepo;
-    
+
     public async Task<Result<PricingRuleDto>> CreatePricingRuleAsync(
         CreatePricingRuleDto dto, CancellationToken ct = default)
     {
-        if (dto.DaysOfWeek.Any())
+        if (!dto.DaysOfWeek.Any())
             return Result.Failure<PricingRuleDto>("At least one day of the week must be specified.");
-        
+
         var pricingRule = new PricingRule()
         {
             RuleName = dto.RuleName,
