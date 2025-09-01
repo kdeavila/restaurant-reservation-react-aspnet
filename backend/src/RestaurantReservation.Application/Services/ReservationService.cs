@@ -92,6 +92,16 @@ public class ReservationService(
 
     public async Task<Result> CancelReservationAsync(int id, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        var reservation = await _reservationRepository.GetByIdAsync(id, ct);
+        if (reservation is null) return Result.Failure("Reservation not found.");
+
+        if (reservation.Status == ReservationStatus.Cancelled)
+            return Result.Failure("Reservation is already cancelled.");
+        
+        reservation.Status = ReservationStatus.Cancelled;
+        reservation.UpdatedAt = DateTime.UtcNow;
+        
+        await _reservationRepository.UpdateAsync(reservation, ct);
+        return Result.Success();
     }
 }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Domain.Entities;
+using RestaurantReservation.Domain.Enums;
 using RestaurantReservation.Infrastructure.Persistence;
 
 namespace RestaurantReservation.Infrastructure.Repositories;
@@ -42,7 +43,9 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
         => await _context.Reservations
             .AnyAsync(r =>
                     r.TableId == tableId &&
-                    r.Date == date.Date && (
+                    r.Date == date.Date &&
+                    (r.Status != ReservationStatus.Cancelled || r.Status != ReservationStatus.Completed) &&
+                    (
                         (startTime >= r.StartTime && startTime < r.EndTime) ||
                         (endTime > r.StartTime && endTime <= r.EndTime) ||
                         (startTime <= r.StartTime && endTime >= r.EndTime)
@@ -59,15 +62,6 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
     public async Task UpdateAsync(Reservation reservation, CancellationToken ct = default)
     {
         _context.Reservations.Update(reservation);
-        await _context.SaveChangesAsync(ct);
-    }
-
-    public async Task DeleteAsync(int id, CancellationToken ct = default)
-    {
-        var reservation = await _context.Reservations.FindAsync([id], ct);
-        if (reservation is null) return;
-
-        _context.Remove(reservation);
         await _context.SaveChangesAsync(ct);
     }
 }

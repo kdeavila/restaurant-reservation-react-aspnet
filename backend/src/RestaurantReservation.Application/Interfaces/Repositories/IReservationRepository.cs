@@ -14,5 +14,4 @@ public interface IReservationRepository
 
     Task AddAsync(Reservation reservation, CancellationToken ct = default);
     Task UpdateAsync(Reservation reservation, CancellationToken ct = default);
-    Task DeleteAsync(int id, CancellationToken ct = default);
 }
