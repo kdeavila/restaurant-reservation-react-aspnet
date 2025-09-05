@@ -22,10 +22,10 @@ public class PricingService(
         CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(tableId, ct);
-        if (table is null) return Result.Failure<(decimal, decimal)>("Table not found");
+        if (table is null) return Result.Failure<(decimal, decimal)>("Table not found", 404);
 
         var tableType = await _tableTypeRepository.GetByIdAsync(table.TableTypeId, ct);
-        if (tableType is null) return Result.Failure<(decimal, decimal)>("Table type not found");
+        if (tableType is null) return Result.Failure<(decimal, decimal)>("Table type not found", 404);
 
         var hours = (decimal)(endTime - startTime).TotalHours;
         var basePrice = tableType.BasePricePerHour * hours;

@@ -14,7 +14,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
     public async Task<Result<ClientDto>> CreateClientAsync(CreateClientDto dto, CancellationToken ct = default)
     {
         var emailExists = await _clientRepository.EmailExistsAsync(dto.Email, ct);
-        if (emailExists) return Result.Failure<ClientDto>("Email already in use");
+        if (emailExists) return Result.Failure<ClientDto>("Email already in use", 409);
 
         var client = new Client()
         {
@@ -35,7 +35,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
     public async Task<Result<ClientDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(id, ct);
-        if (client is null) return Result.Failure<ClientDto>("Client not found");
+        if (client is null) return Result.Failure<ClientDto>("Client not found", 404);
 
         var clientDto = new ClientDto(client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
             client.Status.ToString());
@@ -52,12 +52,12 @@ public class ClientService(IClientRepository clientRepository) : IClientService
     public async Task<Result> UpdateClientAsync(UpdateClientDto dto, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(dto.Id, ct);
-        if (client is null) return Result.Failure("Client not found");
+        if (client is null) return Result.Failure("Client not found", 404);
 
         if (!string.IsNullOrEmpty(dto.Email))
         {
             var emailExists = await _clientRepository.EmailExistsForOthersClients(dto.Email, dto.Id, ct);
-            if (emailExists) return Result.Failure("Email already in use");
+            if (emailExists) return Result.Failure("Email already in use", 409);
 
             client.Email = dto.Email;
         }
@@ -76,7 +76,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
     public async Task<Result> DeleteClientAsync(int id, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(id, ct);
-        if (client is null) return Result.Failure("Client not found");
+        if (client is null) return Result.Failure("Client not found", 404);
 
         await _clientRepository.DeleteAsync(client.Id, ct);
         return Result.Success();

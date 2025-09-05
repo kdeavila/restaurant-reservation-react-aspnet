@@ -18,7 +18,7 @@ public class PricingRuleService(
         CreatePricingRuleDto dto, CancellationToken ct = default)
     {
         if (!dto.DaysOfWeek.Any())
-            return Result.Failure<PricingRuleDto>("At least one day of the week must be specified.");
+            return Result.Failure<PricingRuleDto>("At least one day of the week must be specified.", 400);
 
         var pricingRule = new PricingRule()
         {
@@ -56,7 +56,7 @@ public class PricingRuleService(
     public async Task<Result<PricingRuleDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var rule = await _pricingRuleRepository.GetByIdAsync(id, ct);
-        if (rule is null) return Result.Failure<PricingRuleDto>("Pricing rule not found.");
+        if (rule is null) return Result.Failure<PricingRuleDto>("Pricing rule not found.", 404);
 
         var days = await _pricingRuleDaysRepository.GetByPricingRuleIdAsync(rule.Id, ct);
 
@@ -90,7 +90,7 @@ public class PricingRuleService(
     public async Task<Result> UpdatePricingRuleAsync(UpdatePricingRuleDto dto, CancellationToken ct = default)
     {
         var rule = await _pricingRuleRepository.GetByIdAsync(dto.Id, ct);
-        if (rule is null) return Result.Failure("Pricing rule not found.");
+        if (rule is null) return Result.Failure("Pricing rule not found.", 404);
 
         rule.RuleName = dto.RuleName ?? rule.RuleName;
         rule.RuleType = dto.RuleType ?? rule.RuleType;
@@ -120,7 +120,7 @@ public class PricingRuleService(
     public async Task<Result> DeletePricingRuleAsync(int id, CancellationToken ct = default)
     {
         var rule = await _pricingRuleRepository.GetByIdAsync(id, ct);
-        if (rule is null) return Result.Failure("Pricing rule not found.");
+        if (rule is null) return Result.Failure("Pricing rule not found.", 404);
 
         await _pricingRuleDaysRepository.DeleteByPricingRuleIdAsync(rule.Id, ct);
         await _pricingRuleRepository.DeleteAsync(id, ct);

@@ -13,7 +13,7 @@ public class TableTypeService(ITableTypeRepository tableTypeRepository) : ITable
     public async Task<Result<TableTypeDto>> CreateAsync(CreateTableTypeDto dto, CancellationToken ct = default)
     {
         var tableExists = await _tableTypeRepository.ExistsByNameAsync(dto.Name, ct);
-        if (tableExists) return Result.Failure<TableTypeDto>("Table type with the same name already exists.");
+        if (tableExists) return Result.Failure<TableTypeDto>("Table type with the same name already exists.", 404);
 
         var tableType = new TableType()
         {
@@ -35,7 +35,7 @@ public class TableTypeService(ITableTypeRepository tableTypeRepository) : ITable
     public async Task<Result<TableTypeDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(id, ct);
-        if (tableType is null) return Result.Failure<TableTypeDto>("Table type not found.");
+        if (tableType is null) return Result.Failure<TableTypeDto>("Table type not found.", 404);
 
         var tableTypeDto = new TableTypeDto(
             tableType.Id, tableType.Name, tableType.Description,
@@ -54,9 +54,16 @@ public class TableTypeService(ITableTypeRepository tableTypeRepository) : ITable
     public async Task<Result> UpdateAsync(UpdateTableTypeDto dto, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(dto.Id, ct);
-        if (tableType is null) return Result.Failure("Table type not found.");
+        if (tableType is null) return Result.Failure("Table type not found.", 404);
 
-        tableType.Name = dto.Name ?? tableType.Name;
+        if (!string.IsNullOrEmpty(dto.Name) && dto.Name != tableType.Name)
+        {
+            var nameExists = await _tableTypeRepository.ExistsByNameAsync(dto.Name, ct);
+            if (nameExists) return Result.Failure("Table type with the same name already exists.", 409);
+
+            tableType.Name = dto.Name;
+        }
+
         tableType.Description = dto.Description ?? tableType.Description;
         tableType.BasePricePerHour = dto.BasePricePerHour ?? tableType.BasePricePerHour;
 
@@ -67,7 +74,7 @@ public class TableTypeService(ITableTypeRepository tableTypeRepository) : ITable
     public async Task<Result> DeactivateAsync(int id, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(id, ct);
-        if (tableType is null) return Result.Failure("Table type not found.");
+        if (tableType is null) return Result.Failure("Table type not found.", 404);
 
         tableType.IsActive = false;
         await _tableTypeRepository.UpdateAsync(tableType, ct);

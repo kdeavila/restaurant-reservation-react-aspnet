@@ -19,16 +19,16 @@ public class ReservationService(
     {
         var duration = dto.EndTime - dto.StartTime;
         if (duration.TotalMinutes < 30)
-            return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.");
+            return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.", 400);
 
         if (dto.Date.Date < DateTime.UtcNow.Date)
-            return Result.Failure<Reservation>("Reservation date cannot be in the past.");
+            return Result.Failure<Reservation>("Reservation date cannot be in the past.", 400);
 
         if (dto.StartTime >= dto.EndTime)
-            return Result.Failure<Reservation>("End time must be after start time.");
+            return Result.Failure<Reservation>("End time must be after start time.", 400);
 
         if (basePrice < 0 || totalPrice < 0)
-            return Result.Failure<Reservation>("Prices must be non-negative.");
+            return Result.Failure<Reservation>("Prices must be non-negative.", 400);
 
         var reservation = new Reservation()
         {
@@ -54,16 +54,16 @@ public class ReservationService(
         (UpdateReservationDto dto, decimal? basePrice, decimal? totalPrice, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
-        if (reservation is null) return Result.Failure("Reservation not found.");
+        if (reservation is null) return Result.Failure("Reservation not found.", 404);
 
         if (dto is { EndTime: not null, StartTime: not null })
         {
             var duration = dto.EndTime.Value - dto.StartTime.Value;
             if (duration.TotalMinutes < 30)
-                return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.");
+                return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.", 400);
 
             if (dto.StartTime >= dto.EndTime)
-                return Result.Failure<Reservation>("End time must be after start time.");
+                return Result.Failure<Reservation>("End time must be after start time.", 400);
         }
 
         reservation.TableId = dto.TableId ?? reservation.TableId;
@@ -93,10 +93,10 @@ public class ReservationService(
     public async Task<Result> CancelReservationAsync(int id, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(id, ct);
-        if (reservation is null) return Result.Failure("Reservation not found.");
+        if (reservation is null) return Result.Failure("Reservation not found.", 404);
 
         if (reservation.Status == ReservationStatus.Cancelled)
-            return Result.Failure("Reservation is already cancelled.");
+            return Result.Failure("Reservation is already cancelled.", 400);
         
         reservation.Status = ReservationStatus.Cancelled;
         reservation.UpdatedAt = DateTime.UtcNow;

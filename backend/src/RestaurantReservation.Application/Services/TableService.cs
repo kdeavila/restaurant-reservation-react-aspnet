@@ -16,7 +16,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
     public async Task<Result<TableDto>> CreateTableAsync(CreateTableDto dto, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId, ct);
-        if (tableType is null) return Result.Failure<TableDto>("Table type not found");
+        if (tableType is null) return Result.Failure<TableDto>("Table type not found", 404);
 
         // Generate the code for the tables, including the table type and adding the name and code. e.g. VIP01;
         var existingTables = await _tableRepository.GetByTableTypeIdAsync(dto.TableTypeId, ct);
@@ -24,6 +24,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
 
         var table = new Table()
         {
+            Code = code,
             Capacity = dto.Capacity,
             Location = dto.Location,
             TableTypeId = dto.TableTypeId,
@@ -40,7 +41,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
     public async Task<Result<TableDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(id, ct);
-        if (table is null) return Result.Failure<TableDto>("Table not found");
+        if (table is null) return Result.Failure<TableDto>("Table not found", 404);
 
         var tableDto = new TableDto(table.Id, table.Code, table.Capacity, table.Location, table.TableTypeId,
             table.Status.ToString());
@@ -58,7 +59,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
     public async Task<Result> UpdateTableAsync(UpdateTableDto dto, CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(dto.Id, ct);
-        if (table is null) return Result.Failure("Table not found");
+        if (table is null) return Result.Failure("Table not found", 404);
 
         table.Capacity = dto.Capacity ?? table.Capacity;
         table.Location = dto.Location ?? table.Location;

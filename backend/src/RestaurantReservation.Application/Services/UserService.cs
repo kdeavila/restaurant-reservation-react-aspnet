@@ -14,7 +14,7 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<Result<UserDto>> RegisterUserAsync(CreateUserDto dto, CancellationToken ct = default)
     {
         var existing = await _userRepository.GetByEmailAsync(dto.Email, ct);
-        if (existing is not null) return Result.Failure<UserDto>("A user with this email already exists.");
+        if (existing is not null) return Result.Failure<UserDto>("A user with this email already exists.", 409);
 
         var user = new User()
         {
@@ -33,11 +33,12 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<Result<UserDto>> AuthenticateAsync(LoginDto dto, CancellationToken ct = default)
     {
+        // TODO: Implement JWT token generation and return token along with user info
         var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
-        if (user is null) return Result.Failure<UserDto>("Invalid email or password.");
+        if (user is null) return Result.Failure<UserDto>("Invalid email or password.", 401);
 
         var isValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-        if (!isValid) return Result.Failure<UserDto>("Invalid email or password.");
+        if (!isValid) return Result.Failure<UserDto>("Invalid email or password.", 401);
 
         var userDto = new UserDto(user.Id, user.Username, user.Email, user.Role.ToString(), user.Status.ToString());
         return Result.Success(userDto);
@@ -46,7 +47,7 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<Result<UserDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var user = await _userRepository.GetByIdAsync(id, ct);
-        if (user is null) return Result.Failure<UserDto>("User not found.");
+        if (user is null) return Result.Failure<UserDto>("User not found.", 404);
 
         var userDto = new UserDto(user.Id, user.Username, user.Email, user.Role.ToString(), user.Status.ToString());
         return Result.Success(userDto);
@@ -61,7 +62,7 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<Result> UpdateUserAsync(UpdateUserDto dto, CancellationToken ct = default)
     {
         var user = await _userRepository.GetByIdAsync(dto.Id, ct);
-        if (user is null) return Result.Failure("User not found.");
+        if (user is null) return Result.Failure("User not found.", 404);
 
         user.Username = dto.Username ?? user.Username;
         user.Email = dto.Email ?? user.Email;
@@ -74,7 +75,7 @@ public class UserService(IUserRepository userRepository) : IUserService
     public async Task<Result> DeactivateUserAsync(int id, CancellationToken ct = default)
     {
         var user = await _userRepository.GetByIdAsync(id, ct);
-        if (user is null) return Result.Failure("User not found.");
+        if (user is null) return Result.Failure("User not found.", 404);
 
         user.Status = UserStatus.Inactive;
         await _userRepository.UpdateAsync(user, ct);
