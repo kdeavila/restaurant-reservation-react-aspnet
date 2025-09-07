@@ -61,11 +61,19 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
         var table = await _tableRepository.GetByIdAsync(dto.Id, ct);
         if (table is null) return Result.Failure("Table not found", 404);
 
+        if (dto.TableTypeId.HasValue && dto.TableTypeId.Value != table.TableTypeId)
+        {
+            return Result.Failure(
+                "Cannot change table type once created. Please create a new table instead.",
+                400
+            );
+        }
+
         table.Capacity = dto.Capacity ?? table.Capacity;
         table.Location = dto.Location ?? table.Location;
-        table.TableTypeId = dto.TableTypeId ?? table.TableTypeId;
 
-        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<TableStatus>(dto.Status, true, out var parsed))
+        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<TableStatus>
+                (dto.Status, true, out var parsed))
             table.Status = parsed;
 
         await _tableRepository.UpdateAsync(table, ct);
@@ -74,6 +82,9 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
 
     public async Task<Result> DeleteTableAsync(int id, CancellationToken ct = default)
     {
+        var table = await _tableRepository.GetByIdAsync(id, ct);
+        if (table is null) return Result.Failure("Table not found", 404);
+
         await _tableRepository.DeleteAsync(id, ct);
         return Result.Success();
     }

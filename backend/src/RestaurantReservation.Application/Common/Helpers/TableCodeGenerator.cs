@@ -1,5 +1,3 @@
-using RestaurantReservation.Application.Interfaces.Repositories;
-
 namespace RestaurantReservation.Application.Common.Helpers;
 
 public class TableCodeGenerator()
