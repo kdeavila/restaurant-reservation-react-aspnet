@@ -1,8 +1,10 @@
+using Microsoft.VisualBasic.CompilerServices;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.PricingRule;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
+using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -14,11 +16,26 @@ public class PricingRuleService(
     private readonly IPricingRuleRepository _pricingRuleRepository = ruleRepo;
     private readonly IPricingRuleDaysRepository _pricingRuleDaysRepository = daysRepo;
 
-    public async Task<Result<PricingRuleDto>> CreatePricingRuleAsync(
+    public async Task<Result<PricingRule>> CreatePricingRuleAsync(
         CreatePricingRuleDto dto, CancellationToken ct = default)
     {
+        if (string.IsNullOrEmpty(dto.RuleName))
+            return Result.Failure<PricingRule>("RuleName cannot be empty.", 400);
+
+        if (string.IsNullOrEmpty(dto.RuleType))
+            return Result.Failure<PricingRule>("RuleType cannot be empty.", 400);
+
+        if (dto.StartTime >= dto.EndTime)
+            return Result.Failure<PricingRule>("EndTime must be after StartTime.", 400);
+
+        if (dto.StartDate >= dto.EndDate)
+            return Result.Failure<PricingRule>("EndDate must be after StartDate", 400);
+
+        if (dto.SurchargePercentage is < 0 or > 100)
+            return Result.Failure<PricingRule>("SurchargePercentage must be between 0 and 100", 400);
+
         if (!dto.DaysOfWeek.Any())
-            return Result.Failure<PricingRuleDto>("At least one day of the week must be specified.", 400);
+            return Result.Failure<PricingRule>("At least one day of the week must be specified.", 400);
 
         var pricingRule = new PricingRule()
         {
@@ -35,22 +52,7 @@ public class PricingRuleService(
         };
 
         await _pricingRuleRepository.AddAsync(pricingRule, ct);
-
-        var pricingRuleDays = dto.DaysOfWeek.Select(day => new PricingRuleDays()
-        {
-            PricingRuleId = pricingRule.Id,
-            DayOfWeek = day
-        }).ToList();
-
-        foreach (var prd in pricingRuleDays)
-            await _pricingRuleDaysRepository.AddAsync(prd, ct);
-
-        var pricingRuleDto = new PricingRuleDto(
-            pricingRule.Id, pricingRule.RuleName, pricingRule.RuleType, pricingRule.StartTime, pricingRule.EndTime,
-            pricingRule.SurchargePercentage, pricingRule.StartDate, pricingRule.EndDate, pricingRule.TableTypeId,
-            pricingRule.IsActive, dto.DaysOfWeek
-        );
-        return Result.Success(pricingRuleDto);
+        return Result.Success(pricingRule);
     }
 
     public async Task<Result<PricingRuleDto>> GetByIdAsync(int id, CancellationToken ct = default)

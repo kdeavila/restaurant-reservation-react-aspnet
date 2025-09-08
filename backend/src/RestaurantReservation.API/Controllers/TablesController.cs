@@ -22,7 +22,6 @@ public class TablesController(ITableService tableService) : ControllerBase
     public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
     {
         var result = await _tableService.GetByIdAsync(id, ct);
-
         if (result.IsFailure) return StatusCode(result.StatusCode, result.Error);
 
         return Ok(result.Value);
@@ -38,7 +37,7 @@ public class TablesController(ITableService tableService) : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
     }
-    
+
     [HttpPatch("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTableDto dto, CancellationToken ct = default)
     {

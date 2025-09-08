@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Application.Services;
+using RestaurantReservation.Application.UseCases.PricingRules;
 using RestaurantReservation.Application.UseCases.Reservations;
 using RestaurantReservation.Infrastructure.Persistence;
 using RestaurantReservation.Infrastructure.Persistence.Seeding;
@@ -34,11 +35,13 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITableService, TableService>();
 builder.Services.AddScoped<ITableTypeService, TableTypeService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IPricingRuleService, PricingRuleService>();
 builder.Services.AddScoped<IPricingService, PricingService>();
 
 // Register UseCases
 builder.Services.AddScoped<CreateReservationUseCase>();
 builder.Services.AddScoped<UpdateReservationUseCase>();
+builder.Services.AddScoped<CreatePricingRuleUseCase>();
 
 // Register Helpers (there are no helpers yet, but this is where they would go)
 
