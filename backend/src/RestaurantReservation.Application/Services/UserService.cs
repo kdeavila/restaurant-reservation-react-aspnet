@@ -33,7 +33,7 @@ public class UserService(IUserRepository userRepository) : IUserService
 
     public async Task<Result<UserDto>> AuthenticateAsync(LoginDto dto, CancellationToken ct = default)
     {
-        // TODO: Implement JWT token generation and return token along with user info
+        // TODO: Implement JWT token generation and return token along with user info.
         var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
         if (user is null) return Result.Failure<UserDto>("Invalid email or password.", 401);
 
