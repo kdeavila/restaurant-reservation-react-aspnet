@@ -45,6 +45,9 @@ public class PricingRulesController(
     public async Task<IActionResult> Update(
         int id, UpdatePricingRuleDto dto, CancellationToken ct = default)
     {
+        if (id != dto.Id)
+            return BadRequest("ID in URL does not match ID in body.");
+
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var result = await _pricingRuleService.UpdatePricingRuleAsync(dto, ct);
