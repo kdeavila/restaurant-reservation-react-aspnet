@@ -55,4 +55,11 @@ public class PricingRulesController(
             ? StatusCode(result.StatusCode, result.Error)
             : NoContent();
     }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    {
+        var result = await _pricingRuleService.DeletePricingRuleAsync(id, ct);
+        return result.IsFailure ? StatusCode(result.StatusCode, result.Error) : NoContent();
+    }
 }
