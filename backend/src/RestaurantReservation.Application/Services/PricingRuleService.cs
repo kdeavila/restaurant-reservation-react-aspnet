@@ -10,11 +10,13 @@ namespace RestaurantReservation.Application.Services;
 
 public class PricingRuleService(
     IPricingRuleRepository ruleRepo,
-    IPricingRuleDaysRepository daysRepo
+    IPricingRuleDaysRepository daysRepo,
+    ITableTypeRepository _tableTypeRepository
 ) : IPricingRuleService
 {
     private readonly IPricingRuleRepository _pricingRuleRepository = ruleRepo;
     private readonly IPricingRuleDaysRepository _pricingRuleDaysRepository = daysRepo;
+    private readonly ITableTypeRepository _tableTypeRepository = _tableTypeRepository;
 
     public async Task<Result<PricingRule>> CreatePricingRuleAsync(
         CreatePricingRuleDto dto, CancellationToken ct = default)
@@ -94,6 +96,29 @@ public class PricingRuleService(
         var rule = await _pricingRuleRepository.GetByIdAsync(dto.Id, ct);
         if (rule is null) return Result.Failure("Pricing rule not found.", 404);
 
+        if (dto.TableTypeId.HasValue)
+        {
+            var tableTypeExists = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId.Value, ct);
+
+            if (tableTypeExists is null)
+                return Result.Failure("Table type not found.", 404);
+        }
+
+        if (dto.RuleName != null && string.IsNullOrEmpty(dto.RuleName))
+            return Result.Failure("RuleName cannot be empty.", 400);
+
+        if (dto.RuleType != null && string.IsNullOrEmpty(dto.RuleType))
+            return Result.Failure("RuleType cannot be empty.", 400);
+
+        if (dto.StartTime.HasValue && dto.EndTime.HasValue && dto.StartTime.Value >= dto.EndTime.Value)
+            return Result.Failure("EndTime must be after StartTime.", 400);
+
+        if (dto.StartDate.HasValue && dto.EndDate.HasValue && dto.StartDate.Value >= dto.EndDate.Value)
+            return Result.Failure("EndDate must be after StartDate", 400);
+
+        if (dto.SurchargePercentage.HasValue && (dto.SurchargePercentage < 0 || dto.SurchargePercentage > 100))
+            return Result.Failure("SurchargePercentage must be between 0 and 100", 400);
+
         rule.RuleName = dto.RuleName ?? rule.RuleName;
         rule.RuleType = dto.RuleType ?? rule.RuleType;
         rule.StartTime = dto.StartTime ?? rule.StartTime;
@@ -106,16 +131,23 @@ public class PricingRuleService(
 
         await _pricingRuleRepository.UpdateAsync(rule, ct);
 
-        if (dto.DaysOfWeek is null || !dto.DaysOfWeek.Any()) return Result.Success();
-        await _pricingRuleDaysRepository.DeleteByPricingRuleIdAsync(rule.Id, ct);
-
-        var dayEntities = dto.DaysOfWeek.Select(day => new PricingRuleDays
+        if (dto.DaysOfWeek != null)
         {
-            PricingRuleId = rule.Id,
-            DayOfWeek = day
-        }).ToList();
+            if (!dto.DaysOfWeek.Any())
+                return Result.Failure("At least one day of the week must be specified.", 400);
 
-        await _pricingRuleDaysRepository.AddRangeAsync(dayEntities, ct);
+            await _pricingRuleDaysRepository.DeleteByPricingRuleIdAsync(rule.Id, ct);
+
+            var dayEntities = dto.DaysOfWeek.Select(d => new PricingRuleDays()
+            {
+                PricingRuleId = rule.Id,
+                DayOfWeek = d
+            }).ToList();
+
+            await _pricingRuleDaysRepository.AddRangeAsync(dayEntities, ct);
+        }
+        
+        await _pricingRuleRepository.UpdateAsync(rule, ct);
         return Result.Success();
     }
 

@@ -40,4 +40,16 @@ public class PricingRulesController(
             ? StatusCode(result.StatusCode, result.Error)
             : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
     }
+
+    [HttpPatch("{id:int}")]
+    public async Task<IActionResult> Update(
+        int id, UpdatePricingRuleDto dto, CancellationToken ct = default)
+    {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+
+        var result = await _pricingRuleService.UpdatePricingRuleAsync(dto, ct);
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, result.Error)
+            : NoContent();
+    }
 }
