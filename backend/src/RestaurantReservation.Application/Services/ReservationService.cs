@@ -13,9 +13,52 @@ public class ReservationService(
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
 
-    public async Task<Result<Reservation>> CreateReservationAsync(CreateReservationDto dto, decimal basePrice,
-        decimal totalPrice,
-        CancellationToken ct = default)
+    public async Task<IEnumerable<ReservationDto>> GetAllAsync(CancellationToken ct = default)
+    {
+        var reservations = await _reservationRepository.GetAllAsync(ct);
+        return reservations.Select(r => new ReservationDto(
+            r.Id,
+            r.ClientId,
+            $"{r.Client.FirstName} {r.Client.LastName}",
+            r.TableId,
+            r.Table.Code,
+            r.Date,
+            r.StartTime,
+            r.EndTime,
+            r.NumberOfGuests,
+            r.BasePrice,
+            r.TotalPrice,
+            r.Status.ToString(),
+            r.Notes
+        ));
+    }
+
+    public async Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default)
+    {
+        var reservation = await _reservationRepository.GetByIdAsync(id, ct);
+        if (reservation is null) return Result.Failure<ReservationDto>("Reservation not found", 404);
+
+        var reservationDto = new ReservationDto(
+            reservation.Id,
+            reservation.ClientId,
+            $"{reservation.Client.FirstName} {reservation.Client.LastName}",
+            reservation.TableId,
+            reservation.Table.Code,
+            reservation.Date,
+            reservation.StartTime,
+            reservation.EndTime,
+            reservation.NumberOfGuests,
+            reservation.BasePrice,
+            reservation.TotalPrice,
+            reservation.Status.ToString(),
+            reservation.Notes
+        );
+        return Result.Success(reservationDto);
+    }
+
+    public async Task<Result<Reservation>> CreateReservationAsync(
+        CreateReservationDto dto, int createdByUserId,
+        decimal basePrice, decimal totalPrice, CancellationToken ct = default)
     {
         var duration = dto.EndTime - dto.StartTime;
         if (duration.TotalMinutes < 30)
@@ -34,6 +77,7 @@ public class ReservationService(
         {
             ClientId = dto.ClientId,
             TableId = dto.TableId,
+            CreatedByUserId = createdByUserId,
             Date = dto.Date,
             StartTime = dto.StartTime,
             EndTime = dto.EndTime,
@@ -43,7 +87,7 @@ public class ReservationService(
             Status = ReservationStatus.Pending,
             Notes = dto.Notes ?? string.Empty,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            UpdatedAt = DateTime.UtcNow,
         };
 
         await _reservationRepository.AddAsync(reservation, ct);
@@ -97,10 +141,10 @@ public class ReservationService(
 
         if (reservation.Status == ReservationStatus.Cancelled)
             return Result.Failure("Reservation is already cancelled.", 400);
-        
+
         reservation.Status = ReservationStatus.Cancelled;
         reservation.UpdatedAt = DateTime.UtcNow;
-        
+
         await _reservationRepository.UpdateAsync(reservation, ct);
         return Result.Success();
     }

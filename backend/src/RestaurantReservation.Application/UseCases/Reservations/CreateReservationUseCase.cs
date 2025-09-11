@@ -19,7 +19,8 @@ public class CreateReservationUseCase(
     private readonly IPricingService _pricingService = pricingService;
     private readonly IReservationService _reservationService = reservationService;
 
-    public async Task<Result<ReservationDto>> ExecuteAsync(CreateReservationDto dto, CancellationToken ct = default)
+    public async Task<Result<ReservationDto>> ExecuteAsync(
+        CreateReservationDto dto, int currentUserId, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
         if (client is null || client.Status != ClientStatus.Active)
@@ -46,7 +47,7 @@ public class CreateReservationUseCase(
         var (basePrice, totalPrice) = priceResult.Value;
 
         var reservation = await
-            _reservationService.CreateReservationAsync(dto, basePrice, totalPrice, ct);
+            _reservationService.CreateReservationAsync(dto, currentUserId, basePrice, totalPrice, ct);
 
         if (reservation.IsFailure)
             return Result.Failure<ReservationDto>(reservation.Error, priceResult.StatusCode);
