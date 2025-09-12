@@ -7,14 +7,15 @@ using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.Services;
 
-public class UserService(IUserRepository userRepository) : IUserService
+public class UserService(IUserRepository userRepository, ITokenService tokenService) : IUserService
 {
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly ITokenService _tokenService = tokenService;
 
-    public async Task<Result<UserDto>> RegisterUserAsync(CreateUserDto dto, CancellationToken ct = default)
+    public async Task<Result<AuthResponse>> RegisterUserAsync(CreateUserDto dto, CancellationToken ct = default)
     {
-        var existing = await _userRepository.GetByEmailAsync(dto.Email, ct);
-        if (existing is not null) return Result.Failure<UserDto>("A user with this email already exists.", 409);
+        if (await _userRepository.GetByEmailAsync(dto.Email, ct) is not null)
+            return Result.Failure<AuthResponse>("Email is already in use.", 409);
 
         var user = new User()
         {
@@ -27,21 +28,40 @@ public class UserService(IUserRepository userRepository) : IUserService
         };
 
         await _userRepository.AddAsync(user, ct);
-        var userDto = new UserDto(user.Id, user.Username, user.Email, user.Role.ToString(), user.Status.ToString());
+
+        var token = _tokenService.GenerateToken(user);
+        var userDto = new AuthResponse(
+            user.Id,
+            user.Username,
+            user.Email,
+            user.Role.ToString(),
+            user.Status.ToString(),
+            token
+        );
         return Result.Success(userDto);
     }
 
-    public async Task<Result<UserDto>> AuthenticateAsync(LoginDto dto, CancellationToken ct = default)
+    public async Task<Result<AuthResponse>> LoginAsync(LoginDto dto, CancellationToken ct = default)
     {
-        // TODO: Implement JWT token generation and return token along with user info.
         var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
-        if (user is null) return Result.Failure<UserDto>("Invalid email or password.", 401);
+        if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            return Result.Failure<AuthResponse>("Invalid credentials.", 401);
 
-        var isValid = BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash);
-        if (!isValid) return Result.Failure<UserDto>("Invalid email or password.", 401);
+        if (user.Status != UserStatus.Active)
+            return Result.Failure<AuthResponse>("User account inactive.", 403);
 
-        var userDto = new UserDto(user.Id, user.Username, user.Email, user.Role.ToString(), user.Status.ToString());
-        return Result.Success(userDto);
+        var token = _tokenService.GenerateToken(user);
+
+        var authResponse = new AuthResponse(
+            user.Id,
+            user.Username,
+            user.Email,
+            user.Role.ToString(),
+            user.Status.ToString(),
+            token
+        );
+
+        return Result.Success<AuthResponse>(authResponse);
     }
 
     public async Task<Result<UserDto>> GetByIdAsync(int id, CancellationToken ct = default)
@@ -49,27 +69,27 @@ public class UserService(IUserRepository userRepository) : IUserService
         var user = await _userRepository.GetByIdAsync(id, ct);
         if (user is null) return Result.Failure<UserDto>("User not found.", 404);
 
-        var userDto = new UserDto(user.Id, user.Username, user.Email, user.Role.ToString(), user.Status.ToString());
+        var userDto = new UserDto(
+            user.Id,
+            user.Username,
+            user.Email,
+            user.Role.ToString(),
+            user.Status.ToString()
+        );
         return Result.Success(userDto);
     }
 
     public async Task<IEnumerable<UserDto>> GetAllAsync(CancellationToken ct = default)
     {
         var users = await _userRepository.GetAllAsync(ct);
-        return users.Select(u => new UserDto(u.Id, u.Username, u.Email, u.Role.ToString(), u.Status.ToString()));
-    }
-
-    public async Task<Result> UpdateUserAsync(UpdateUserDto dto, CancellationToken ct = default)
-    {
-        var user = await _userRepository.GetByIdAsync(dto.Id, ct);
-        if (user is null) return Result.Failure("User not found.", 404);
-
-        user.Username = dto.Username ?? user.Username;
-        user.Email = dto.Email ?? user.Email;
-        user.Role = dto.Role ?? user.Role;
-
-        await _userRepository.UpdateAsync(user, ct);
-        return Result.Success();
+        return users.Select(u => new UserDto(
+                u.Id,
+                u.Username,
+                u.Email,
+                u.Role.ToString(),
+                u.Status.ToString()
+            )
+        );
     }
 
     public async Task<Result> DeactivateUserAsync(int id, CancellationToken ct = default)
