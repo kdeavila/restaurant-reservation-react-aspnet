@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.DTOs.Reservation;
 using RestaurantReservation.Application.Interfaces.Services;
@@ -34,15 +35,13 @@ public class ReservationsController(
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> CreateReservation(
         [FromBody] CreateReservationDto dto, CancellationToken ct = default)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        // TODO: Add authentication and get user ID from token
-        const int tempUserId = 2;
-
-        var result = await _createReservationUseCase.ExecuteAsync(dto, tempUserId, ct);
+        var result = await _createReservationUseCase.ExecuteAsync(dto, ct);
         return result.IsFailure
             ? StatusCode(result.StatusCode, new { error = result.Error })
             : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);

@@ -72,7 +72,7 @@ public class ReservationService(
 
         if (basePrice < 0 || totalPrice < 0)
             return Result.Failure<Reservation>("Prices must be non-negative.", 400);
-
+        
         var reservation = new Reservation()
         {
             ClientId = dto.ClientId,

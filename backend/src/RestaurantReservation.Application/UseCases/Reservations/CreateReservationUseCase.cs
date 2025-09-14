@@ -20,7 +20,7 @@ public class CreateReservationUseCase(
     private readonly IReservationService _reservationService = reservationService;
 
     public async Task<Result<ReservationDto>> ExecuteAsync(
-        CreateReservationDto dto, int currentUserId, CancellationToken ct = default)
+        CreateReservationDto dto, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
         if (client is null || client.Status != ClientStatus.Active)
@@ -31,9 +31,11 @@ public class CreateReservationUseCase(
             return Result.Failure<ReservationDto>("Table not found or inactive.", 404);
 
         var overlap =
-            await _reservationRepository.ExistsOverlappingReservationAsync(dto.TableId, dto.Date, dto.StartTime,
-                dto.EndTime, ct);
-        if (overlap) return Result.Failure<ReservationDto>("Table is already booked for the selected time.", 409);
+            await _reservationRepository.ExistsOverlappingReservationAsync
+                (dto.TableId, dto.Date, dto.StartTime, dto.EndTime, ct);
+        if (overlap)
+            return Result.Failure<ReservationDto>
+                ("Table is already booked for the selected time.", 409);
 
         var priceResult = await _pricingService.CalculatePriceAsync(
             dto.TableId,
@@ -46,6 +48,7 @@ public class CreateReservationUseCase(
             return Result.Failure<ReservationDto>(priceResult.Error, priceResult.StatusCode);
         var (basePrice, totalPrice) = priceResult.Value;
 
+        var currentUserId = 2;
         var reservation = await
             _reservationService.CreateReservationAsync(dto, currentUserId, basePrice, totalPrice, ct);
 
