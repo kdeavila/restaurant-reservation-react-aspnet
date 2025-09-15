@@ -16,7 +16,7 @@ public class AuthController(IUserService userService) : ControllerBase
         var result = await _userService.RegisterUserAsync(dto, ct);
         return result.IsFailure
             ? StatusCode(result.StatusCode, new { error = result.Error })
-            : Ok(result.Value);
+            : Created($"/api/users/{result.Value.Id}", result.Value);
     }
 
     [HttpPost("login")]

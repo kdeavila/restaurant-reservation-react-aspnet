@@ -12,10 +12,10 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
     private readonly IUserRepository _userRepository = userRepository;
     private readonly ITokenService _tokenService = tokenService;
 
-    public async Task<Result<AuthResponse>> RegisterUserAsync(CreateUserDto dto, CancellationToken ct = default)
+    public async Task<Result<UserDto>> RegisterUserAsync(CreateUserDto dto, CancellationToken ct = default)
     {
         if (await _userRepository.GetByEmailAsync(dto.Email, ct) is not null)
-            return Result.Failure<AuthResponse>("Email is already in use.", 409);
+            return Result.Failure<UserDto>("Email is already in use.", 409);
 
         var user = new User()
         {
@@ -29,14 +29,12 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
 
         await _userRepository.AddAsync(user, ct);
 
-        var token = _tokenService.GenerateToken(user);
-        var userDto = new AuthResponse(
+        var userDto = new UserDto(
             user.Id,
             user.Username,
             user.Email,
             user.Role.ToString(),
-            user.Status.ToString(),
-            token
+            user.Status.ToString()
         );
         return Result.Success(userDto);
     }
