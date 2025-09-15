@@ -4,19 +4,20 @@ using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Infrastructure.Persistence.Seeding;
 
-public class DataSeeder
+public static class DataSeeder
 {
     public static async Task SeedAsync(RestaurantReservationDbContext context)
     {
         await context.Database.MigrateAsync();
 
+        // Admin user
         if (!context.Users.Any())
         {
             context.Users.Add(new User
             {
                 Username = "admin",
                 Email = "admin@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("mysuperpassword"),
                 Role = UserRole.Admin,
                 Status = UserStatus.Active,
                 CreatedAt = DateTime.UtcNow
@@ -24,63 +25,247 @@ public class DataSeeder
             await context.SaveChangesAsync();
         }
 
-        TableType? vipType = null;
+        // Table types
+        TableType vipTableType = null!;
+        TableType standardTableType = null!;
 
         if (!context.TableTypes.Any())
         {
-            var normal = new TableType
-            {
-                Name = "Normal",
-                Description = "Standard dining table",
-                BasePricePerHour = 20,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            var vip = new TableType
+            vipTableType = new TableType
             {
                 Name = "VIP",
-                Description = "Premium dining table",
-                BasePricePerHour = 50,
+                Description = "Premium dining table with exclusive services",
+                BasePricePerHour = 50m,
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
-            context.TableTypes.AddRange(normal, vip);
-            await context.SaveChangesAsync();
+            standardTableType = new TableType
+            {
+                Name = "Standard",
+                Description = "Regular dining table",
+                BasePricePerHour = 25m,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
 
-            vipType = vip;
+            context.TableTypes.AddRange(vipTableType, standardTableType);
+            await context.SaveChangesAsync();
         }
         else
         {
-            vipType = await context.TableTypes.FirstOrDefaultAsync(t => t.Name == "VIP");
+            vipTableType = await context.TableTypes.FirstAsync(t => t.Name == "VIP");
+            standardTableType = await context.TableTypes.FirstAsync(t => t.Name == "Standard");
         }
 
-        if (!context.PricingRules.Any() && vipType != null)
+        // Tables
+        if (!context.Tables.Any())
         {
-            var rule = new PricingRule
+            var tables = new List<Table>
             {
-                RuleName = "Saturday Night Surcharge",
-                RuleType = "Weekend Surcharge",
-                StartTime = new TimeSpan(18, 0, 0),
-                EndTime = new TimeSpan(23, 59, 59),
-                SurchargePercentage = 20m,
-                StartDate = DateTime.UtcNow,
-                EndDate = DateTime.UtcNow.AddYears(5),
-                TableTypeId = vipType.Id,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                new Table
+                {
+                    Code = "VIP01", Capacity = 6, Location = "Main hall", TableTypeId = vipTableType.Id,
+                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                },
+                new Table
+                {
+                    Code = "VIP02", Capacity = 4, Location = "Terrace", TableTypeId = vipTableType.Id,
+                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                },
+                new Table
+                {
+                    Code = "STD01", Capacity = 4, Location = "Main hall", TableTypeId = standardTableType.Id,
+                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                },
+                new Table
+                {
+                    Code = "STD02", Capacity = 2, Location = "Terrace", TableTypeId = standardTableType.Id,
+                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                },
+                new Table
+                {
+                    Code = "STD03", Capacity = 8, Location = "Private room", TableTypeId = standardTableType.Id,
+                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                }
             };
 
-            context.PricingRules.Add(rule);
+            context.Tables.AddRange(tables);
+            await context.SaveChangesAsync();
+        }
+
+        // Clients
+        List<Client> clients = new();
+        if (!context.Clients.Any())
+        {
+            clients = new List<Client>
+            {
+                new Client
+                {
+                    FirstName = "Keyner", LastName = "De Ávila", Email = "kda.ts@gmail.com", Phone = "3022851699",
+                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
+                },
+                new Client
+                {
+                    FirstName = "John", LastName = "Doe", Email = "johndoe_12@yahoo.com", Phone = "4155557285",
+                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
+                },
+                new Client
+                {
+                    FirstName = "Maria", LastName = "Garcia", Email = "maria.garcia@hotmail.com", Phone = "3055551234",
+                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
+                },
+                new Client
+                {
+                    FirstName = "Carlos", LastName = "Rodriguez", Email = "c.rodriguez@gmail.com", Phone = "7865559876",
+                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
+                }
+            };
+
+            context.Clients.AddRange(clients);
+            await context.SaveChangesAsync();
+        }
+        else
+        {
+            clients = await context.Clients.ToListAsync();
+        }
+
+        // Pricing rules
+        if (!context.PricingRules.Any())
+        {
+            var startDate = DateTime.UtcNow;
+            var endDate = DateTime.UtcNow.AddMonths(6);
+
+            var pricingRules = new List<PricingRule>
+            {
+                new PricingRule
+                {
+                    RuleName = "Midday VIP Surcharge",
+                    RuleType = "Peak Hour",
+                    StartTime = new TimeSpan(12, 0, 0),
+                    EndTime = new TimeSpan(14, 0, 0),
+                    SurchargePercentage = 20m,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TableTypeId = vipTableType.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new PricingRule
+                {
+                    RuleName = "Weekend Surcharge",
+                    RuleType = "Weekend",
+                    StartTime = new TimeSpan(18, 0, 0),
+                    EndTime = new TimeSpan(23, 0, 0),
+                    SurchargePercentage = 30m,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TableTypeId = vipTableType.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new PricingRule
+                {
+                    RuleName = "Early Bird Discount",
+                    RuleType = "Discount",
+                    StartTime = new TimeSpan(17, 0, 0),
+                    EndTime = new TimeSpan(18, 30, 0),
+                    SurchargePercentage = -15m,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    TableTypeId = standardTableType.Id,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+
+            context.PricingRules.AddRange(pricingRules);
             await context.SaveChangesAsync();
 
-            context.PricingRuleDays.Add(new PricingRuleDays
+            // Add days for pricing rules
+            var pricingRuleDays = new List<PricingRuleDays>();
+            foreach (var rule in pricingRules)
             {
-                PricingRuleId = rule.Id,
-                DayOfWeek = DaysOfWeek.Saturday
-            });
+                if (rule.RuleName == "Weekend Surcharge")
+                {
+                    pricingRuleDays.Add(new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Friday });
+                    pricingRuleDays.Add(
+                        new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Saturday });
+                }
+                else
+                {
+                    for (int i = 1; i <= 5; i++)
+                    {
+                        pricingRuleDays.Add(new PricingRuleDays
+                        {
+                            PricingRuleId = rule.Id,
+                            DayOfWeek = (DaysOfWeek)i
+                        });
+                    }
+                }
+            }
 
+            context.PricingRuleDays.AddRange(pricingRuleDays);
+            await context.SaveChangesAsync();
+        }
+
+        // Reservations
+        if (!context.Reservations.Any())
+        {
+            var tables = await context.Tables.ToListAsync();
+            var user = await context.Users.FirstAsync();
+            var client = clients.First();
+
+            var reservations = new List<Reservation>
+            {
+                new Reservation
+                {
+                    ClientId = client.Id,
+                    TableId = tables[0].Id,
+                    Date = DateTime.UtcNow.Date.AddDays(1),
+                    StartTime = new TimeSpan(12, 0, 0),
+                    EndTime = new TimeSpan(14, 0, 0),
+                    NumberOfGuests = 4,
+                    BasePrice = 100m,
+                    TotalPrice = 120m,
+                    Status = ReservationStatus.Confirmed,
+                    Notes = "Business meeting",
+                    CreatedByUserId = user.Id,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Reservation
+                {
+                    ClientId = client.Id,
+                    TableId = tables[2].Id,
+                    Date = DateTime.UtcNow.Date.AddDays(2),
+                    StartTime = new TimeSpan(17, 0, 0),
+                    EndTime = new TimeSpan(18, 30, 0),
+                    NumberOfGuests = 2,
+                    BasePrice = 37.5m,
+                    TotalPrice = 31.88m,
+                    Status = ReservationStatus.Confirmed,
+                    Notes = "Romantic dinner",
+                    CreatedByUserId = user.Id,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Reservation
+                {
+                    ClientId = clients[1].Id,
+                    TableId = tables[1].Id,
+                    Date = DateTime.UtcNow.Date.AddDays(7),
+                    StartTime = new TimeSpan(19, 0, 0),
+                    EndTime = new TimeSpan(22, 0, 0),
+                    NumberOfGuests = 3,
+                    BasePrice = 150m,
+                    TotalPrice = 195m,
+                    Status = ReservationStatus.Pending,
+                    Notes = "Birthday celebration",
+                    CreatedByUserId = user.Id,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+
+            context.Reservations.AddRange(reservations);
             await context.SaveChangesAsync();
         }
     }
