@@ -29,7 +29,8 @@ public class ReservationService(
             r.BasePrice,
             r.TotalPrice,
             r.Status.ToString(),
-            r.Notes
+            r.Notes,
+            r.CreatedByUserId
         ));
     }
 
@@ -51,7 +52,8 @@ public class ReservationService(
             reservation.BasePrice,
             reservation.TotalPrice,
             reservation.Status.ToString(),
-            reservation.Notes
+            reservation.Notes,
+            reservation.CreatedByUserId
         );
         return Result.Success(reservationDto);
     }
@@ -72,7 +74,7 @@ public class ReservationService(
 
         if (basePrice < 0 || totalPrice < 0)
             return Result.Failure<Reservation>("Prices must be non-negative.", 400);
-        
+
         var reservation = new Reservation()
         {
             ClientId = dto.ClientId,

@@ -43,7 +43,7 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
         => await _context.Reservations
             .AnyAsync(r =>
                     r.TableId == tableId &&
-                    r.Date == date.Date &&
+                    r.Date == date.Date && 
                     (r.Status != ReservationStatus.Cancelled || r.Status != ReservationStatus.Completed) &&
                     (
                         (startTime >= r.StartTime && startTime < r.EndTime) ||

@@ -45,7 +45,7 @@ public class ReservationsController(
         return result.IsFailure
             ? StatusCode(result.StatusCode, new { error = result.Error })
             : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
-    }
+    }   
 
     [HttpPatch("{id:int}")]
     public async Task<IActionResult> UpdateReservation(

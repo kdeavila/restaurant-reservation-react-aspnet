@@ -10,18 +10,23 @@ public class CreateReservationUseCase(
     IClientRepository clientRepository,
     ITableRepository tableRepository,
     IReservationRepository reservationRepository,
+    ICurrentUserService currentUserService,
     IReservationService reservationService,
     IPricingService pricingService)
 {
     private readonly IClientRepository _clientRepository = clientRepository;
     private readonly ITableRepository _tableRepository = tableRepository;
     private readonly IReservationRepository _reservationRepository = reservationRepository;
+    private readonly ICurrentUserService _currentUserService = currentUserService;
     private readonly IPricingService _pricingService = pricingService;
     private readonly IReservationService _reservationService = reservationService;
 
     public async Task<Result<ReservationDto>> ExecuteAsync(
         CreateReservationDto dto, CancellationToken ct = default)
     {
+        if (_currentUserService.UserId is not int userId)
+            return Result.Failure<ReservationDto>("User not authenticated.", 401);
+
         var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
         if (client is null || client.Status != ClientStatus.Active)
             return Result.Failure<ReservationDto>("Client not found or inactive.", 404);
@@ -29,6 +34,10 @@ public class CreateReservationUseCase(
         var table = await _tableRepository.GetByIdAsync(dto.TableId, ct);
         if (table is null || table.Status != TableStatus.Active)
             return Result.Failure<ReservationDto>("Table not found or inactive.", 404);
+
+        if (dto.NumberOfGuests > table.Capacity)
+            return Result.Failure<ReservationDto>
+                ("The number of guests exceeds the table's capacity", 400);
 
         var overlap =
             await _reservationRepository.ExistsOverlappingReservationAsync
@@ -48,9 +57,8 @@ public class CreateReservationUseCase(
             return Result.Failure<ReservationDto>(priceResult.Error, priceResult.StatusCode);
         var (basePrice, totalPrice) = priceResult.Value;
 
-        var currentUserId = 2;
         var reservation = await
-            _reservationService.CreateReservationAsync(dto, currentUserId, basePrice, totalPrice, ct);
+            _reservationService.CreateReservationAsync(dto, userId, basePrice, totalPrice, ct);
 
         if (reservation.IsFailure)
             return Result.Failure<ReservationDto>(reservation.Error, priceResult.StatusCode);
@@ -69,7 +77,8 @@ public class CreateReservationUseCase(
             r.BasePrice,
             r.TotalPrice,
             r.Status.ToString(),
-            r.Notes
+            r.Notes,
+            r.CreatedByUserId
         );
 
         return Result.Success(reservationDto);
