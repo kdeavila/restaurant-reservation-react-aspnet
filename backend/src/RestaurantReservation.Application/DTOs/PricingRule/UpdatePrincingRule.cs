@@ -13,7 +13,7 @@ public class UpdatePricingRuleDto
     public string? RuleType { get; set; }
     public TimeSpan? StartTime { get; set; }
     public TimeSpan? EndTime { get; set; }
-    [Range(0, 100)]
+    [Range(-100, 100)]
     public decimal? SurchargePercentage { get; set; }
     public DateTime? StartDate { get; set; }
     public DateTime? EndDate { get; set; }

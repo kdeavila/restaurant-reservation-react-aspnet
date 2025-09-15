@@ -11,7 +11,6 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
 {
     private readonly ITableTypeService _tableTypeService = tableTypeService;
 
-    // GET: api/table-types
     [HttpGet]
     public async Task<IActionResult> GetAll(CancellationToken ct = default)
     {
@@ -19,15 +18,15 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
         return Ok(result);
     }
 
-    // GET: api/table-types/{id}
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
     {
         var result = await _tableTypeService.GetByIdAsync(id, ct);
-        return result.IsFailure ? NotFound(result.Error) : Ok(result.Value);
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : NoContent();
     }
 
-    // POST: api/table-types
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateTableTypeDto dto, CancellationToken ct = default)
     {
@@ -35,11 +34,10 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
 
         var result = await _tableTypeService.CreateAsync(dto, ct);
         return result.IsFailure
-            ? Conflict(result.Error)
+            ? StatusCode(result.StatusCode, new { error = result.Error })
             : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
     }
 
-    // PATCH: api/table-types
     [HttpPatch("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTableTypeDto dto, CancellationToken ct = default)
     {
@@ -47,16 +45,8 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var result = await _tableTypeService.UpdateAsync(dto, ct);
-        if (result.IsFailure)
-        {
-            return result.StatusCode switch
-            {
-                404 => NotFound(result.Error),
-                409 => Conflict(result.Error),
-                _ => BadRequest(result.Error)
-            };
-        }
-
-        return NoContent();
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : NoContent();
     }
 }

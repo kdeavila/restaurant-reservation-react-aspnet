@@ -22,9 +22,9 @@ public class TablesController(ITableService tableService) : ControllerBase
     public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
     {
         var result = await _tableService.GetByIdAsync(id, ct);
-        if (result.IsFailure) return StatusCode(result.StatusCode, result.Error);
-
-        return Ok(result.Value);
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : Ok(result.Value);
     }
 
     [HttpPost]
@@ -33,30 +33,29 @@ public class TablesController(ITableService tableService) : ControllerBase
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var result = await _tableService.CreateTableAsync(dto, ct);
-        if (result.IsFailure) return StatusCode(result.StatusCode, result.Error);
-
-        return CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPatch("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateTableDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id) return BadRequest("ID in URL does not match ID in body.");
-
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var result = await _tableService.UpdateTableAsync(dto, ct);
-        if (result.IsFailure) return StatusCode(result.StatusCode, result.Error);
-
-        return NoContent();
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {
         var result = await _tableService.DeleteTableAsync(id, ct);
-        if (result.IsFailure) return StatusCode(result.StatusCode, result.Error);
-
-        return NoContent();
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : NoContent();
     }
 }

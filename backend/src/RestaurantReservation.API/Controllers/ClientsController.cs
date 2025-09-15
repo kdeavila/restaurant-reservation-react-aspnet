@@ -21,7 +21,9 @@ public class ClientsController(IClientService clientService) : ControllerBase
     public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
     {
         var result = await _clientService.GetByIdAsync(id, ct);
-        return result.IsFailure ? NotFound(result.Error) : Ok(result.Value);
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : Ok(result.Value);
     }
 
     [HttpPost]
@@ -31,36 +33,29 @@ public class ClientsController(IClientService clientService) : ControllerBase
 
         var result = await _clientService.CreateClientAsync(dto, ct);
         return result.IsFailure
-            ? Conflict(result.Error)
+            ? StatusCode(result.StatusCode, new { error = result.Error })
             : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
     }
 
     [HttpPatch("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateClientDto dto, CancellationToken ct = default)
+    public async Task<IActionResult> Update
+        (int id, [FromBody] UpdateClientDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id) return BadRequest("ID in URL does not match ID in body.");
-
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var result = await _clientService.UpdateClientAsync(dto, ct);
-
-        if (result.IsFailure)
-        {
-            return (result.StatusCode) switch
-            {
-                404 => NotFound(result.Error),
-                409 => Conflict(result.Error),
-                _ => BadRequest(result.Error)
-            };
-        }
-
-        return NoContent();
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {
-        var result = await _clientService.DeleteClientAsync(id, ct);
-        return result.IsFailure ? NotFound(result.Error) : NoContent();
+        var result = await _clientService.DeactivateClientAsync(id, ct);
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : NoContent();
     }
 }

@@ -48,7 +48,7 @@ public class ReservationsController(
     }   
 
     [HttpPatch("{id:int}")]
-    public async Task<IActionResult> UpdateReservation(
+    public async Task<IActionResult> Update(
         int id, [FromBody] UpdateReservationDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id) return BadRequest(new { error = "ID in URL does not match ID in body." });
@@ -61,7 +61,7 @@ public class ReservationsController(
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> DeleteReservation(int id, CancellationToken ct = default)
+    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {
         var result = await _reservationService.CancelReservationAsync(id, ct);
         return result.IsFailure

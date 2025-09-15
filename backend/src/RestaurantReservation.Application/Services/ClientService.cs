@@ -73,12 +73,14 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         return Result.Success();
     }
 
-    public async Task<Result> DeleteClientAsync(int id, CancellationToken ct = default)
+    public async Task<Result> DeactivateClientAsync(int id, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(id, ct);
         if (client is null) return Result.Failure("Client not found", 404);
 
-        await _clientRepository.DeleteAsync(client.Id, ct);
+        client.Status = ClientStatus.Inactive;
+
+        await _clientRepository.UpdateAsync(client, ct);
         return Result.Success();
     }
 }

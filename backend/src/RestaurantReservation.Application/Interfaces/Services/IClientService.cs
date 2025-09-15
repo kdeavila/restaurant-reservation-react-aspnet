@@ -9,5 +9,5 @@ public interface IClientService
     Task<Result<ClientDto>> GetByIdAsync(int id, CancellationToken ct = default);
     Task<IEnumerable<ClientDto>> GetAllAsync(CancellationToken ct = default);
     Task<Result> UpdateClientAsync(UpdateClientDto dto, CancellationToken ct = default);
-    Task<Result> DeleteClientAsync(int id, CancellationToken ct = default);
+    Task<Result> DeactivateClientAsync(int id, CancellationToken ct = default);
 }

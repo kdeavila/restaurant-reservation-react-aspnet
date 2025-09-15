@@ -13,6 +13,8 @@ public class AuthController(IUserService userService) : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] CreateUserDto dto, CancellationToken ct = default)
     {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        
         var result = await _userService.RegisterUserAsync(dto, ct);
         return result.IsFailure
             ? StatusCode(result.StatusCode, new { error = result.Error })
@@ -22,6 +24,8 @@ public class AuthController(IUserService userService) : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto dto, CancellationToken ct)
     {
+        if (!ModelState.IsValid) return BadRequest(ModelState);
+        
         var result = await _userService.LoginAsync(dto, ct);
         return result.IsFailure
             ? Unauthorized(new { error = result.Error })

@@ -26,7 +26,9 @@ public class PricingRulesController(
     public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
     {
         var result = await _pricingRuleService.GetByIdAsync(id, ct);
-        return result.IsFailure ? NotFound(result.Error) : Ok(result.Value);
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
+            : NoContent();
     }
 
     [HttpPost]
@@ -37,7 +39,7 @@ public class PricingRulesController(
 
         var result = await _createPricingRuleUseCase.ExecuteAsync(dto, ct);
         return result.IsFailure
-            ? StatusCode(result.StatusCode, result.Error)
+            ? StatusCode(result.StatusCode, new { error = result.Error })
             : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
     }
 
@@ -47,12 +49,11 @@ public class PricingRulesController(
     {
         if (id != dto.Id)
             return BadRequest("ID in URL does not match ID in body.");
-
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var result = await _pricingRuleService.UpdatePricingRuleAsync(dto, ct);
         return result.IsFailure
-            ? StatusCode(result.StatusCode, result.Error)
+            ? StatusCode(result.StatusCode, new { error = result.Error })
             : NoContent();
     }
 
@@ -60,6 +61,8 @@ public class PricingRulesController(
     public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {
         var result = await _pricingRuleService.DeletePricingRuleAsync(id, ct);
-        return result.IsFailure ? StatusCode(result.StatusCode, result.Error) : NoContent();
+        return result.IsFailure 
+            ? StatusCode(result.StatusCode, new { error = result.Error }) 
+            : NoContent();
     }
 }
