@@ -70,8 +70,6 @@ builder.Services.AddScoped<CreateReservationUseCase>();
 builder.Services.AddScoped<UpdateReservationUseCase>();
 builder.Services.AddScoped<CreatePricingRuleUseCase>();
 
-// Register Helpers (there are no helpers yet, but this is where they would go)
-
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
