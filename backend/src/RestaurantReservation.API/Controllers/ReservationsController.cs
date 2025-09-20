@@ -19,9 +19,11 @@ public class ReservationsController(
     private readonly IReservationService _reservationService = reservationService;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct = default)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] ReservationQueryParams query,
+        CancellationToken ct = default)
     {
-        var result = await _reservationService.GetAllAsync(ct);
+        var result = await _reservationService.GetAllAsync(query, ct);
         return Ok(result);
     }
 
@@ -45,7 +47,7 @@ public class ReservationsController(
         return result.IsFailure
             ? StatusCode(result.StatusCode, new { error = result.Error })
             : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
-    }   
+    }
 
     [HttpPatch("{id:int}")]
     public async Task<IActionResult> Update(

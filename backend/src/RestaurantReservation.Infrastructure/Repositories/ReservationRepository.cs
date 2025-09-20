@@ -10,18 +10,17 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
 {
     private readonly RestaurantReservationDbContext _context = context;
 
+    public IQueryable<Reservation> Query()
+        => _context.Reservations
+            .Include(r => r.Client)
+            .Include(r => r.Table)
+            .AsNoTracking();
+    
     public async Task<Reservation?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.Reservations
             .Include(r => r.Client)
             .Include(r => r.Table)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
-
-    public async Task<IEnumerable<Reservation>> GetAllAsync(CancellationToken ct = default)
-        => await _context.Reservations
-            .Include(r => r.Client)
-            .Include(r => r.Table)
-            .AsNoTracking()
-            .ToListAsync(ct);
 
     public async Task<IEnumerable<Reservation>> GetByClientIdAsync(int clientId, CancellationToken ct = default)
         => await _context.Reservations

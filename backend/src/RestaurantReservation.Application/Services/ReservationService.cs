@@ -4,6 +4,7 @@ using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
+using Microsoft.EntityFrameworkCore;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -13,25 +14,51 @@ public class ReservationService(
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
 
-    public async Task<IEnumerable<ReservationDto>> GetAllAsync(CancellationToken ct = default)
+    public async Task<IEnumerable<ReservationDto>> GetAllAsync(
+        ReservationQueryParams queryParams, CancellationToken ct = default)
     {
-        var reservations = await _reservationRepository.GetAllAsync(ct);
-        return reservations.Select(r => new ReservationDto(
-            r.Id,
-            r.ClientId,
-            $"{r.Client.FirstName} {r.Client.LastName}",
-            r.TableId,
-            r.Table.Code,
-            r.Date,
-            r.StartTime,
-            r.EndTime,
-            r.NumberOfGuests,
-            r.BasePrice,
-            r.TotalPrice,
-            r.Status.ToString(),
-            r.Notes,
-            r.CreatedByUserId
-        ));
+        var query = _reservationRepository.Query();
+
+        if (queryParams.ClientId.HasValue)
+            query = query.Where(r => r.ClientId == queryParams.ClientId.Value);
+
+        if (queryParams.TableId.HasValue)
+            query = query.Where(r => r.TableId == queryParams.TableId.Value);
+
+        if (queryParams.Date.HasValue)
+            query = query.Where(r => r.Date == queryParams.Date.Value);
+
+        if (queryParams.StartTime.HasValue)
+            query = query.Where(r => r.StartTime >= queryParams.StartTime.Value);
+
+        if (queryParams.EndTime.HasValue)
+            query = query.Where(r => r.EndTime <= queryParams.EndTime.Value);
+
+        if (!string.IsNullOrEmpty(queryParams.Status))
+            query = query.Where(r => r.Status.ToString() == queryParams.Status);
+
+        query = query
+            .Skip((queryParams.PageNumber - 1) * queryParams.PageSize)
+            .Take(queryParams.PageSize);
+
+        return await query
+            .Select(r => new ReservationDto(
+                r.Id,
+                r.ClientId,
+                $"{r.Client.FirstName} {r.Client.LastName}",
+                r.TableId,
+                r.Table.Code,
+                r.Date,
+                r.StartTime,
+                r.EndTime,
+                r.NumberOfGuests,
+                r.BasePrice,
+                r.TotalPrice,
+                r.Status.ToString(),
+                r.Notes,
+                r.CreatedByUserId
+            ))
+            .ToListAsync(ct);
     }
 
     public async Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default)
