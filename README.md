@@ -333,4 +333,4 @@ This is a personal project, but suggestions and feedback are welcome!
 
 ---
 
-*This README will be updated as the project progresses. Last updated: 2025-01-19*
+*This README will be updated as the project progresses. Last updated: 2025-09-21*
