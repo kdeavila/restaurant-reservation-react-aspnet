@@ -1,4 +1,5 @@
 using RestaurantReservation.Application.Common;
+using RestaurantReservation.Application.Common.Pagination;
 using RestaurantReservation.Application.DTOs.Reservation;
 using RestaurantReservation.Domain.Entities;
 
@@ -8,7 +9,7 @@ public interface IReservationService
 {
     Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default);
 
-    Task<IEnumerable<ReservationDto>> GetAllAsync(
+    Task<(IEnumerable<ReservationDto> Data, PaginationMetadata Pagination)> GetAllAsync(
         ReservationQueryParams query, CancellationToken ct = default);
 
     Task<Result<Reservation>> CreateReservationAsync(

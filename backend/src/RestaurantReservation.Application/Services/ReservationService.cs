@@ -5,6 +5,7 @@ using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
+using RestaurantReservation.Application.Common.Pagination;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -14,8 +15,9 @@ public class ReservationService(
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
 
-    public async Task<IEnumerable<ReservationDto>> GetAllAsync(
-        ReservationQueryParams queryParams, CancellationToken ct = default)
+    public async Task<(IEnumerable<ReservationDto> Data, PaginationMetadata Pagination)> GetAllAsync(
+        ReservationQueryParams queryParams,
+        CancellationToken ct = default)
     {
         var query = _reservationRepository.Query();
 
@@ -37,11 +39,12 @@ public class ReservationService(
         if (!string.IsNullOrEmpty(queryParams.Status))
             query = query.Where(r => r.Status.ToString() == queryParams.Status);
 
-        query = query
-            .Skip((queryParams.PageNumber - 1) * queryParams.PageSize)
-            .Take(queryParams.PageSize);
+        var totalCount = await query.CountAsync(ct);
 
-        return await query
+        var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
+        var data = await query
+            .Skip(skipNumber)
+            .Take(queryParams.PageSize)
             .Select(r => new ReservationDto(
                 r.Id,
                 r.ClientId,
@@ -59,6 +62,16 @@ public class ReservationService(
                 r.CreatedByUserId
             ))
             .ToListAsync(ct);
+
+        var pagination = new PaginationMetadata
+        {
+            Page = queryParams.Page,
+            PageSize = queryParams.PageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)queryParams.PageSize)
+        };
+
+        return (data, pagination);
     }
 
     public async Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default)

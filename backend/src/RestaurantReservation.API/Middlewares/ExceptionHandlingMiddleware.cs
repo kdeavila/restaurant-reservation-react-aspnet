@@ -1,11 +1,12 @@
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Exceptions;
+using RestaurantReservation.Application.Common.Responses;
 
 namespace RestaurantReservation.API.Middlewares;
 
-public class ExceptionHandlingMiddleware
+public class ExceptionHandlingMiddleware(RequestDelegate next)
 {
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+    public async Task InvokeAsync(HttpContext context)
     {
         try
         {
@@ -23,7 +24,8 @@ public class ExceptionHandlingMiddleware
         {
             ValidationException vex => ApiResponse<object>.ErrorResponse(
                 vex.Message,
-                ErrorCodes.ValidationError),
+                ErrorCodes.ValidationError,
+                StatusCodes.Status400BadRequest),
 
             NotFoundException nex => ApiResponse<object>.ErrorResponse(
                 nex.Message,
