@@ -95,7 +95,8 @@ public class ReservationService(
     public async Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(id, ct);
-        if (reservation is null) return Result.Failure<ReservationDto>("Reservation not found", 404);
+        if (reservation is null)
+            return Result.Failure<ReservationDto>("Reservation not found", 404);
 
         var reservationDto = new ReservationDto(
             reservation.Id,

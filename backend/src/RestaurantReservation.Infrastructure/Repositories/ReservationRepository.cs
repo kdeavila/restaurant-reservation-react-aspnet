@@ -15,11 +15,13 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
             .Include(r => r.Client)
             .Include(r => r.Table)
             .AsNoTracking();
-    
+
     public async Task<Reservation?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.Reservations
             .Include(r => r.Client)
             .Include(r => r.Table)
+            .Include(r => r.User)
+            .AsNoTracking()
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
     public async Task<IEnumerable<Reservation>> GetByClientIdAsync(int clientId, CancellationToken ct = default)
@@ -42,7 +44,7 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
         => await _context.Reservations
             .AnyAsync(r =>
                     r.TableId == tableId &&
-                    r.Date == date.Date && 
+                    r.Date == date.Date &&
                     (r.Status != ReservationStatus.Cancelled || r.Status != ReservationStatus.Completed) &&
                     (
                         (startTime >= r.StartTime && startTime < r.EndTime) ||
