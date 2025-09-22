@@ -53,7 +53,7 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
             .WithMany(t => t.Reservations)
             .HasForeignKey(r => r.TableId);
 
-        builder.HasOne(r => r.CreatedByUser)
+        builder.HasOne(r => r.User)
             .WithMany(u => u.ReservationsCreated)
             .HasForeignKey(r => r.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);

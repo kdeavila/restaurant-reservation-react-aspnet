@@ -40,7 +40,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         // Navigation
         builder.HasMany(u => u.ReservationsCreated)
-            .WithOne(r => r.CreatedByUser)
+            .WithOne(r => r.User)
             .HasForeignKey(r => r.CreatedByUserId)
             .OnDelete(DeleteBehavior.Restrict);
     }

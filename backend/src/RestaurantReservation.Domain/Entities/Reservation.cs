@@ -20,7 +20,7 @@ public class Reservation
     public int CreatedByUserId { get; set; }
 
     // Navigation
-    public User CreatedByUser { get; set; } = null!;
+    public User User { get; set; } = null!;
     public Client Client { get; set; } = null!;
     public Table Table { get; set; } = null!;
 }

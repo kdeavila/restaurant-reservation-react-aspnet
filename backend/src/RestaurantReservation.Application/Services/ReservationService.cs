@@ -6,6 +6,9 @@ using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Common.Pagination;
+using RestaurantReservation.Application.DTOs.Client;
+using RestaurantReservation.Application.DTOs.Table;
+using RestaurantReservation.Application.DTOs.User;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -47,10 +50,20 @@ public class ReservationService(
             .Take(queryParams.PageSize)
             .Select(r => new ReservationDto(
                 r.Id,
-                r.ClientId,
-                $"{r.Client.FirstName} {r.Client.LastName}",
-                r.TableId,
-                r.Table.Code,
+                new ClientDto(
+                    r.Client.Id,
+                    r.Client.FirstName,
+                    r.Client.LastName,
+                    r.Client.Email,
+                    r.Client.Phone,
+                    r.Client.Status.ToString()),
+                new TableDto(
+                    r.Table.Id,
+                    r.Table.Code,
+                    r.Table.Capacity,
+                    r.Table.Location,
+                    r.Table.TableTypeId,
+                    r.Table.Status.ToString()),
                 r.Date,
                 r.StartTime,
                 r.EndTime,
@@ -59,7 +72,12 @@ public class ReservationService(
                 r.TotalPrice,
                 r.Status.ToString(),
                 r.Notes,
-                r.CreatedByUserId
+                new UserDto(
+                    r.User.Id,
+                    r.User.Username,
+                    r.User.Email,
+                    r.User.Role.ToString(),
+                    r.User.Status.ToString())
             ))
             .ToListAsync(ct);
 
@@ -81,10 +99,20 @@ public class ReservationService(
 
         var reservationDto = new ReservationDto(
             reservation.Id,
-            reservation.ClientId,
-            $"{reservation.Client.FirstName} {reservation.Client.LastName}",
-            reservation.TableId,
-            reservation.Table.Code,
+            new ClientDto(
+                reservation.Client.Id,
+                reservation.Client.FirstName,
+                reservation.Client.LastName,
+                reservation.Client.Email,
+                reservation.Client.Phone,
+                reservation.Client.Status.ToString()),
+            new TableDto(
+                reservation.Table.Id,
+                reservation.Table.Code,
+                reservation.Table.Capacity,
+                reservation.Table.Location,
+                reservation.Table.TableTypeId,
+                reservation.Table.Status.ToString()),
             reservation.Date,
             reservation.StartTime,
             reservation.EndTime,
@@ -93,7 +121,12 @@ public class ReservationService(
             reservation.TotalPrice,
             reservation.Status.ToString(),
             reservation.Notes,
-            reservation.CreatedByUserId
+            new UserDto(
+                reservation.User.Id,
+                reservation.User.Username,
+                reservation.User.Email,
+                reservation.User.Role.ToString(),
+                reservation.User.Status.ToString())
         );
         return Result.Success(reservationDto);
     }

@@ -1,5 +1,8 @@
 using RestaurantReservation.Application.Common;
+using RestaurantReservation.Application.DTOs.Client;
 using RestaurantReservation.Application.DTOs.Reservation;
+using RestaurantReservation.Application.DTOs.Table;
+using RestaurantReservation.Application.DTOs.User;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Enums;
@@ -11,6 +14,7 @@ public class CreateReservationUseCase(
     ITableRepository tableRepository,
     IReservationRepository reservationRepository,
     ICurrentUserService currentUserService,
+    IUserRepository userRepository,
     IReservationService reservationService,
     IPricingService pricingService)
 {
@@ -20,12 +24,17 @@ public class CreateReservationUseCase(
     private readonly ICurrentUserService _currentUserService = currentUserService;
     private readonly IPricingService _pricingService = pricingService;
     private readonly IReservationService _reservationService = reservationService;
+    private readonly IUserRepository _userRepository = userRepository;
 
     public async Task<Result<ReservationDto>> ExecuteAsync(
         CreateReservationDto dto, CancellationToken ct = default)
     {
-        if (_currentUserService.UserId is not int userId)
+        if (_currentUserService.UserId is not { } userId)
             return Result.Failure<ReservationDto>("User not authenticated.", 401);
+
+        var user = await _userRepository.GetByIdAsync(userId, ct);
+        if (user is null)
+            return Result.Failure<ReservationDto>("User not found.", 404);
 
         var client = await _clientRepository.GetByIdAsync(dto.ClientId, ct);
         if (client is null || client.Status != ClientStatus.Active)
@@ -66,10 +75,20 @@ public class CreateReservationUseCase(
         var r = reservation.Value;
         var reservationDto = new ReservationDto(
             r.Id,
-            r.ClientId,
-            $"{client.FirstName} {client.LastName}",
-            r.TableId,
-            table.Code,
+            new ClientDto(
+                client.Id,
+                client.FirstName,
+                client.LastName,
+                client.Email,
+                client.Phone,
+                client.Status.ToString()),
+            new TableDto(
+                table.Id,
+                table.Code,
+                table.Capacity,
+                table.Location,
+                table.TableTypeId,
+                table.Status.ToString()),
             r.Date,
             r.StartTime,
             r.EndTime,
@@ -78,7 +97,12 @@ public class CreateReservationUseCase(
             r.TotalPrice,
             r.Status.ToString(),
             r.Notes,
-            r.CreatedByUserId
+            new UserDto(
+                user.Id,
+                user.Username,
+                user.Email,
+                user.Role.ToString(),
+                user.Status.ToString())
         );
 
         return Result.Success(reservationDto);
