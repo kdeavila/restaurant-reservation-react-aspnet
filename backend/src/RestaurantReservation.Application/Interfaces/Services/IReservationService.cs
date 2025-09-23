@@ -10,7 +10,7 @@ public interface IReservationService
     Task<Result<ReservationDto>> GetByIdAsync(int id, CancellationToken ct = default);
 
     Task<(IEnumerable<ReservationDto> Data, PaginationMetadata Pagination)> GetAllAsync(
-        ReservationQueryParams query, CancellationToken ct = default);
+        ReservationQueryParams queryParams, CancellationToken ct = default);
 
     Task<Result<Reservation>> CreateReservationAsync(
         CreateReservationDto dto, int createdByUserId, decimal basePrice,

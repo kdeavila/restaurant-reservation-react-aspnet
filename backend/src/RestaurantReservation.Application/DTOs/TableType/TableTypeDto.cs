@@ -5,5 +5,7 @@ public record TableTypeDto(
     string Name,
     string Description,
     decimal BasePricePerHour,
-    bool IsActive
+    bool IsActive,
+    int TableCount,
+    DateTime CreatedAt
 );

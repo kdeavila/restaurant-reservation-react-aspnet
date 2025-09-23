@@ -18,15 +18,23 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
         => await _context.Tables
             .Include(t => t.TableType)
             .ToListAsync(ct);
-    
+
     public async Task<IEnumerable<Table>> GetByTableTypeIdAsync(int tableTypeId, CancellationToken ct = default)
         => await _context.Tables
             .Where(t => t.TableTypeId == tableTypeId)
             .AsNoTracking()
             .ToListAsync(ct);
 
-    public async Task<IEnumerable<Table>> GetAvailableTablesAsync(DateTime date, TimeSpan startTime, TimeSpan endTime,
-        int capacity, CancellationToken ct = default)
+    public async Task<Dictionary<int, int>> GetTableCountsByTableTypeIdsAsync(IEnumerable<int> tableTypeIds,
+        CancellationToken ct = default)
+        => await _context.Tables
+            .Where(t => tableTypeIds.Contains(t.TableTypeId))
+            .GroupBy(t => t.TableTypeId)
+            .Select(g => new { TableTypeId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.TableTypeId, x => x.Count, ct);
+
+    public async Task<IEnumerable<Table>> GetAvailableTablesAsync(DateTime date, TimeSpan startTime,
+        TimeSpan endTime, int capacity, CancellationToken ct = default)
         => await _context.Tables
             .Include(t => t.TableType)
             .Where(t => t.Capacity >= capacity &&

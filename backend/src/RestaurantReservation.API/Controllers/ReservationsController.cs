@@ -10,28 +10,22 @@ namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
 [Route("api/reservations")]
-public class ReservationsController : ControllerBase
+public class ReservationsController(
+    CreateReservationUseCase createReservationUseCase,
+    UpdateReservationUseCase updateReservationUseCase,
+    IReservationService reservationService)
+    : ControllerBase
 {
-    private readonly CreateReservationUseCase _createReservationUseCase;
-    private readonly UpdateReservationUseCase _updateReservationUseCase;
-    private readonly IReservationService _reservationService;
-
-    public ReservationsController(
-        CreateReservationUseCase createReservationUseCase,
-        UpdateReservationUseCase updateReservationUseCase,
-        IReservationService reservationService)
-    {
-        _createReservationUseCase = createReservationUseCase;
-        _updateReservationUseCase = updateReservationUseCase;
-        _reservationService = reservationService;
-    }
+    private readonly CreateReservationUseCase _createReservationUseCase = createReservationUseCase;
+    private readonly UpdateReservationUseCase _updateReservationUseCase = updateReservationUseCase;
+    private readonly IReservationService _reservationService = reservationService;
 
     [HttpGet]
     public async Task<ActionResult<ApiResponse<IEnumerable<ReservationDto>>>> GetAll(
-        [FromQuery] ReservationQueryParams query,
+        [FromQuery] ReservationQueryParams queryParams,
         CancellationToken ct = default)
     {
-        var (data, pagination) = await _reservationService.GetAllAsync(query, ct);
+        var (data, pagination) = await _reservationService.GetAllAsync(queryParams, ct);
         return Ok(ApiResponse<IEnumerable<ReservationDto>>.SuccessResponse(
             data, "Reservations retrieved successfully", 200, pagination));
     }
