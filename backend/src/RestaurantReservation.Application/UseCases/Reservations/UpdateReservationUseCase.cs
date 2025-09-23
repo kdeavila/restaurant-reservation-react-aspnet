@@ -2,6 +2,7 @@ using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.Reservation;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
+using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.UseCases.Reservations;
@@ -9,18 +10,53 @@ namespace RestaurantReservation.Application.UseCases.Reservations;
 public class UpdateReservationUseCase(
     IReservationRepository reservationRepository,
     IPricingService pricingService,
-    IReservationService reservationService)
+    IReservationService reservationService,
+    ITableRepository tableRepository,
+    ITableTypeRepository tableTypeRepository)
 {
     private readonly IReservationRepository _reservationRepository = reservationRepository;
     private readonly IReservationService _reservationService = reservationService;
     private readonly IPricingService _pricingService = pricingService;
+    private readonly ITableRepository _tableRepository = tableRepository;
+    private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
 
-    public async Task<Result> ExecuteAsync(UpdateReservationDto dto, CancellationToken ct = default)
+    public async Task<Result<string>> ExecuteAsync(UpdateReservationDto dto, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
-        if (reservation is null) return Result.Failure("Reservation not found.", 404);
+        if (reservation is null) return Result.Failure<string>("Reservation not found.", 404);
 
-        if (dto.TableId.HasValue || dto.Date.HasValue || dto.StartTime.HasValue || dto.EndTime.HasValue)
+        if (reservation.Status is ReservationStatus.Cancelled or ReservationStatus.Completed)
+            return Result.Failure<string>("Cannot modify cancelled or completed reservations.", 400);
+
+        Table? newTable = null;
+        if (dto.TableId.HasValue)
+        {
+            newTable = await _tableRepository.GetByIdAsync(dto.TableId.Value, ct);
+            if (newTable is null || newTable.Status != TableStatus.Active)
+                return Result.Failure<string>("Selected table is not available.", 404);
+
+            var tableType = await _tableTypeRepository.GetByIdAsync(newTable.TableTypeId, ct);
+            if (tableType is null || !tableType.IsActive)
+                return Result.Failure<string>("Table type is not available.", 400);
+        }
+
+        var finalTable = newTable ?? reservation.Table;
+        var finalGuests = dto.NumberOfGuests ?? reservation.NumberOfGuests;
+
+        if (finalGuests > finalTable.Capacity)
+            return Result.Failure<string>($"Table capacity exceeded. Maximum: {finalTable.Capacity} guests.",
+                400);
+
+        decimal? newBasePrice = null;
+        decimal? newTotalPrice = null;
+
+        var shouldCheckAvailability =
+            dto.TableId.HasValue ||
+            dto.Date.HasValue ||
+            dto.StartTime.HasValue ||
+            dto.EndTime.HasValue;
+
+        if (shouldCheckAvailability)
         {
             var tableId = dto.TableId ?? reservation.TableId;
             var date = dto.Date ?? reservation.Date;
@@ -29,24 +65,41 @@ public class UpdateReservationUseCase(
 
             var overlap = await _reservationRepository.ExistsOverlappingReservationAsync
                 (tableId, date, start, end, ct);
-
             if (overlap)
-                return Result.Failure("The selected table is not available at the specified time.", 409);
+                return Result.Failure<string>("The selected table is not available at the specified time.",
+                    409);
 
             var priceResult = await _pricingService.CalculatePriceAsync(tableId, date, start, end, ct);
-
             if (priceResult.IsFailure)
-                return Result.Failure(priceResult.Error, priceResult.StatusCode);
+                return Result.Failure<string>(priceResult.Error, priceResult.StatusCode);
 
-            var (basePrice, totalPrice) = priceResult.Value;
-
-            var result = await _reservationService.UpdateReservationAsync(dto, basePrice, totalPrice, ct);
-            return result.IsFailure ? Result.Failure("Failed to update reservation.", 400) : Result.Success();
+            (newBasePrice, newTotalPrice) = priceResult.Value;
         }
-        else
+
+        if (!string.IsNullOrEmpty(dto.Status) && dto.Status != reservation.Status.ToString())
         {
-            var result = await _reservationService.UpdateReservationAsync(dto, null, null, ct);
-            return result.IsFailure ? Result.Failure("Failed to update reservation.", 400) : Result.Success();
+            if (!IsValidStatusTransition(reservation.Status, dto.Status))
+                return Result.Failure<string>($"Invalid status transition from {reservation.Status} to {dto.Status}.",
+                    400);
         }
+
+        var updatedResult = await _reservationService.UpdateReservationAsync(dto, newBasePrice, newTotalPrice, ct);
+        return updatedResult.IsFailure
+            ? Result.Failure<string>(updatedResult.Error, updatedResult.StatusCode)
+            : Result.Success("Reservation updated successfully.");
+    }
+
+    private bool IsValidStatusTransition(ReservationStatus currentStatus, string newStatus)
+    {
+        var validTransitions = new Dictionary<ReservationStatus, ReservationStatus[]>
+        {
+            [ReservationStatus.Completed] = [],
+            [ReservationStatus.Cancelled] = [],
+            [ReservationStatus.Pending] = [ReservationStatus.Confirmed],
+            [ReservationStatus.Confirmed] = [ReservationStatus.Completed]
+        };
+
+        return Enum.TryParse<ReservationStatus>(newStatus, out var parsedStatus) &&
+               validTransitions[currentStatus].Contains(parsedStatus);
     }
 }

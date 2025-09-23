@@ -20,5 +20,5 @@ public interface IReservationService
     (UpdateReservationDto dto, decimal? basePrice,
         decimal? totalPrice, CancellationToken ct = default);
 
-    Task<Result> CancelReservationAsync(int id, CancellationToken ct = default);
+    Task<Result<string>> CancelReservationAsync(int id, CancellationToken ct = default);
 }

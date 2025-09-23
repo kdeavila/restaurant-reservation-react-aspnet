@@ -40,7 +40,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
     {
         if (!ModelState.IsValid)
             return BadRequest(ApiResponse<TableTypeDto>.ErrorResponse(
-                "Invalid model", ErrorCodes.ValidationError, 400));
+                "Invalid model", ErrorCodes.ValidationError));
 
         var result = await _tableTypeService.CreateAsync(dto, ct);
         if (result.IsFailure)
@@ -59,7 +59,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
     {
         if (id != dto.Id)
             return BadRequest(ApiResponse<TableTypeDto>.ErrorResponse(
-                "ID mismatch", ErrorCodes.ValidationError, 400));
+                "ID mismatch", ErrorCodes.ValidationError));
 
         var result = await _tableTypeService.UpdateAsync(dto, ct);
         if (result.IsFailure)
@@ -82,7 +82,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
             return StatusCode(result.StatusCode, ApiResponse<string>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
 
-        return Ok(ApiResponse<string>.SuccessResponse(null!, result.Value));
+        return Ok(ApiResponse<string>.SuccessResponse(result.Value, result.Value));
     }
 
     private static string GetErrorCode(int statusCode) => statusCode switch

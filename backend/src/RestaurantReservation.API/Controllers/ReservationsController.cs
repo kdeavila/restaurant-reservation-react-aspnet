@@ -27,14 +27,13 @@ public class ReservationsController(
     {
         var (data, pagination) = await _reservationService.GetAllAsync(queryParams, ct);
         return Ok(ApiResponse<IEnumerable<ReservationDto>>.SuccessResponse(
-            data, "Reservations retrieved successfully", 200, pagination));
+            data, "Reservations retrieved successfully", pagination: pagination));
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<ApiResponse<ReservationDto>>> GetById(int id, CancellationToken ct = default)
     {
         var result = await _reservationService.GetByIdAsync(id, ct);
-
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ReservationDto>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
@@ -52,7 +51,6 @@ public class ReservationsController(
                 ApiResponse<ReservationDto>.ErrorResponse("Invalid data", ErrorCodes.ValidationError));
 
         var result = await _createReservationUseCase.ExecuteAsync(dto, ct);
-
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ReservationDto>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
@@ -63,36 +61,36 @@ public class ReservationsController(
     }
 
     [HttpPatch("{id:int}")]
-    public async Task<ActionResult<ApiResponse<object>>> Update(
+    public async Task<ActionResult<ApiResponse<ReservationDto>>> Update(
         int id, [FromBody] UpdateReservationDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id)
-            return BadRequest(ApiResponse<ReservationDto>.ErrorResponse("ID in URL does not match ID in body",
+            return BadRequest(ApiResponse<ReservationDto>.ErrorResponse("ID mismatch",
                 ErrorCodes.ValidationError));
 
-        if (!ModelState.IsValid)
-            return BadRequest(
-                ApiResponse<ReservationDto>.ErrorResponse("Invalid data", ErrorCodes.ValidationError));
-
         var result = await _updateReservationUseCase.ExecuteAsync(dto, ct);
-
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ReservationDto>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
 
-        return NoContent();
+        var updatedResult = await _reservationService.GetByIdAsync(id, ct);
+        if (updatedResult.IsFailure)
+            return StatusCode(updatedResult.StatusCode,
+                ApiResponse<ReservationDto>.ErrorResponse(result.Error, GetErrorCode(updatedResult.StatusCode),
+                    updatedResult.StatusCode));
+
+        return Ok(ApiResponse<ReservationDto>.SuccessResponse(updatedResult.Value, "Reservation updated"));
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult<ApiResponse<object>>> Delete(int id, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
     {
         var result = await _reservationService.CancelReservationAsync(id, ct);
-
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ReservationDto>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
 
-        return NoContent();
+        return Ok(ApiResponse<string>.SuccessResponse(result.Value, result.Value));
     }
 
     private static string GetErrorCode(int statusCode) => statusCode switch
