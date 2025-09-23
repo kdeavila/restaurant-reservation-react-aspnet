@@ -129,11 +129,11 @@ public class TableTypeService(
         return Result.Success();
     }
 
-    public async Task<Result> DeactivateAsync(int id, CancellationToken ct = default)
+    public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(id, ct);
         if (tableType is null)
-            return Result.Failure("Table type not found.", 404);
+            return Result.Failure<string>("Table type not found.", 404);
 
         var tablesUsingThisType = await _tableRepository.GetByTableTypeIdAsync(id, ct);
         var tables = tablesUsingThisType.ToList();

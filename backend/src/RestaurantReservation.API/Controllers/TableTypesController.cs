@@ -82,9 +82,9 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
             return StatusCode(result.StatusCode, ApiResponse<string>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
 
-        return Ok(ApiResponse<string>.SuccessResponse("Deletion completed", "Table type deleted"));
+        return Ok(ApiResponse<string>.SuccessResponse(null!, result.Value));
     }
-    
+
     private static string GetErrorCode(int statusCode) => statusCode switch
     {
         400 => ErrorCodes.ValidationError,
