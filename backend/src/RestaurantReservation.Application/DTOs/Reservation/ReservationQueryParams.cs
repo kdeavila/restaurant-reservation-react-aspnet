@@ -12,8 +12,4 @@ public class ReservationQueryParams
     // Pagination
     public int Page { get; set; } = 1;
     public int PageSize { get; set; } = 5;
-
-    // TODO: add the logic for order and sort
-    // public string? OrderBy { get; set; }
-    // public string? SortBy { get; set; }
 }

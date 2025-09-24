@@ -28,7 +28,7 @@ public class PricingRulesController(
         var result = await _pricingRuleService.GetByIdAsync(id, ct);
         return result.IsFailure
             ? StatusCode(result.StatusCode, new { error = result.Error })
-            : NoContent();
+            : Ok(result.Value);
     }
 
     [HttpPost]
@@ -61,8 +61,8 @@ public class PricingRulesController(
     public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
     {
         var result = await _pricingRuleService.DeletePricingRuleAsync(id, ct);
-        return result.IsFailure 
-            ? StatusCode(result.StatusCode, new { error = result.Error }) 
+        return result.IsFailure
+            ? StatusCode(result.StatusCode, new { error = result.Error })
             : NoContent();
     }
 }

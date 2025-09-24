@@ -10,15 +10,16 @@ public class ClientRepository(RestaurantReservationDbContext context) : IClientR
     private readonly RestaurantReservationDbContext _context = context;
 
     public async Task<Client?> GetByIdAsync(int id, CancellationToken ct = default)
-        => await _context.Clients.FindAsync([id], ct);
+        => await _context.Clients
+            .Include(c => c.Reservations)
+            .FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public async Task<Client?> GetByEmailAsync(string email, CancellationToken ct = default)
         => await _context.Clients.FirstOrDefaultAsync(c => c.Email == email, ct);
 
     public async Task<IEnumerable<Client>> GetAllAsync(CancellationToken ct = default)
         => await _context.Clients
-            .AsNoTracking()
-            .OrderBy(c => c.LastName).ThenBy(c => c.FirstName)
+            .Include(c => c.Reservations)
             .ToListAsync(ct);
 
     public async Task<IEnumerable<Reservation>> GetReservationsAsync(int clientId, CancellationToken ct = default)

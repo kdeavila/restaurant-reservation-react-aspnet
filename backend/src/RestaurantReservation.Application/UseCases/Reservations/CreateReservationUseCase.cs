@@ -87,7 +87,9 @@ public class CreateReservationUseCase(
                 client.LastName,
                 client.Email,
                 client.Phone,
-                client.Status.ToString()),
+                client.Status.ToString(),
+                client.Reservations.Count,
+                client.CreatedAt),
             new TableDto(
                 table.Id,
                 table.Code,

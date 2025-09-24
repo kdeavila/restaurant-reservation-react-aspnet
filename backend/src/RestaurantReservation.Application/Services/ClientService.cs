@@ -28,7 +28,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
 
         await _clientRepository.AddAsync(client, ct);
         var clientDto = new ClientDto(client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
-            client.Status.ToString());
+            client.Status.ToString(), TotalReservations: 0, client.CreatedAt);
         return Result.Success(clientDto);
     }
 
@@ -38,15 +38,17 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         if (client is null) return Result.Failure<ClientDto>("Client not found", 404);
 
         var clientDto = new ClientDto(client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
-            client.Status.ToString());
+            client.Status.ToString(), client.Reservations.Count, client.CreatedAt);
         return Result.Success(clientDto);
     }
 
     public async Task<IEnumerable<ClientDto>> GetAllAsync(CancellationToken ct = default)
     {
         var clients = await _clientRepository.GetAllAsync(ct);
-        return clients.Select(c => new ClientDto(c.Id, c.FirstName, c.LastName, c.Email, c.Phone,
-            c.Status.ToString()));
+
+        return clients.Select(client => new ClientDto(
+            client.Id, client.FirstName, client.LastName, client.Email, client.Phone,
+            client.Status.ToString(), client.Reservations.Count, client.CreatedAt));
     }
 
     public async Task<Result> UpdateClientAsync(UpdateClientDto dto, CancellationToken ct = default)
@@ -66,7 +68,8 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         client.LastName = dto.LastName ?? client.LastName;
         client.Phone = dto.Phone ?? client.Phone;
 
-        if (!string.IsNullOrEmpty(dto.Status) && Enum.TryParse<ClientStatus>(dto.Status, true, out var parsed))
+        if (!string.IsNullOrEmpty(dto.Status) &&
+            Enum.TryParse<ClientStatus>(dto.Status, true, out var parsed))
             client.Status = parsed;
 
         await _clientRepository.UpdateAsync(client, ct);

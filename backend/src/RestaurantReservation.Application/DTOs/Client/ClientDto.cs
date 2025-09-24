@@ -6,5 +6,7 @@ public record ClientDto(
     string LastName,
     string Email,
     string? Phone,
-    string Status
+    string Status,
+    int TotalReservations,
+    DateTime MemberSince
 );
