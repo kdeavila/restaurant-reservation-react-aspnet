@@ -11,7 +11,8 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
 
     public async Task<Table?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.Tables
-            .Include(t => t.TableType)
+            // .Include(t => t.TableType)
+            .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
     public async Task<IEnumerable<Table>> GetAllAsync(CancellationToken ct = default)

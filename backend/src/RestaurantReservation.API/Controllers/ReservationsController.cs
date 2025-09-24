@@ -5,6 +5,7 @@ using RestaurantReservation.Application.Common.Responses;
 using RestaurantReservation.Application.DTOs.Reservation;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Application.UseCases.Reservations;
+using RestaurantReservation.Domain.Entities;
 
 namespace RestaurantReservation.API.Controllers;
 
@@ -65,21 +66,26 @@ public class ReservationsController(
         int id, [FromBody] UpdateReservationDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id)
-            return BadRequest(ApiResponse<ReservationDto>.ErrorResponse("ID mismatch",
-                ErrorCodes.ValidationError));
+            return BadRequest(ApiResponse<ReservationDto>.ErrorResponse(
+                "ID mismatch", ErrorCodes.ValidationError, 400));
 
         var result = await _updateReservationUseCase.ExecuteAsync(dto, ct);
+
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ReservationDto>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
 
         var updatedResult = await _reservationService.GetByIdAsync(id, ct);
+
         if (updatedResult.IsFailure)
             return StatusCode(updatedResult.StatusCode,
-                ApiResponse<ReservationDto>.ErrorResponse(result.Error, GetErrorCode(updatedResult.StatusCode),
+                ApiResponse<ReservationDto>.ErrorResponse(
+                    updatedResult.Error,
+                    GetErrorCode(updatedResult.StatusCode),
                     updatedResult.StatusCode));
 
-        return Ok(ApiResponse<ReservationDto>.SuccessResponse(updatedResult.Value, "Reservation updated"));
+        return Ok(ApiResponse<ReservationDto>.SuccessResponse(
+            updatedResult.Value, "Reservation updated successfully"));
     }
 
     [HttpDelete("{id:int}")]

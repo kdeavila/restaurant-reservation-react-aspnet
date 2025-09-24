@@ -170,26 +170,29 @@ public class ReservationService(
         return Result.Success(reservation);
     }
 
-    public async Task<Result> UpdateReservationAsync
+    public async Task<Result<string>> UpdateReservationAsync
         (UpdateReservationDto dto, decimal? basePrice, decimal? totalPrice, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
-        if (reservation is null) return Result.Failure("Reservation not found.", 404);
+        if (reservation is null)
+            return Result.Failure<string>("Reservation not found.", 404);
+        
+        Console.WriteLine($"📊 BEFORE UPDATE - TableId: {reservation.TableId}");
 
-        if (dto is { EndTime: not null, StartTime: not null })
-        {
-            var duration = dto.EndTime.Value - dto.StartTime.Value;
-            if (duration.TotalMinutes < 30)
-                return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.", 400);
+        var finalStartTime = dto.StartTime ?? reservation.StartTime;
+        var finalEndTime = dto.EndTime ?? reservation.EndTime;
 
-            if (dto.StartTime >= dto.EndTime)
-                return Result.Failure<Reservation>("End time must be after start time.", 400);
-        }
+        var duration = finalEndTime - finalStartTime;
+        if (duration.TotalMinutes < 30)
+            return Result.Failure<string>("Reservation must be at least 30 minutes long.", 400);
+
+        if (finalStartTime >= finalEndTime)
+            return Result.Failure<string>("End time must be after start time.", 400);
 
         reservation.TableId = dto.TableId ?? reservation.TableId;
         reservation.Date = dto.Date ?? reservation.Date;
-        reservation.StartTime = dto.StartTime ?? reservation.StartTime;
-        reservation.EndTime = dto.EndTime ?? reservation.EndTime;
+        reservation.StartTime = finalStartTime;
+        reservation.EndTime = finalEndTime;
         reservation.NumberOfGuests = dto.NumberOfGuests ?? reservation.NumberOfGuests;
         reservation.Notes = dto.Notes ?? reservation.Notes;
 
@@ -206,8 +209,14 @@ public class ReservationService(
         }
 
         reservation.UpdatedAt = DateTime.UtcNow;
+        
         await _reservationRepository.UpdateAsync(reservation, ct);
-        return Result.Success();
+
+        var updatedReservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
+        
+        Console.WriteLine($"✅ AFTER SAVE - TableId: {updatedReservation!.TableId}");
+
+        return Result.Success<string>("Reservation updated successfully.");
     }
 
     public async Task<Result<string>> CancelReservationAsync(int id, CancellationToken ct = default)

@@ -16,7 +16,8 @@ public class CreateReservationUseCase(
     ICurrentUserService currentUserService,
     IUserRepository userRepository,
     IReservationService reservationService,
-    IPricingService pricingService)
+    IPricingService pricingService,
+    ITableTypeRepository tableTypeRepository)
 {
     private readonly IClientRepository _clientRepository = clientRepository;
     private readonly ITableRepository _tableRepository = tableRepository;
@@ -25,6 +26,7 @@ public class CreateReservationUseCase(
     private readonly IPricingService _pricingService = pricingService;
     private readonly IReservationService _reservationService = reservationService;
     private readonly IUserRepository _userRepository = userRepository;
+    private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
 
     public async Task<Result<ReservationDto>> ExecuteAsync(
         CreateReservationDto dto, CancellationToken ct = default)
@@ -44,13 +46,17 @@ public class CreateReservationUseCase(
         if (table is null || table.Status != TableStatus.Active)
             return Result.Failure<ReservationDto>("Table not found or inactive.", 404);
 
+        var tableType = await _tableTypeRepository.GetByIdAsync(table.TableTypeId, ct);
+        if (tableType is null || !tableType.IsActive)
+            return Result.Failure<ReservationDto>("Table type is not available.", 400);
+
         if (dto.NumberOfGuests > table.Capacity)
             return Result.Failure<ReservationDto>
                 ("The number of guests exceeds the table's capacity", 400);
 
         var overlap =
             await _reservationRepository.ExistsOverlappingReservationAsync
-                (dto.TableId, dto.Date, dto.StartTime, dto.EndTime, ct);
+                (dto.TableId, dto.Date, dto.StartTime, dto.EndTime, null, ct);
         if (overlap)
             return Result.Failure<ReservationDto>
                 ("Table is already booked for the selected time.", 409);
