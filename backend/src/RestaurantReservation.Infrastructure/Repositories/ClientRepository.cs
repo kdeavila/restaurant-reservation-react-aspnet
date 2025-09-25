@@ -9,6 +9,10 @@ public class ClientRepository(RestaurantReservationDbContext context) : IClientR
 {
     private readonly RestaurantReservationDbContext _context = context;
 
+    public IQueryable<Client> Query()
+        => _context.Clients
+            .AsNoTracking();
+
     public async Task<Client?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.Clients
             .Include(c => c.Reservations)

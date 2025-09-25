@@ -79,8 +79,8 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
     {
         var result = await _tableTypeService.DeactivateAsync(id, ct);
         if (result.IsFailure)
-            return StatusCode(result.StatusCode, ApiResponse<string>.ErrorResponse(
-                result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+            return StatusCode(result.StatusCode,
+                ApiResponse<string>.ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
 
         return Ok(ApiResponse<string>.SuccessResponse(result.Value, result.Value));
     }
