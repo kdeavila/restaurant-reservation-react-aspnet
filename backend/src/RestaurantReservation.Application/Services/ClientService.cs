@@ -16,7 +16,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
     public async Task<Result<ClientDto>> CreateClientAsync(CreateClientDto dto, CancellationToken ct = default)
     {
         var emailExists = await _clientRepository.EmailExistsAsync(dto.Email, ct);
-        if (emailExists) return Result.Failure<ClientDto>("Email already in use", 409);
+        if (emailExists) return Result.Failure<ClientDto>("Email address is already in use.", 409);
 
         var client = new Client()
         {
@@ -115,7 +115,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         if (!string.IsNullOrEmpty(dto.Email))
         {
             var emailExists = await _clientRepository.EmailExistsForOthersClients(dto.Email, dto.Id, ct);
-            if (emailExists) return Result.Failure("Email already in use", 409);
+            if (emailExists) return Result.Failure("Email address is already in use", 409);
 
             client.Email = dto.Email;
         }
@@ -154,7 +154,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
 
         client.Status = ClientStatus.Inactive;
         await _clientRepository.UpdateAsync(client, ct);
-        
+
         return Result.Success<string>("Client deactivated successfully.");
     }
 }

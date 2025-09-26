@@ -15,7 +15,7 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
     public async Task<Result<UserDto>> RegisterUserAsync(CreateUserDto dto, CancellationToken ct = default)
     {
         if (await _userRepository.GetByEmailAsync(dto.Email, ct) is not null)
-            return Result.Failure<UserDto>("Email is already in use.", 409);
+            return Result.Failure<UserDto>("Email address is already in use.", 409);
 
         var user = new User()
         {

@@ -11,6 +11,7 @@ public class ClientRepository(RestaurantReservationDbContext context) : IClientR
 
     public IQueryable<Client> Query()
         => _context.Clients
+            .Include(c => c.Reservations)
             .AsNoTracking();
 
     public async Task<Client?> GetByIdAsync(int id, CancellationToken ct = default)
