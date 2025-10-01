@@ -2,5 +2,5 @@ namespace RestaurantReservation.Domain.Enums;
 
 public enum TableStatus
 {
-    Active, Maintenance, OutOfService
+    Active, Maintenance, Inactive
 }

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.JSInterop.Infrastructure;
+using RestaurantReservation.Application.Common;
+using RestaurantReservation.Application.Common.Responses;
 using RestaurantReservation.Application.DTOs.Table;
 using RestaurantReservation.Application.Interfaces.Services;
 
@@ -12,50 +14,85 @@ public class TablesController(ITableService tableService) : ControllerBase
     private readonly ITableService _tableService = tableService;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<IEnumerable<TableDetailedDto>>>> GetAll(
+        [FromQuery] TableQueryParams queryParams, CancellationToken ct = default)
     {
-        var result = await _tableService.GetAllAsync(ct);
-        return Ok(result);
+        var (data, pagination) = await _tableService.GetAllAsync(queryParams, ct);
+
+        return Ok(ApiResponse<IEnumerable<TableDetailedDto>>.SuccessResponse(
+            data, "Tables retrieved successfully", pagination: pagination));
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<TableDetailedDto>>> GetById(int id, CancellationToken ct = default)
     {
         var result = await _tableService.GetByIdAsync(id, ct);
-        return result.IsFailure
-            ? StatusCode(result.StatusCode, new { error = result.Error })
-            : Ok(result.Value);
+        if (result.IsFailure)
+            return StatusCode(result.StatusCode, ApiResponse<TableDetailedDto>
+                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+
+        return Ok(ApiResponse<TableDetailedDto>.SuccessResponse(result.Value, "Table found"));
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateTableDto dto, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<TableDetailedDto>>> Create([FromBody] CreateTableDto dto,
+        CancellationToken ct = default)
     {
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (!ModelState.IsValid)
+            return BadRequest(ApiResponse<TableDetailedDto>.ErrorResponse(
+                "Invalid model", ErrorCodes.ValidationError));
 
-        var result = await _tableService.CreateTableAsync(dto, ct);
-        return result.IsFailure
-            ? StatusCode(result.StatusCode, new { error = result.Error })
-            : CreatedAtAction(nameof(GetById), new { id = result.Value.Id }, result.Value);
+        var result = await _tableService.CreateAsync(dto, ct);
+        if (result.IsFailure)
+            return StatusCode(result.StatusCode, ApiResponse<TableDetailedDto>
+                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+
+        return CreatedAtAction(nameof(GetById), new { id = result.Value.Id },
+            ApiResponse<TableDetailedDto>.SuccessResponse(result.Value, "Table created"));
     }
 
     [HttpPatch("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] UpdateTableDto dto, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<TableDetailedDto>>> Update(
+        int id,
+        [FromBody] UpdateTableDto dto,
+        CancellationToken ct = default)
     {
-        if (id != dto.Id) return BadRequest("ID in URL does not match ID in body.");
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+        if (id != dto.Id)
+            return BadRequest(ApiResponse<TableDetailedDto>
+                .ErrorResponse("ID mismatch", ErrorCodes.ValidationError));
 
-        var result = await _tableService.UpdateTableAsync(dto, ct);
-        return result.IsFailure
-            ? StatusCode(result.StatusCode, new { error = result.Error })
-            : NoContent();
+        var result = await _tableService.UpdateAsync(dto, ct);
+        if (result.IsFailure)
+            return StatusCode(result.StatusCode, ApiResponse<TableDetailedDto>
+                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+
+        var updatedResult = await _tableService.GetByIdAsync(id, ct);
+        if (result.IsFailure)
+            return StatusCode(updatedResult.StatusCode, ApiResponse<TableDetailedDto>
+                .ErrorResponse(updatedResult.Error, GetErrorCode(updatedResult.StatusCode), updatedResult.StatusCode));
+
+        return Ok(ApiResponse<TableDetailedDto>.SuccessResponse(updatedResult.Value, "Table updated"));
     }
 
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
     {
-        var result = await _tableService.DeleteTableAsync(id, ct);
-        return result.IsFailure
-            ? StatusCode(result.StatusCode, new { error = result.Error })
-            : NoContent();
+        var result = await _tableService.DeactivateAsync(id, ct);
+
+        if (result.IsFailure)
+            return StatusCode(result.StatusCode, ApiResponse<string>
+                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+
+        return Ok(ApiResponse<string>.SuccessResponse(result.Value, result.Value));
     }
+    
+    private static string GetErrorCode(int statusCode) => statusCode switch
+    {
+        400 => ErrorCodes.ValidationError,
+        404 => ErrorCodes.NotFound,
+        401 => ErrorCodes.Unauthorized,
+        409 => ErrorCodes.Conflict,
+        422 => ErrorCodes.BusinessRuleViolation,
+        _ => ErrorCodes.InternalError
+    };
 }

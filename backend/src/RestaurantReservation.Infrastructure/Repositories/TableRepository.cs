@@ -9,16 +9,15 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
 {
     private readonly RestaurantReservationDbContext _context = context;
 
+    public IQueryable<Table> Query()
+        => _context.Tables
+            .AsNoTracking();
+
     public async Task<Table?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.Tables
-            // .Include(t => t.TableType)
+            .Include(t => t.TableType)
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id, ct);
-
-    public async Task<IEnumerable<Table>> GetAllAsync(CancellationToken ct = default)
-        => await _context.Tables
-            .Include(t => t.TableType)
-            .ToListAsync(ct);
 
     public async Task<IEnumerable<Table>> GetByTableTypeIdAsync(int tableTypeId, CancellationToken ct = default)
         => await _context.Tables

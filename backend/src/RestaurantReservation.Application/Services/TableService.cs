@@ -1,6 +1,10 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Helpers;
+using RestaurantReservation.Application.Common.Pagination;
 using RestaurantReservation.Application.DTOs.Table;
+using RestaurantReservation.Application.DTOs.TableType;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
@@ -12,16 +16,85 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
 {
     private readonly ITableRepository _tableRepository = tableRepository;
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
+    
+    public async Task<Result<TableDetailedDto>> GetByIdAsync(int id, CancellationToken ct = default)
+    {
+        var table = await _tableRepository.GetByIdAsync(id, ct);
+        if (table is null) return Result.Failure<TableDetailedDto>("Table not found", 404);
 
-    public async Task<Result<TableDto>> CreateTableAsync(CreateTableDto dto, CancellationToken ct = default)
+        var tableDto = new TableDetailedDto(
+            table.Id,
+            table.Code,
+            table.Capacity,
+            table.Location,
+            table.Status.ToString(),
+            new TableTypeSimpleDto(
+                table.TableTypeId,
+                table.TableType.Name,
+                table.TableType.BasePricePerHour,
+                table.TableType.IsActive
+            ));
+        return Result.Success(tableDto);
+    }
+
+    public async Task<(IEnumerable<TableDetailedDto> Data, PaginationMetadata pagination)> GetAllAsync(
+        [FromQuery] TableQueryParams queryParams, CancellationToken ct = default)
+    {
+        var query = _tableRepository.Query();
+
+        if (!string.IsNullOrEmpty(queryParams.Code))
+            query = query.Where(t => t.Code.Contains(queryParams.Code));
+
+        if (queryParams.Capacity.HasValue)
+            query = query.Where(t => t.Capacity >= queryParams.Capacity);
+
+        if (!string.IsNullOrEmpty(queryParams.Location))
+            query = query.Where(t => t.Location.Contains(queryParams.Location));
+
+        if (!string.IsNullOrEmpty(queryParams.Status))
+            query = query.Where(t => t.Status.ToString().Contains(queryParams.Status));
+
+        var totalCount = await query.CountAsync(ct);
+
+        var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
+        var data = await query
+            .Skip(skipNumber)
+            .Take(queryParams.PageSize)
+            .Select(t =>
+                new TableDetailedDto(
+                    t.Id,
+                    t.Code,
+                    t.Capacity,
+                    t.Location,
+                    t.Status.ToString(),
+                    new TableTypeSimpleDto(
+                        t.TableTypeId,
+                        t.TableType.Name,
+                        t.TableType.BasePricePerHour,
+                        t.TableType.IsActive
+                    )))
+            .ToListAsync(ct);
+
+        var pagination = new PaginationMetadata
+        {
+            Page = queryParams.Page,
+            PageSize = queryParams.PageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)queryParams.PageSize)
+        };
+
+        return (data, pagination);
+    }
+
+    public async Task<Result<TableDetailedDto>> CreateAsync(CreateTableDto dto, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId, ct);
-        if (tableType is null) 
-            return Result.Failure<TableDto>("Table type not found", 404);
+        if (tableType is null)
+            return Result.Failure<TableDetailedDto>("Table type not found", 404);
         if (!tableType.IsActive)
-            return Result.Failure<TableDto>("Table type is inactive", 400);
+            return Result.Failure<TableDetailedDto>("Table type is inactive", 400);
 
-        // Generate the code for the tables, including the table type and adding the name and code. e.g. VIP01;
+        // generate the code for the tables, including the table type and adding the name and code. e.g., VIP01;
         var existingTables = await _tableRepository.GetByTableTypeIdAsync(dto.TableTypeId, ct);
         var code = TableCodeGenerator.Generate(tableType.Name, existingTables.Count());
 
@@ -36,30 +109,22 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
         };
 
         await _tableRepository.AddAsync(table, ct);
-        var tableDto = new TableDto(table.Id, table.Code, table.Capacity, table.Location, table.TableTypeId,
-            table.Status.ToString());
+        var tableDto = new TableDetailedDto(
+            table.Id,
+            table.Code,
+            table.Capacity,
+            table.Location,
+            table.Status.ToString(),
+            new TableTypeSimpleDto(
+                table.TableTypeId,
+                table.TableType.Name,
+                table.TableType.BasePricePerHour,
+                table.TableType.IsActive
+            ));
         return Result.Success(tableDto);
     }
 
-    public async Task<Result<TableDto>> GetByIdAsync(int id, CancellationToken ct = default)
-    {
-        var table = await _tableRepository.GetByIdAsync(id, ct);
-        if (table is null) return Result.Failure<TableDto>("Table not found", 404);
-
-        var tableDto = new TableDto(table.Id, table.Code, table.Capacity, table.Location, table.TableTypeId,
-            table.Status.ToString());
-        return Result.Success(tableDto);
-    }
-
-    public async Task<IEnumerable<TableDto>> GetAllAsync(CancellationToken ct = default)
-    {
-        var tables = await _tableRepository.GetAllAsync(ct);
-        return tables.Select(t =>
-            new TableDto(t.Id, t.Code, t.Capacity, t.Location, t.TableTypeId, t.Status.ToString())
-        );
-    }
-
-    public async Task<Result> UpdateTableAsync(UpdateTableDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateAsync(UpdateTableDto dto, CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(dto.Id, ct);
         if (table is null) return Result.Failure("Table not found", 404);
@@ -83,12 +148,27 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
         return Result.Success();
     }
 
-    public async Task<Result> DeleteTableAsync(int id, CancellationToken ct = default)
+    public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(id, ct);
-        if (table is null) return Result.Failure("Table not found", 404);
+        if (table is null) return Result.Failure<string>("Table not found", 404);
 
-        await _tableRepository.DeleteAsync(id, ct);
-        return Result.Success();
+        var futureReservations = table.Reservations
+            .Where(r => r.Status != ReservationStatus.Cancelled
+                        && r.Status != ReservationStatus.Completed &&
+                        (r.Date > DateTime.UtcNow.Date ||
+                         (r.Date == DateTime.UtcNow.Date &&
+                          r.StartTime > DateTime.UtcNow.TimeOfDay))
+            ).ToList();
+
+        if (futureReservations.Any())
+            return Result.Failure<string>(
+                $"Cannot delete table. It has {futureReservations.Count} future reservation(s). " +
+                "Please cancel or reassign the reservations first.",
+                409);
+
+        table.Status = TableStatus.Inactive;
+        await _tableRepository.UpdateAsync(table, ct);
+        return Result.Success("Table deactivated successfully.");
     }
 }

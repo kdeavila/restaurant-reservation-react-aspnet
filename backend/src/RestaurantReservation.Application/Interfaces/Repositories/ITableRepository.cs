@@ -4,11 +4,13 @@ namespace RestaurantReservation.Application.Interfaces.Repositories;
 
 public interface ITableRepository
 {
+    IQueryable<Table> Query();
     Task<Table?> GetByIdAsync(int id, CancellationToken ct = default);
-    Task<IEnumerable<Table>> GetAllAsync(CancellationToken ct = default);
     Task<IEnumerable<Table>> GetByTableTypeIdAsync(int tableTypeId, CancellationToken ct = default);
+
     Task<Dictionary<int, int>> GetTableCountsByTableTypeIdsAsync(IEnumerable<int> tableTypeIds,
         CancellationToken ct = default);
+
     Task<IEnumerable<Table>> GetAvailableTablesAsync(DateTime date, TimeSpan startTime, TimeSpan endTime, int capacity,
         CancellationToken ct = default);
 

@@ -1,13 +1,17 @@
 using RestaurantReservation.Application.Common;
+using RestaurantReservation.Application.Common.Pagination;
 using RestaurantReservation.Application.DTOs.Table;
 
 namespace RestaurantReservation.Application.Interfaces.Services;
 
 public interface ITableService
 {
-    Task<Result<TableDto>> CreateTableAsync(CreateTableDto dto, CancellationToken ct = default);
-    Task<Result<TableDto>> GetByIdAsync(int id, CancellationToken ct = default);
-    Task<IEnumerable<TableDto>> GetAllAsync(CancellationToken ct = default);
-    Task<Result> UpdateTableAsync(UpdateTableDto dto, CancellationToken ct = default);
-    Task<Result> DeleteTableAsync(int id, CancellationToken ct = default);
+    Task<(IEnumerable<TableDetailedDto> Data, PaginationMetadata pagination)> GetAllAsync(
+        TableQueryParams queryParams, CancellationToken ct = default);
+
+    Task<Result<TableDetailedDto>> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<Result<TableDetailedDto>> CreateAsync(CreateTableDto dto, CancellationToken ct = default);
+
+    Task<Result> UpdateAsync(UpdateTableDto dto, CancellationToken ct = default);
+    Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default);
 }
