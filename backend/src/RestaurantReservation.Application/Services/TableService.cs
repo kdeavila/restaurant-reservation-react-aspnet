@@ -16,7 +16,10 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
     public async Task<Result<TableDto>> CreateTableAsync(CreateTableDto dto, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId, ct);
-        if (tableType is null) return Result.Failure<TableDto>("Table type not found", 404);
+        if (tableType is null) 
+            return Result.Failure<TableDto>("Table type not found", 404);
+        if (!tableType.IsActive)
+            return Result.Failure<TableDto>("Table type is inactive", 400);
 
         // Generate the code for the tables, including the table type and adding the name and code. e.g. VIP01;
         var existingTables = await _tableRepository.GetByTableTypeIdAsync(dto.TableTypeId, ct);
