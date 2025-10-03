@@ -1,5 +1,6 @@
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.PricingRule;
+using RestaurantReservation.Application.DTOs.TableType;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
@@ -20,8 +21,8 @@ public class CreatePricingRuleUseCase(
         CreatePricingRuleDto dto, CancellationToken ct = default)
     {
         var tableTypeExists = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId, ct);
-        if (tableTypeExists is null)
-            return Result.Failure<PricingRuleDto>("TableTypeId does not exist.", 400);
+        if (tableTypeExists is null || !tableTypeExists.IsActive)
+            return Result.Failure<PricingRuleDto>("TableType not found or inactive.", 400);
 
         var pricingRule = await _pricingRuleService.CreatePricingRuleAsync(dto, ct);
         if (pricingRule.IsFailure)
@@ -39,8 +40,23 @@ public class CreatePricingRuleUseCase(
             await _pricingRuleDaysRepository.AddAsync(prd, ct);
 
         var pricingRuleDto = new PricingRuleDto(
-            rule.Id, rule.RuleName, rule.RuleType, rule.StartTime, rule.EndTime, rule.SurchargePercentage,
-            rule.StartDate, rule.EndDate, rule.TableTypeId, rule.IsActive, dto.DaysOfWeek
+            rule.Id,
+            rule.RuleName,
+            rule.RuleType,
+            rule.StartTime,
+            rule.EndTime,
+            rule.SurchargePercentage,
+            rule.StartDate,
+            rule.EndDate,
+            new TableTypeSimpleDto(
+                rule.TableTypeId,
+                rule.TableType.Name,
+                rule.TableType.BasePricePerHour,
+                rule.TableType.IsActive
+            ),
+            rule.IsActive,
+            rule.CreatedAt,
+            dto.DaysOfWeek
         );
         return Result.Success(pricingRuleDto);
     }

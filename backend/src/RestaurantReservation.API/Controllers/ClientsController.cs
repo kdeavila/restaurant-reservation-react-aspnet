@@ -51,7 +51,7 @@ public class ClientsController(IClientService clientService) : ControllerBase
     }
 
     [HttpPatch("{id:int}")]
-    public async Task<IActionResult> Update
+    public async Task<ActionResult<ApiResponse<ClientDto>>> Update
         (int id, [FromBody] UpdateClientDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id) return BadRequest("ID in URL does not match ID in body.");

@@ -10,5 +10,5 @@ public interface IPricingRuleService
     Task<Result<PricingRuleDto>> GetByIdAsync(int id, CancellationToken ct = default);
     Task<IEnumerable<PricingRuleDto>> GetAllAsync(CancellationToken ct = default);
     Task<Result> UpdatePricingRuleAsync(UpdatePricingRuleDto dto, CancellationToken ct = default);
-    Task<Result> DeletePricingRuleAsync(int id, CancellationToken ct = default);
+    Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default);
 }

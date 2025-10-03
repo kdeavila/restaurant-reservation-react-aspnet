@@ -16,7 +16,7 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
 {
     private readonly ITableRepository _tableRepository = tableRepository;
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
-    
+
     public async Task<Result<TableDetailedDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(id, ct);
@@ -151,7 +151,8 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
     public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
     {
         var table = await _tableRepository.GetByIdAsync(id, ct);
-        if (table is null) return Result.Failure<string>("Table not found", 404);
+        if (table is null)
+            return Result.Failure<string>("Table not found", 404);
 
         var futureReservations = table.Reservations
             .Where(r => r.Status != ReservationStatus.Cancelled

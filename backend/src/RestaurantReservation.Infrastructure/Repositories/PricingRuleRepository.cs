@@ -13,11 +13,13 @@ public class PricingRuleRepository(RestaurantReservationDbContext context) : IPr
     public async Task<PricingRule?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.PricingRules
             .Include(r => r.PricingRuleDays)
+            .Include(r => r.TableType)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
     public async Task<IEnumerable<PricingRule>> GetAllAsync(CancellationToken ct = default)
         => await _context.PricingRules
             .Include(r => r.PricingRuleDays)
+            .Include(r => r.TableType)
             .AsNoTracking()
             .ToListAsync(ct);
 
