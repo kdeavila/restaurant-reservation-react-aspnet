@@ -144,11 +144,9 @@ public class ReservationService(
         if (duration.TotalMinutes < 30)
             return Result.Failure<Reservation>("Reservation must be at least 30 minutes long.", 400);
 
-        if (dto.Date.Date < DateTime.UtcNow.Date)
-            return Result.Failure<Reservation>("Reservation date cannot be in the past.", 400);
-
-        if (dto.StartTime >= dto.EndTime)
-            return Result.Failure<Reservation>("End time must be after start time.", 400);
+        var reservationDateTime = dto.Date.Date + dto.StartTime;
+        if (reservationDateTime <= DateTime.Now)
+            return Result.Failure<Reservation>("Reservation date must be in the future.", 400);
 
         if (basePrice < 0 || totalPrice < 0)
             return Result.Failure<Reservation>("Prices must be non-negative.", 400);
