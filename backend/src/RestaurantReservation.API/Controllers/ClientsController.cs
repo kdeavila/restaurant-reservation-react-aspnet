@@ -55,7 +55,6 @@ public class ClientsController(IClientService clientService) : ControllerBase
         (int id, [FromBody] UpdateClientDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id) return BadRequest("ID in URL does not match ID in body.");
-        if (!ModelState.IsValid) return BadRequest(ModelState);
 
         var result = await _clientService.UpdateClientAsync(dto, ct);
         if (result.IsFailure)

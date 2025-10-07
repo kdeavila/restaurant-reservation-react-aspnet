@@ -9,19 +9,18 @@ namespace RestaurantReservation.Infrastructure.Repositories;
 public class PricingRuleRepository(RestaurantReservationDbContext context) : IPricingRuleRepository
 {
     private readonly RestaurantReservationDbContext _context = context;
+    
+    public IQueryable<PricingRule> Query()
+        => _context.PricingRules
+            .Include(r => r.PricingRuleDays)
+            .Include(r => r.TableType)
+            .AsNoTracking();
 
     public async Task<PricingRule?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.PricingRules
             .Include(r => r.PricingRuleDays)
             .Include(r => r.TableType)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
-
-    public async Task<IEnumerable<PricingRule>> GetAllAsync(CancellationToken ct = default)
-        => await _context.PricingRules
-            .Include(r => r.PricingRuleDays)
-            .Include(r => r.TableType)
-            .AsNoTracking()
-            .ToListAsync(ct);
 
     public async Task<IEnumerable<PricingRule>> GetApplicableRulesAsync(int tableTypeId, DateTime date,
         TimeSpan startTime,
@@ -38,34 +37,6 @@ public class PricingRuleRepository(RestaurantReservationDbContext context) : IPr
                 endTime <= r.EndTime &&
                 r.PricingRuleDays.Any(d => d.DayOfWeek == (DaysOfWeek)(int)date.DayOfWeek)
             )
-            .ToListAsync(ct);
-
-    public async Task<IEnumerable<PricingRule>> GetActiveByTableTypeWithDaysAsync(
-        int tableTypeId,
-        DateTime date,
-        TimeSpan startTime,
-        TimeSpan endTime,
-        CancellationToken ct = default
-    )
-        => await _context.PricingRules
-            .Include(r => r.PricingRuleDays)
-            .Where(r =>
-                r.TableTypeId == tableTypeId &&
-                r.IsActive &&
-                date.Date >= r.StartDate.Date &&
-                date.Date <= r.EndDate.Date &&
-                endTime > r.StartTime &&
-                startTime < r.EndTime
-            )
-            .AsNoTracking()
-            .ToListAsync(ct);
-
-    public async Task<IEnumerable<PricingRule>> GetActiveRulesAsync(CancellationToken ct = default)
-        => await _context.PricingRules
-            .Include(r => r.PricingRuleDays)
-            .AsNoTracking()
-            .Where(r => r.IsActive &&
-                        (r.StartDate <= DateTime.UtcNow && r.EndDate >= DateTime.UtcNow))
             .ToListAsync(ct);
 
     public async Task AddAsync(PricingRule rule, CancellationToken ct = default)

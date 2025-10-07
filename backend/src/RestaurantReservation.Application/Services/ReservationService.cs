@@ -178,9 +178,7 @@ public class ReservationService(
         var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
         if (reservation is null)
             return Result.Failure<string>("Reservation not found.", 404);
-
-        Console.WriteLine($"📊 BEFORE UPDATE - TableId: {reservation.TableId}");
-
+        
         var finalStartTime = dto.StartTime ?? reservation.StartTime;
         var finalEndTime = dto.EndTime ?? reservation.EndTime;
 
@@ -215,9 +213,6 @@ public class ReservationService(
         await _reservationRepository.UpdateAsync(reservation, ct);
 
         var updatedReservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
-
-        Console.WriteLine($"✅ AFTER SAVE - TableId: {updatedReservation!.TableId}");
-
         return Result.Success<string>("Reservation updated successfully.");
     }
 

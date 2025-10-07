@@ -1,4 +1,6 @@
+using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Common;
+using RestaurantReservation.Application.Common.Pagination;
 using RestaurantReservation.Application.DTOs.PricingRule;
 using RestaurantReservation.Application.DTOs.TableType;
 using RestaurantReservation.Application.Interfaces.Repositories;
@@ -18,51 +20,84 @@ public class PricingRuleService(
     private readonly IPricingRuleDaysRepository _pricingRuleDaysRepository = daysRepo;
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
 
-    public async Task<Result<PricingRule>> CreatePricingRuleAsync(
-        CreatePricingRuleDto dto, CancellationToken ct = default)
+    public async Task<(IEnumerable<PricingRuleDto> Data, PaginationMetadata Pagination)> GetAllAsync(
+        PricingRuleQueryParams queryParams, CancellationToken ct = default)
     {
-        if (string.IsNullOrEmpty(dto.RuleName))
-            return Result.Failure<PricingRule>("RuleName cannot be empty.", 400);
+        var query = _pricingRuleRepository.Query();
 
-        if (string.IsNullOrEmpty(dto.RuleType))
-            return Result.Failure<PricingRule>("RuleType cannot be empty.", 400);
+        if (!string.IsNullOrEmpty(queryParams.RuleName))
+            query = query.Where(r => r.RuleName.Contains(queryParams.RuleName));
 
-        if (dto.StartTime >= dto.EndTime)
-            return Result.Failure<PricingRule>("EndTime must be after StartTime.", 400);
+        if (!string.IsNullOrEmpty(queryParams.RuleType))
+            query = query.Where(r => r.RuleType.Contains(queryParams.RuleType));
 
-        if (dto.StartDate >= dto.EndDate)
-            return Result.Failure<PricingRule>("EndDate must be after StartDate", 400);
+        if (queryParams.StartTime.HasValue)
+            query = query.Where(r => r.StartTime >= queryParams.StartTime.Value);
 
-        if (dto.SurchargePercentage is < 0 or > 100)
-            return Result.Failure<PricingRule>("SurchargePercentage must be between 0 and 100", 400);
+        if (queryParams.EndTime.HasValue)
+            query = query.Where(r => r.EndTime <= queryParams.EndTime.Value);
 
-        if (!dto.DaysOfWeek.Any())
-            return Result.Failure<PricingRule>("At least one day of the week must be specified.", 400);
+        if (queryParams.StartDate.HasValue)
+            query = query.Where(r => r.StartDate >= queryParams.StartDate.Value);
 
-        // Validate DaysOfWeek enum values
-        var validDaysOfWeek = Enum.GetValues<DaysOfWeek>();
-        var invalidDays = dto.DaysOfWeek
-            .Where(d => !validDaysOfWeek.Contains(d)).ToList();
-        if (invalidDays.Any())
-            return Result.Failure<PricingRule>($"Invalid days of week provided: " +
-                                               $"{string.Join(", ", invalidDays)}", 400);
+        if (queryParams.EndDate.HasValue)
+            query = query.Where(r => r.EndDate <= queryParams.EndDate.Value);
 
-        var pricingRule = new PricingRule()
+        if (queryParams.TableTypeId.HasValue)
+            query = query.Where(r => r.TableTypeId == queryParams.TableTypeId.Value);
+
+        if (queryParams.IsActive.HasValue)
+            query = query.Where(r => r.IsActive == queryParams.IsActive.Value);
+
+        // pagination
+        var totalCount = await query.CountAsync(ct);
+        var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
+
+        var rulesPage = await query
+            .Skip(skipNumber)
+            .Take(queryParams.PageSize)
+            .ToListAsync(ct);
+
+        var ruleIds = rulesPage.Select(r => r.Id).ToList();
+        var allDays = await _pricingRuleDaysRepository.GetByPricingRuleIdsAsync(ruleIds, ct);
+
+        var data = rulesPage.Select(rule =>
         {
-            RuleName = dto.RuleName,
-            RuleType = dto.RuleType,
-            StartTime = dto.StartTime,
-            EndTime = dto.EndTime,
-            StartDate = dto.StartDate,
-            EndDate = dto.EndDate,
-            SurchargePercentage = dto.SurchargePercentage,
-            TableTypeId = dto.TableTypeId,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            var days = allDays
+                .Where(d => d.PricingRuleId == rule.Id)
+                .Select(d => d.DayOfWeek)
+                .ToList();
+
+            return new PricingRuleDto(
+                rule.Id,
+                rule.RuleName,
+                rule.RuleType,
+                rule.StartTime,
+                rule.EndTime,
+                rule.SurchargePercentage,
+                rule.StartDate,
+                rule.EndDate,
+                new TableTypeSimpleDto(
+                    rule.TableTypeId,
+                    rule.TableType.Name,
+                    rule.TableType.BasePricePerHour,
+                    rule.TableType.IsActive
+                ),
+                rule.IsActive,
+                rule.CreatedAt,
+                days
+            );
+        });
+
+        var pagination = new PaginationMetadata
+        {
+            Page = queryParams.Page,
+            PageSize = queryParams.PageSize,
+            TotalCount = totalCount,
+            TotalPages = (int)Math.Ceiling(totalCount / (double)queryParams.PageSize)
         };
 
-        await _pricingRuleRepository.AddAsync(pricingRule, ct);
-        return Result.Success(pricingRule);
+        return (data, pagination);
     }
 
     public async Task<Result<PricingRuleDto>> GetByIdAsync(int id, CancellationToken ct = default)
@@ -94,66 +129,98 @@ public class PricingRuleService(
         return Result.Success(pricingRuleDto);
     }
 
-    public async Task<IEnumerable<PricingRuleDto>> GetAllAsync(CancellationToken ct = default)
+    public async Task<Result<PricingRule>> CreatePricingRuleAsync(
+        CreatePricingRuleDto dto, CancellationToken ct = default)
     {
-        var rules = await _pricingRuleRepository.GetAllAsync(ct);
-        var result = new List<PricingRuleDto>();
+        if (string.IsNullOrEmpty(dto.RuleName))
+            return Result.Failure<PricingRule>("RuleName cannot be empty.", 400);
 
-        foreach (var rule in rules)
+        if (string.IsNullOrEmpty(dto.RuleType))
+            return Result.Failure<PricingRule>("RuleType cannot be empty.", 400);
+
+        if (dto.StartTime >= dto.EndTime)
+            return Result.Failure<PricingRule>("EndTime must be after StartTime.", 400);
+
+        if (dto.StartDate >= dto.EndDate)
+            return Result.Failure<PricingRule>("EndDate must be after StartDate", 400);
+
+        if (dto.SurchargePercentage is < -100 or > 100)
+            return Result.Failure<PricingRule>("SurchargePercentage must be between -100 and 100", 400);
+
+        if (!dto.DaysOfWeek.Any())
+            return Result.Failure<PricingRule>("At least one day of the week must be specified.", 400);
+
+        // Validate DaysOfWeek enum values
+        var validDaysOfWeek = Enum.GetValues<DaysOfWeek>();
+        var invalidDays = dto.DaysOfWeek
+            .Where(d => !validDaysOfWeek.Contains(d)).ToList();
+        if (invalidDays.Any())
+            return Result.Failure<PricingRule>($"Invalid days of week provided: " +
+                                               $"{string.Join(", ", invalidDays)}", 400);
+
+        var pricingRule = new PricingRule()
         {
-            var days = await _pricingRuleDaysRepository.GetByPricingRuleIdAsync(rule.Id, ct);
+            RuleName = dto.RuleName,
+            RuleType = dto.RuleType,
+            StartTime = dto.StartTime,
+            EndTime = dto.EndTime,
+            StartDate = dto.StartDate,
+            EndDate = dto.EndDate,
+            SurchargePercentage = dto.SurchargePercentage,
+            TableTypeId = dto.TableTypeId,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
 
-            result.Add(new PricingRuleDto(
-                rule.Id,
-                rule.RuleName,
-                rule.RuleType,
-                rule.StartTime,
-                rule.EndTime,
-                rule.SurchargePercentage,
-                rule.StartDate,
-                rule.EndDate,
-                new TableTypeSimpleDto(
-                    rule.TableTypeId,
-                    rule.TableType.Name,
-                    rule.TableType.BasePricePerHour,
-                    rule.TableType.IsActive
-                ),
-                rule.IsActive,
-                rule.CreatedAt,
-                days.Select(d => d.DayOfWeek).ToList()
-            ));
-        }
-
-        return result;
+        await _pricingRuleRepository.AddAsync(pricingRule, ct);
+        return Result.Success(pricingRule);
     }
 
-    public async Task<Result> UpdatePricingRuleAsync(UpdatePricingRuleDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateAsync(UpdatePricingRuleDto dto, CancellationToken ct = default)
     {
         var rule = await _pricingRuleRepository.GetByIdAsync(dto.Id, ct);
-        if (rule is null) return Result.Failure("Pricing rule not found.", 404);
+        if (rule is null)
+            return Result.Failure("Pricing rule not found.", 404);
 
-        if (dto.TableTypeId.HasValue)
+        if (dto.StartTime is not null && dto.EndTime is not null)
         {
-            var tableTypeExists = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId.Value, ct);
+            var startTime = dto.StartTime.Value;
+            var endTime = dto.EndTime.Value;
 
-            if (tableTypeExists is null)
-                return Result.Failure("Table type not found.", 404);
+            if (startTime >= endTime)
+                return Result.Failure("EndTime must be after StartTime", 400);
         }
 
-        if (dto.RuleName != null && string.IsNullOrEmpty(dto.RuleName))
-            return Result.Failure("RuleName cannot be empty.", 400);
+        if (dto.StartDate is not null && dto.EndDate is not null)
+        {
+            var startDate = dto.StartDate.Value;
+            var endDate = dto.EndDate.Value;
 
-        if (dto.RuleType != null && string.IsNullOrEmpty(dto.RuleType))
-            return Result.Failure("RuleType cannot be empty.", 400);
+            if (startDate >= endDate)
+                return Result.Failure("EndDate must be after StartDate", 400);
+        }
 
-        if (dto.StartTime.HasValue && dto.EndTime.HasValue && dto.StartTime.Value >= dto.EndTime.Value)
-            return Result.Failure("EndTime must be after StartTime.", 400);
+        if (dto.SurchargePercentage is < -100 or > 100)
+            return Result.Failure("SurchargePercentage must be between -100 and 100", 400);
 
-        if (dto.StartDate.HasValue && dto.EndDate.HasValue && dto.StartDate.Value >= dto.EndDate.Value)
-            return Result.Failure("EndDate must be after StartDate", 400);
+        if (dto.DaysOfWeek is { Count: > 0 })
+        {
+            var invalidDays = dto.DaysOfWeek.Except(Enum.GetValues<DaysOfWeek>()).ToList();
+            if (invalidDays.Any())
+                return Result.Failure($"Invalid days of week provided: " +
+                                      $"{string.Join(", ", invalidDays)}", 400);
+        }
+        else if (dto.DaysOfWeek is not null)
+        {
+            return Result.Failure("At least one day of the week must be specified.", 400);
+        }
 
-        if (dto.SurchargePercentage.HasValue && (dto.SurchargePercentage < 0 || dto.SurchargePercentage > 100))
-            return Result.Failure("SurchargePercentage must be between 0 and 100", 400);
+        if (dto.TableTypeId.HasValue && dto.TableTypeId.Value != rule.TableTypeId)
+        {
+            var tableType = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId.Value, ct);
+            if (tableType is null || !tableType.IsActive)
+                return Result.Failure("Table type not found or inactive", 404);
+        }
 
         rule.RuleName = dto.RuleName ?? rule.RuleName;
         rule.RuleType = dto.RuleType ?? rule.RuleType;
@@ -169,29 +236,16 @@ public class PricingRuleService(
 
         if (dto.DaysOfWeek != null)
         {
-            if (!dto.DaysOfWeek.Any())
-                return Result.Failure("At least one day of the week must be specified.", 400);
-
-            // Validate DaysOfWeek enum values
-            var validDaysOfWeek = Enum.GetValues<DaysOfWeek>();
-            var invalidDays = dto.DaysOfWeek
-                .Where(d => !validDaysOfWeek.Contains(d)).ToList();
-            if (invalidDays.Any())
-                return Result.Failure($"Invalid days of week provided:" +
-                                      $" {string.Join(", ", invalidDays)}", 400);
-
             await _pricingRuleDaysRepository.DeleteByPricingRuleIdAsync(rule.Id, ct);
-
-            var dayEntities = dto.DaysOfWeek.Select(d => new PricingRuleDays()
-            {
-                PricingRuleId = rule.Id,
-                DayOfWeek = d
-            }).ToList();
-
+            var dayEntities = dto.DaysOfWeek
+                .Select(d => new PricingRuleDays
+                {
+                    PricingRuleId = rule.Id,
+                    DayOfWeek = d
+                }).ToList();
             await _pricingRuleDaysRepository.AddRangeAsync(dayEntities, ct);
         }
 
-        await _pricingRuleRepository.UpdateAsync(rule, ct);
         return Result.Success();
     }
 

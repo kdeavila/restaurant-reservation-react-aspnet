@@ -14,6 +14,14 @@ public class PricingRuleDaysRepository(RestaurantReservationDbContext context) :
             .AsNoTracking()
             .FirstOrDefaultAsync(d => d.Id == id, ct);
 
+    public async Task<IEnumerable<PricingRuleDays>> GetByPricingRuleIdsAsync(
+        IEnumerable<int> ruleIds,
+        CancellationToken ct = default
+    )
+        => await _context.PricingRuleDays
+            .Where(prd => ruleIds.Contains(prd.PricingRuleId))
+            .ToListAsync(ct);
+    
     public async Task<IEnumerable<PricingRuleDays>> GetByPricingRuleIdAsync(
         int pricingRuleId,
         CancellationToken ct = default

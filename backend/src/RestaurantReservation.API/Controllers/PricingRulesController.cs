@@ -18,11 +18,13 @@ public class PricingRulesController(
     private readonly CreatePricingRuleUseCase _createPricingRuleUseCase = createPricingRuleUseCase;
 
     [HttpGet]
-    public async Task<ActionResult<ApiResponse<IEnumerable<PricingRuleDto>>>> GetAll(CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<IEnumerable<PricingRuleDto>>>> GetAll(
+        [FromQuery] PricingRuleQueryParams queryParams, CancellationToken ct = default)
     {
-        var result = await _pricingRuleService.GetAllAsync(ct);
-        return Ok(ApiResponse<IEnumerable<PricingRuleDto>>.SuccessResponse(result,
-            "Pricing rules retrieved successfully"));
+        var (data, pagination) = await _pricingRuleService.GetAllAsync(queryParams, ct);
+
+        return Ok(ApiResponse<IEnumerable<PricingRuleDto>>
+            .SuccessResponse(data, "Pricing rules retrieved successfully", pagination: pagination));
     }
 
     [HttpGet("{id:int}")]
@@ -58,13 +60,19 @@ public class PricingRulesController(
         int id, UpdatePricingRuleDto dto, CancellationToken ct = default)
     {
         if (id != dto.Id)
-            return BadRequest("ID in URL does not match ID in body.");
-        if (!ModelState.IsValid) return BadRequest(ModelState);
+            return BadRequest(ApiResponse<PricingRuleDto>.ErrorResponse("ID mismatch", ErrorCodes.ValidationError));
 
-        var result = await _pricingRuleService.UpdatePricingRuleAsync(dto, ct);
-        return result.IsFailure
-            ? StatusCode(result.StatusCode, new { error = result.Error })
-            : NoContent();
+        var result = await _pricingRuleService.UpdateAsync(dto, ct);
+        if (result.IsFailure)
+            return StatusCode(result.StatusCode, ApiResponse<PricingRuleDto>
+                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+
+        var updatedResult = await _pricingRuleService.GetByIdAsync(id, ct);
+        if (updatedResult.IsFailure)
+            return StatusCode(updatedResult.StatusCode, ApiResponse<PricingRuleDto>
+                .ErrorResponse(updatedResult.Error, GetErrorCode(updatedResult.StatusCode), updatedResult.StatusCode));
+
+        return Ok(ApiResponse<PricingRuleDto>.SuccessResponse(updatedResult.Value, "Pricing rule updated"));
     }
 
     [HttpDelete("{id:int}")]

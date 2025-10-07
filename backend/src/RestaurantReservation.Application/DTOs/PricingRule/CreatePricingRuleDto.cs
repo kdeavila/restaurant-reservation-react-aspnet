@@ -13,5 +13,5 @@ public class CreatePricingRuleDto
     [Required] public DateTime StartDate { get; set; }
     [Required] public DateTime EndDate { get; set; }
     [Required] public int TableTypeId { get; set; }
-    [Required] public List<DaysOfWeek> DaysOfWeek { get; set; } = new List<DaysOfWeek>();
+    [Required] public List<DaysOfWeek> DaysOfWeek { get; set; } = [];
 }
