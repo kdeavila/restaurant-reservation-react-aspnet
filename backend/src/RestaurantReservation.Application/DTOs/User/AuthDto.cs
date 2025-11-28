@@ -1,10 +1,11 @@
 namespace RestaurantReservation.Application.DTOs.User;
 
-public record AuthResponse(
+public record AuthDto(
     int Id,
     string Username,
     string Email, 
     string Role,
     string Status,
-    string Token
+    string Token,
+    DateTime TokenExpiry
 );

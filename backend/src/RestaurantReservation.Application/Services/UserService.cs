@@ -4,6 +4,7 @@ using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -39,27 +40,31 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
         return Result.Success(userDto);
     }
 
-    public async Task<Result<AuthResponse>> LoginAsync(LoginDto dto, CancellationToken ct = default)
+    public async Task<Result<AuthDto>> LoginAsync(LoginDto dto, CancellationToken ct = default)
     {
         var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
         if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-            return Result.Failure<AuthResponse>("Invalid credentials.", 401);
+            return Result.Failure<AuthDto>("Invalid credentials.", 401);
 
         if (user.Status != UserStatus.Active)
-            return Result.Failure<AuthResponse>("User account inactive.", 403);
+            return Result.Failure<AuthDto>("User account inactive.", 403);
 
         var token = _tokenService.GenerateToken(user);
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(token);
+        var expiryUtc = jwtToken.ValidTo;
 
-        var authResponse = new AuthResponse(
+        var authResponse = new AuthDto(
             user.Id,
             user.Username,
             user.Email,
             user.Role.ToString(),
             user.Status.ToString(),
-            token
+            token,
+            expiryUtc
         );
 
-        return Result.Success<AuthResponse>(authResponse);
+        return Result.Success<AuthDto>(authResponse);
     }
 
     public async Task<Result<UserDto>> GetByIdAsync(int id, CancellationToken ct = default)
