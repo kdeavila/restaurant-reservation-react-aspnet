@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Responses;
@@ -9,6 +10,7 @@ namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
 [Route("api/clients")]
+[Authorize(Policy = "AllRoles")]
 public class ClientsController(IClientService clientService) : ControllerBase
 {
     private readonly IClientService _clientService = clientService;
@@ -70,6 +72,7 @@ public class ClientsController(IClientService clientService) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "AdminOrManager")]
     public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
     {
         var result = await _clientService.DeactivateAsync(id, ct);

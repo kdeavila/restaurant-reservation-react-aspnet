@@ -1,336 +1,198 @@
-# 🍽️ Restaurant Reservation System
+# Restaurant Reservation System
 
-A full-stack restaurant reservation management system built with **ASP.NET Core** backend and **React** frontend. This system is designed for restaurant administrators and staff to manage table reservations, clients, and availability in real-time.
+Sistema de gestión de reservas para restaurantes construido con **ASP.NET Core 9** (backend) y **React** (frontend). Diseñado para que administradores y personal del restaurante gestionen reservas, clientes y disponibilidad de mesas.
 
-[![Tech Stack](https://img.shields.io/badge/Tech%20Stack-ASP.NET%20Core%20%2B%20React-blue)](#tech-stack)
-[![Database](https://img.shields.io/badge/Database-SQL%20Server-orange)](#database-schema)
-[![Status](https://img.shields.io/badge/Status-In%20Development-yellow)](#development-status)
+## Descripción
 
-## 📋 Table of Contents
+Sistema que permite al personal autorizado del restaurante:
+- Gestionar información de clientes y su historial de reservas
+- Administrar mesas con diferentes tipos y precios dinámicos
+- Crear, modificar y cancelar reservas con cálculo automático de precios
+- Control de acceso basado en roles (Admin, Manager, Employee)
 
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Database Schema](#database-schema)
-- [Business Rules](#business-rules)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [API Endpoints](#api-endpoints)
-- [Development Status](#development-status)
-- [Contributing](#contributing)
+> Solo el personal autorizado puede realizar operaciones. Los clientes no pueden hacer reservas directamente.
 
-## 🎯 Overview
-
-The Restaurant Reservation System enables authorized restaurant staff to efficiently manage:
-- **Client Management**: Store and manage customer information and reservation history
-- **Table Management**: Configure tables, capacities, and pricing by table type (Normal, Terrace, VIP)
-- **Reservation Management**: Create, edit, and track reservations with dynamic pricing
-- **User Management**: Role-based access control for administrators and employees
-
-> **Note**: Only authorized personnel can perform operations. Clients cannot make reservations directly through this system.
-
-## ✨ Features
-
-### 🧑‍💼 Client Management
-- ➕ Add, edit, delete, and view client profiles
-- 📧 Store contact information (email, phone)
-- 📊 Track complete reservation history
-- 🔍 Search and filter clients
-
-### 🪑 Table Management
-- 🏗️ Manage physical tables and seating capacity
-- 🏷️ Assign table types with different pricing:
-  - **Normal Tables**: Standard pricing
-  - **Terrace Tables**: Outdoor seating with premium
-  - **VIP Tables**: Premium experience with highest rates
-- 📈 Track table status (Active, Maintenance, Inactive)
-- 📍 Optional location tracking within restaurant
-
-### 📅 Reservation Management
-- 🆕 Create, edit, and cancel reservations
-- ⏰ Real-time table availability checking
-- 💰 Dynamic pricing calculation:
-  - Base price per hour by table type
-  - Weekend/holiday surcharges
-  - Peak hour surcharges
-- 📋 Support for special notes and requirements
-- 🔄 Reservation status tracking (Confirmed, Canceled, No Show)
-
-### 👥 User Management
-- 🔐 Role-based authentication (Admin, Employee)
-- 👤 User account management
-- 🛡️ JWT-based secure authentication
-- 📊 User activity tracking
-
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Backend
-- **Framework**: ASP.NET Core Web API
+- **Framework**: ASP.NET Core 9 Web API
 - **ORM**: Entity Framework Core
-- **Database**: SQL Server (configurable)
+- **Database**: SQL Server
 - **Authentication**: JWT Bearer tokens
-- **Documentation**: Swagger/OpenAPI
+- **Architecture**: Clean Architecture (Domain, Application, Infrastructure, API)
 
-### Frontend
-- **Framework**: React (JavaScript/TypeScript)
+### Frontend (Planned)
+- **Framework**: React
 - **Styling**: Tailwind CSS
-- **State Management**: Context API / Redux (TBD)
-- **HTTP Client**: Axios
-- **UI Components**: Custom components with Tailwind
 
-### Development Tools
-- **IDE**: Visual Studio / VS Code
-- **Version Control**: Git
-- **Package Managers**: NuGet (backend), npm/yarn (frontend)
-
-## 🗄️ Database Schema
-
-The system uses 5 core entities with the following relationships:
-
-### 📊 Entity Relationship Diagram
-![ERD Diagram](docs/erd_diagram.png)
-
-### 🏷️ Core Entities
-
-#### TableType
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | PK | Unique identifier |
-| Name | string | Table type (Normal, Terrace, VIP) |
-| Description | string | Optional description |
-| BasePricePerHour | decimal | Base hourly rate |
-| DaySurcharge | decimal | Weekend/holiday surcharge |
-| PeakHourSurcharge | decimal | Peak hour surcharge |
-| IsActive | bool | Availability status |
-| CreatedAt | datetime | Creation timestamp |
-
-#### Table
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | PK | Unique identifier |
-| TableCode | string | Human-friendly identifier |
-| Capacity | int | Maximum guest capacity |
-| TableTypeId | FK | Reference to TableType |
-| Location | string | Physical location (optional) |
-| Status | enum | Active, Maintenance, Inactive |
-| CreatedAt | datetime | Creation timestamp |
-
-#### Client
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | PK | Unique identifier |
-| FirstName | string | Client's first name |
-| LastName | string | Client's last name |
-| Email | string | Unique email address |
-| Phone | string | Contact phone number |
-| Status | enum | Active, Inactive |
-| CreatedAt | datetime | Creation timestamp |
-
-#### Reservation
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | PK | Unique identifier |
-| ClientId | FK | Reference to Client |
-| TableId | FK | Reference to Table |
-| Date | date | Reservation date |
-| StartTime | time | Start time |
-| EndTime | time | End time |
-| NumberOfGuests | int | Party size |
-| BasePrice | decimal | Calculated base price |
-| DaySurcharge | decimal | Applied day surcharge |
-| PeakHourSurcharge | decimal | Applied peak hour surcharge |
-| TotalPrice | decimal | Final calculated price |
-| Status | enum | Confirmed, Canceled, NoShow |
-| Notes | string | Special requests/notes |
-| CreatedAt | datetime | Creation timestamp |
-| UpdatedAt | datetime | Last modification |
-
-#### User
-| Field | Type | Description |
-|-------|------|-------------|
-| Id | PK | Unique identifier |
-| Username | string | Unique username |
-| PasswordHash | string | Secure password hash |
-| Role | enum | Admin, Employee |
-| Status | enum | Active, Inactive |
-| CreatedAt | datetime | Creation timestamp |
-
-## 📏 Business Rules
-
-1. **Table Availability**: Only available tables can be booked for specific time ranges
-2. **Dynamic Pricing**: Prices calculated using:
-   - Base price per hour from TableType
-   - Duration in hours
-   - Weekend/holiday surcharges
-   - Peak hour surcharges
-3. **Unique Constraints**:
-   - Client email addresses must be unique
-   - Usernames must be unique
-   - Table codes should be unique
-4. **Reservation Conflicts**: No overlapping reservations for the same table and time
-5. **Data Integrity**: Deleting clients preserves reservation history for auditing
-
-## 📁 Project Structure
+## Estructura del Proyecto
 
 ```
 restaurant-reservation-react-aspnet/
-├── 📁 docs/
-│   └── erd_diagram.png          # Entity Relationship Diagram
-├── 📄 ReservationController.cs  # API Controller (in development)
-├── 📄 requirements.md          # Detailed project requirements
-├── 📄 .gitignore              # Git ignore patterns
-└── 📄 README.md               # This file
+├── backend/
+│   └── src/
+│       ├── RestaurantReservation.API/           # Controllers, Middleware
+│       ├── RestaurantReservation.Application/   # Services, DTOs, UseCases
+│       ├── RestaurantReservation.Domain/        # Entities, Enums
+│       └── RestaurantReservation.Infrastructure/# DbContext, Repositories
+├── frontend/                                    # React app (planned)
+└── docs/
+    └── erd_diagram.png
 ```
 
-## 🚀 Getting Started
+## Database Schema
+
+![ERD Diagram](docs/erd_diagram.png)
+
+### Entidades Principales
+
+| Entity | Descripción |
+|--------|-------------|
+| **User** | Usuarios del sistema con roles (Admin, Manager, Employee) |
+| **Client** | Clientes del restaurante con historial de reservas |
+| **TableType** | Tipos de mesa con precio base por hora |
+| **Table** | Mesas físicas con capacidad y estado |
+| **Reservation** | Reservas con precios calculados dinámicamente |
+| **PricingRule** | Reglas de precios (recargos por día/hora) |
+
+### Enums
+
+- **UserRole**: Admin, Manager, Employee
+- **UserStatus**: Active, Inactive
+- **ClientStatus**: Active, Inactive
+- **TableStatus**: Active, Maintenance, Inactive
+- **ReservationStatus**: Pending, Confirmed, Cancelled, Completed
+
+## API Endpoints
+
+> Todos los endpoints (excepto Auth) requieren autenticación JWT.
+
+### Authentication (Público)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Registrar usuario |
+| POST | `/api/auth/login` | Iniciar sesión |
+
+### Users (Solo Admin)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users` | Listar usuarios (con paginación) |
+| GET | `/api/users/{id}` | Obtener usuario por ID |
+| DELETE | `/api/users/{id}` | Desactivar usuario |
+
+### Clients
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/clients` | Listar clientes | Admin, Manager, Employee |
+| GET | `/api/clients/{id}` | Obtener cliente por ID | Admin, Manager, Employee |
+| POST | `/api/clients` | Crear cliente | Admin, Manager, Employee |
+| PATCH | `/api/clients/{id}` | Actualizar cliente | Admin, Manager, Employee |
+| DELETE | `/api/clients/{id}` | Desactivar cliente | Admin, Manager |
+
+### Tables
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/tables` | Listar mesas | Admin, Manager, Employee |
+| GET | `/api/tables/{id}` | Obtener mesa por ID | Admin, Manager, Employee |
+| POST | `/api/tables` | Crear mesa | Admin, Manager |
+| PATCH | `/api/tables/{id}` | Actualizar mesa | Admin, Manager |
+| DELETE | `/api/tables/{id}` | Desactivar mesa | Admin |
+
+### Table Types
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/table-types` | Listar tipos de mesa | Admin, Manager, Employee |
+| GET | `/api/table-types/{id}` | Obtener tipo por ID | Admin, Manager, Employee |
+| POST | `/api/table-types` | Crear tipo de mesa | Admin |
+| PATCH | `/api/table-types/{id}` | Actualizar tipo | Admin |
+| DELETE | `/api/table-types/{id}` | Desactivar tipo | Admin |
+
+### Reservations
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/reservations` | Listar reservas | Admin, Manager, Employee |
+| GET | `/api/reservations/{id}` | Obtener reserva por ID | Admin, Manager, Employee |
+| POST | `/api/reservations` | Crear reserva | Admin, Manager, Employee |
+| PATCH | `/api/reservations/{id}` | Actualizar reserva | Admin, Manager, Employee |
+| DELETE | `/api/reservations/{id}` | Cancelar reserva | Admin, Manager, Employee |
+
+### Pricing Rules
+| Method | Endpoint | Description | Roles |
+|--------|----------|-------------|-------|
+| GET | `/api/pricing-rules` | Listar reglas de precios | Admin, Manager, Employee |
+| GET | `/api/pricing-rules/{id}` | Obtener regla por ID | Admin, Manager, Employee |
+| POST | `/api/pricing-rules` | Crear regla | Admin, Manager |
+| PATCH | `/api/pricing-rules/{id}` | Actualizar regla | Admin, Manager |
+| DELETE | `/api/pricing-rules/{id}` | Desactivar regla | Admin |
+
+## Reglas de Negocio
+
+1. **Disponibilidad**: No se permiten reservas superpuestas para la misma mesa
+2. **Precios Dinámicos**: Calculados según tipo de mesa, duración y reglas de pricing
+3. **Validaciones**:
+   - Email de cliente único
+   - Username de usuario único
+   - Reserva mínima de 30 minutos
+   - Número de invitados no puede exceder capacidad de mesa
+4. **Soft Delete**: Clientes y mesas se desactivan, no se eliminan físicamente
+
+## Getting Started
 
 ### Prerequisites
-- .NET 6.0 or later
-- Node.js 16+ and npm/yarn
-- SQL Server (LocalDB for development)
-- Visual Studio 2022 or VS Code
+- .NET 9.0 SDK
+- SQL Server
+- Node.js 18+ (para frontend)
 
-### Installation
+### Backend Setup
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd restaurant-reservation-react-aspnet
-   ```
+```bash
+cd backend/src/RestaurantReservation.API
 
-2. **Backend Setup**
-   ```bash
-   # Navigate to backend directory (when created)
-   cd backend
-   
-   # Restore NuGet packages
-   dotnet restore
-   
-   # Update database connection string in appsettings.json
-   # Run database migrations
-   dotnet ef database update
-   
-   # Start the API
-   dotnet run
-   ```
+# Restaurar dependencias
+dotnet restore
 
-3. **Frontend Setup**
-   ```bash
-   # Navigate to frontend directory (when created)
-   cd frontend
-   
-   # Install dependencies
-   npm install
-   
-   # Start development server
-   npm start
-   ```
+# Aplicar migraciones
+dotnet ef database update
 
-### Environment Variables
+# Ejecutar
+dotnet run
+```
 
-Create `.env` files for configuration:
+### Configuration (appsettings.json)
 
-**Backend (appsettings.json)**
 ```json
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=RestaurantReservationDB;Trusted_Connection=true;"
+    "DefaultConnection": "Server=localhost;Database=RestaurantReservationDB;Trusted_Connection=true;"
   },
   "JwtSettings": {
-    "SecretKey": "your-secret-key",
+    "SecretKey": "your-secret-key-min-32-chars",
     "Issuer": "RestaurantReservationAPI",
-    "Audience": "RestaurantReservationClient"
+    "Audience": "RestaurantReservationClient",
+    "ExpirationMinutes": 60
   }
 }
 ```
 
-**Frontend (.env)**
-```env
-REACT_APP_API_BASE_URL=https://localhost:7000/api
-```
+## Development Status
 
-## 🔌 API Endpoints
+### Completado
+- [x] Clean Architecture setup
+- [x] Entity Framework Core con SQL Server
+- [x] CRUD completo para todas las entidades
+- [x] Sistema de autenticación JWT
+- [x] Autorización por roles en endpoints
+- [x] Paginación y filtros en endpoints
+- [x] Cálculo dinámico de precios
+- [x] Validaciones de negocio
+- [x] Respuestas API estandarizadas
 
-### Authentication
-- `POST /api/auth/login` - User login
-- `POST /api/auth/register` - Register new user (Admin only)
-
-### Reservations
-- `GET /api/reservations` - List all reservations
-- `GET /api/reservations/{id}` - Get specific reservation
-- `POST /api/reservations` - Create new reservation
-- `PUT /api/reservations/{id}` - Update reservation
-- `DELETE /api/reservations/{id}` - Cancel reservation
-
-### Tables
-- `GET /api/tables` - List all tables
-- `GET /api/tables/available` - Check table availability
-- `POST /api/tables` - Create new table (Admin only)
-- `PUT /api/tables/{id}` - Update table (Admin only)
-
-### Clients
-- `GET /api/clients` - List all clients
-- `GET /api/clients/{id}` - Get client details
-- `POST /api/clients` - Add new client
-- `PUT /api/clients/{id}` - Update client information
-
-### Table Types
-- `GET /api/tabletypes` - List table types and pricing
-- `POST /api/tabletypes` - Create table type (Admin only)
-- `PUT /api/tabletypes/{id}` - Update pricing (Admin only)
-
-## 📈 Development Status
-
-### ✅ Completed
-- [x] Project requirements and specifications
-- [x] Database schema design and ERD
-- [x] .gitignore configuration
-- [x] Project documentation
-
-### 🚧 In Progress
-- [ ] Backend API implementation
-- [ ] Database models and Entity Framework setup
-- [ ] Authentication system
-- [ ] Core CRUD operations
-
-### 📋 Planned
-- [ ] Frontend React application
-- [ ] API integration
-- [ ] User interface design
-- [ ] Testing suite
-- [ ] Deployment configuration
-
-### 🎯 Next Steps
-1. Implement Entity Framework models
-2. Create database migrations
-3. Build core API controllers
-4. Set up JWT authentication
-5. Create React frontend structure
-6. Integrate frontend with backend API
-
-## 🤝 Contributing
-
-This is a personal project, but suggestions and feedback are welcome!
-
-### Development Guidelines
-- Follow established code patterns and conventions
-- Write meaningful commit messages
-- Update documentation for new features
-- Test thoroughly before committing
-
-### Code Style
-- **Backend**: Follow C# coding conventions
-- **Frontend**: Use ESLint and Prettier configurations
-- **Database**: Use descriptive naming for entities and fields
+### Pendiente
+- [ ] Frontend React
+- [ ] Notificaciones por email
+- [ ] Tests unitarios e integración
 
 ---
-
-## 📞 Contact
 
 **Developer**: Keyner  
-**Project**: Restaurant Reservation System  
-**Technology**: ASP.NET Core + React  
-
----
-
-*This README will be updated as the project progresses. Last updated: 2025-10-25*
+**Last updated**: 2025-12-02

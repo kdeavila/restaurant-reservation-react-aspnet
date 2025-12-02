@@ -11,6 +11,7 @@ namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
 [Route("api/reservations")]
+[Authorize(Policy = "AllRoles")]
 public class ReservationsController(
     CreateReservationUseCase createReservationUseCase,
     UpdateReservationUseCase updateReservationUseCase,
@@ -43,7 +44,6 @@ public class ReservationsController(
     }
 
     [HttpPost]
-    [Authorize]
     public async Task<ActionResult<ApiResponse<ReservationDto>>> CreateReservation(
         [FromBody] CreateReservationDto dto, CancellationToken ct = default)
     {

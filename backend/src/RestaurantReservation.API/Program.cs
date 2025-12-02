@@ -40,7 +40,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         }
     );
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("AdminOrManager", policy => policy.RequireRole("Admin", "Manager"));
+    options.AddPolicy("AllRoles", policy => policy.RequireRole("Admin", "Manager", "Employee"));
+});
 
 // Register DbContext with SQL Server and specify the migration assembly
 builder.Services.AddDbContext<RestaurantReservationDbContext>(options => options.UseSqlServer

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Responses;
@@ -8,6 +9,7 @@ namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
 [Route("api/users")]
+[Authorize(Policy = "AdminOnly")]
 public class UsersController(IUserService userService) : ControllerBase
 {
     private readonly IUserService _userService = userService;

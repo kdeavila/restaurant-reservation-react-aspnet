@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Responses;
@@ -9,6 +10,7 @@ namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
 [Route("api/pricing-rules")]
+[Authorize(Policy = "AllRoles")]
 public class PricingRulesController(
     IPricingRuleService pricingRuleService,
     CreatePricingRuleUseCase createPricingRuleUseCase
@@ -39,6 +41,7 @@ public class PricingRulesController(
     }
 
     [HttpPost]
+    [Authorize(Policy = "AdminOrManager")]
     public async Task<ActionResult<ApiResponse<PricingRuleDto>>> Create(
         [FromBody] CreatePricingRuleDto dto, CancellationToken ct = default)
     {
@@ -56,6 +59,7 @@ public class PricingRulesController(
     }
 
     [HttpPatch("{id:int}")]
+    [Authorize(Policy = "AdminOrManager")]
     public async Task<ActionResult<ApiResponse<PricingRuleDto>>> Update(
         int id, UpdatePricingRuleDto dto, CancellationToken ct = default)
     {
@@ -76,6 +80,7 @@ public class PricingRulesController(
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
     {
         var result = await _pricingRuleService.DeactivateAsync(id, ct);

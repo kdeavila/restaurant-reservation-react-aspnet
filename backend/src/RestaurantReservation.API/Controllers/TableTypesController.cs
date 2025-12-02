@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Responses;
@@ -8,6 +9,7 @@ namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
 [Route("api/table-types")]
+[Authorize(Policy = "AllRoles")]
 public class TableTypesController(ITableTypeService tableTypeService) : ControllerBase
 {
     private readonly ITableTypeService _tableTypeService = tableTypeService;
@@ -35,6 +37,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
     }
 
     [HttpPost]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<TableTypeDto>>> Create(
         [FromBody] CreateTableTypeDto dto, CancellationToken ct = default)
     {
@@ -52,6 +55,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
     }
 
     [HttpPatch("{id:int}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<TableTypeDto>>> Update(
         int id,
         [FromBody] UpdateTableTypeDto dto,
@@ -75,6 +79,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
     {
         var result = await _tableTypeService.DeactivateAsync(id, ct);
