@@ -136,7 +136,7 @@ public class ReservationService(
         return Result.Success(reservationDto);
     }
 
-    public async Task<Result<Reservation>> CreateReservationAsync(
+    public async Task<Result<Reservation>> CreateAsync(
         CreateReservationDto dto, int createdByUserId,
         decimal basePrice, decimal totalPrice, CancellationToken ct = default)
     {
@@ -172,7 +172,7 @@ public class ReservationService(
         return Result.Success(reservation);
     }
 
-    public async Task<Result<string>> UpdateReservationAsync
+    public async Task<Result<string>> UpdateAsync
         (UpdateReservationDto dto, decimal? basePrice, decimal? totalPrice, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
@@ -216,7 +216,7 @@ public class ReservationService(
         return Result.Success<string>("Reservation updated successfully.");
     }
 
-    public async Task<Result<string>> CancelReservationAsync(int id, CancellationToken ct = default)
+    public async Task<Result<string>> CancelAsync(int id, CancellationToken ct = default)
     {
         var reservation = await _reservationRepository.GetByIdAsync(id, ct);
         if (reservation is null)

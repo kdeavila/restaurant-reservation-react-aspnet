@@ -91,7 +91,7 @@ public class ReservationsController(
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
     {
-        var result = await _reservationService.CancelReservationAsync(id, ct);
+        var result = await _reservationService.CancelAsync(id, ct);
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ReservationDto>.ErrorResponse(
                 result.Error, GetErrorCode(result.StatusCode), result.StatusCode));

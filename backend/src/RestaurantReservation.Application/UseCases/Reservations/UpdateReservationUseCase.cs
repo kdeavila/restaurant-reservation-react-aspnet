@@ -86,7 +86,7 @@ public class UpdateReservationUseCase(
                     ($"Invalid status transition from {reservation.Status} to {dto.Status}.", 400);
         }
 
-        var updatedResult = await _reservationService.UpdateReservationAsync(dto, newBasePrice, newTotalPrice, ct);
+        var updatedResult = await _reservationService.UpdateAsync(dto, newBasePrice, newTotalPrice, ct);
 
         return updatedResult.IsFailure
             ? Result.Failure<string>(updatedResult.Error, updatedResult.StatusCode)

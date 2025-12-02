@@ -41,7 +41,7 @@ public class ClientsController(IClientService clientService) : ControllerBase
             return BadRequest(ApiResponse<ClientDto>.ErrorResponse(
                 "Invalid model", ErrorCodes.ValidationError));
 
-        var result = await _clientService.CreateClientAsync(dto, ct);
+        var result = await _clientService.CreateAsync(dto, ct);
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ClientDto>
                 .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
@@ -56,7 +56,7 @@ public class ClientsController(IClientService clientService) : ControllerBase
     {
         if (id != dto.Id) return BadRequest("ID in URL does not match ID in body.");
 
-        var result = await _clientService.UpdateClientAsync(dto, ct);
+        var result = await _clientService.UpdateAsync(dto, ct);
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<ClientDto>
                 .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
@@ -72,7 +72,7 @@ public class ClientsController(IClientService clientService) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
     {
-        var result = await _clientService.DeactivateClientAsync(id, ct);
+        var result = await _clientService.DeactivateAsync(id, ct);
         if (result.IsFailure)
             return StatusCode(result.StatusCode, ApiResponse<string>
                 .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));

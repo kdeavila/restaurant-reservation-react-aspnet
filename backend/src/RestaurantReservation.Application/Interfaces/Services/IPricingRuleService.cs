@@ -7,7 +7,7 @@ namespace RestaurantReservation.Application.Interfaces.Services;
 
 public interface IPricingRuleService
 {
-    Task<Result<PricingRule>> CreatePricingRuleAsync(CreatePricingRuleDto dto, CancellationToken ct = default);
+    Task<Result<PricingRule>> CreateAsync(CreatePricingRuleDto dto, CancellationToken ct = default);
     Task<Result<PricingRuleDto>> GetByIdAsync(int id, CancellationToken ct = default);
 
     Task<(IEnumerable<PricingRuleDto> Data, PaginationMetadata Pagination)> GetAllAsync(

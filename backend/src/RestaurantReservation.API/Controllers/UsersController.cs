@@ -34,7 +34,7 @@ public class UsersController(IUserService userService) : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<ActionResult<ApiResponse<string>>> Deactivate(int id, CancellationToken ct = default)
     {
-        var result = await _userService.DeactivateUserAsync(id, ct);
+        var result = await _userService.DeactivateAsync(id, ct);
         if (result.IsFailure)
             return StatusCode(result.StatusCode,
                 ApiResponse<string>.ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));

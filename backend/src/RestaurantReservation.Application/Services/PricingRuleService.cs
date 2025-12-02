@@ -129,7 +129,7 @@ public class PricingRuleService(
         return Result.Success(pricingRuleDto);
     }
 
-    public async Task<Result<PricingRule>> CreatePricingRuleAsync(
+    public async Task<Result<PricingRule>> CreateAsync(
         CreatePricingRuleDto dto, CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(dto.RuleName))

@@ -24,7 +24,7 @@ public class CreatePricingRuleUseCase(
         if (tableTypeExists is null || !tableTypeExists.IsActive)
             return Result.Failure<PricingRuleDto>("TableType not found or inactive.", 400);
 
-        var pricingRule = await _pricingRuleService.CreatePricingRuleAsync(dto, ct);
+        var pricingRule = await _pricingRuleService.CreateAsync(dto, ct);
         if (pricingRule.IsFailure)
             return Result.Failure<PricingRuleDto>(pricingRule.Error, pricingRule.StatusCode);
 

@@ -73,7 +73,7 @@ public class CreateReservationUseCase(
         var (basePrice, totalPrice) = priceResult.Value;
 
         var reservation = await
-            _reservationService.CreateReservationAsync(dto, userId, basePrice, totalPrice, ct);
+            _reservationService.CreateAsync(dto, userId, basePrice, totalPrice, ct);
 
         if (reservation.IsFailure)
             return Result.Failure<ReservationDto>(reservation.Error, priceResult.StatusCode);

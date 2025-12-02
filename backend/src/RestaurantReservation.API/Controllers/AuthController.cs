@@ -19,7 +19,7 @@ public class AuthController(IUserService userService) : ControllerBase
             return BadRequest(ApiResponse<UserDto>
                 .ErrorResponse("Invalid model state.", ErrorCodes.ValidationError, 400));
 
-        var result = await _userService.RegisterUserAsync(dto, ct);
+        var result = await _userService.RegisterAsync(dto, ct);
         if (result.IsFailure)
         {
             var status = result.StatusCode == 0 ? 400 : result.StatusCode;

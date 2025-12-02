@@ -15,7 +15,7 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
     private readonly IUserRepository _userRepository = userRepository;
     private readonly ITokenService _tokenService = tokenService;
 
-    public async Task<Result<UserDto>> RegisterUserAsync(CreateUserDto dto, CancellationToken ct = default)
+    public async Task<Result<UserDto>> RegisterAsync(CreateUserDto dto, CancellationToken ct = default)
     {
         if (await _userRepository.GetByEmailAsync(dto.Email, ct) is not null)
             return Result.Failure<UserDto>("Email address is already in use.", 409);
@@ -127,7 +127,7 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
         return (data, pagination);
     }
 
-    public async Task<Result<string>> DeactivateUserAsync(int id, CancellationToken ct = default)
+    public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
     {
         var user = await _userRepository.GetByIdAsync(id, ct);
         if (user is null) return Result.Failure<string>("User not found.", 404);

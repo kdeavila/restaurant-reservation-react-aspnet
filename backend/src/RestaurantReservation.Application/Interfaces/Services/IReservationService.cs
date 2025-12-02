@@ -12,13 +12,13 @@ public interface IReservationService
     Task<(IEnumerable<ReservationDto> Data, PaginationMetadata Pagination)> GetAllAsync(
         ReservationQueryParams queryParams, CancellationToken ct = default);
 
-    Task<Result<Reservation>> CreateReservationAsync(
+    Task<Result<Reservation>> CreateAsync(
         CreateReservationDto dto, int createdByUserId, decimal basePrice,
         decimal totalPrice, CancellationToken ct = default);
 
-    Task<Result<string>> UpdateReservationAsync
+    Task<Result<string>> UpdateAsync
     (UpdateReservationDto dto, decimal? basePrice,
         decimal? totalPrice, CancellationToken ct = default);
 
-    Task<Result<string>> CancelReservationAsync(int id, CancellationToken ct = default);
+    Task<Result<string>> CancelAsync(int id, CancellationToken ct = default);
 }

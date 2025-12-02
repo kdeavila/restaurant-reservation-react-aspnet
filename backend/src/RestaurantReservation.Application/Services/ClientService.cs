@@ -13,7 +13,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
 {
     private readonly IClientRepository _clientRepository = clientRepository;
 
-    public async Task<Result<ClientDto>> CreateClientAsync(CreateClientDto dto, CancellationToken ct = default)
+    public async Task<Result<ClientDto>> CreateAsync(CreateClientDto dto, CancellationToken ct = default)
     {
         var emailExists = await _clientRepository.EmailExistsAsync(dto.Email, ct);
         if (emailExists) return Result.Failure<ClientDto>("Email address is already in use.", 409);
@@ -107,7 +107,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         return (data, pagination);
     }
 
-    public async Task<Result> UpdateClientAsync(UpdateClientDto dto, CancellationToken ct = default)
+    public async Task<Result> UpdateAsync(UpdateClientDto dto, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(dto.Id, ct);
         if (client is null) return Result.Failure("Client not found", 404);
@@ -132,7 +132,7 @@ public class ClientService(IClientRepository clientRepository) : IClientService
         return Result.Success();
     }
 
-    public async Task<Result<string>> DeactivateClientAsync(int id, CancellationToken ct = default)
+    public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
     {
         var client = await _clientRepository.GetByIdAsync(id, ct);
         if (client is null)

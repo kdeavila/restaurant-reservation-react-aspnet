@@ -6,7 +6,7 @@ namespace RestaurantReservation.Application.Interfaces.Services;
 
 public interface IClientService
 {
-    Task<Result<ClientDto>> CreateClientAsync(
+    Task<Result<ClientDto>> CreateAsync(
         CreateClientDto dto, CancellationToken ct = default);
 
     Task<Result<ClientDto>> GetByIdAsync(
@@ -15,9 +15,9 @@ public interface IClientService
     Task<(IEnumerable<ClientDto> Data, PaginationMetadata Pagination)> GetAllAsync(
         ClientQueryParams queryParams, CancellationToken ct = default);
 
-    Task<Result> UpdateClientAsync(
+    Task<Result> UpdateAsync(
         UpdateClientDto dto, CancellationToken ct = default);
 
-    Task<Result<string>> DeactivateClientAsync(
+    Task<Result<string>> DeactivateAsync(
         int id, CancellationToken ct = default);
 }
