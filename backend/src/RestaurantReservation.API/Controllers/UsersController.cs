@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using RestaurantReservation.Application.Common;
+using RestaurantReservation.Application.Common.Responses;
+using RestaurantReservation.Application.DTOs.User;
 using RestaurantReservation.Application.Interfaces.Services;
 
 namespace RestaurantReservation.API.Controllers;
@@ -10,28 +13,42 @@ public class UsersController(IUserService userService) : ControllerBase
     private readonly IUserService _userService = userService;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll(CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<IEnumerable<UserDto>>>> GetAll(
+        [FromQuery] UserQueryParams queryParams, CancellationToken ct = default)
     {
-        var result = await _userService.GetAllAsync(ct);
-        return Ok(result);
+        var (data, pagination) = await _userService.GetAllAsync(queryParams, ct);
+        return Ok(ApiResponse<IEnumerable<UserDto>>.SuccessResponse(data, "Users retrieved successfully", pagination: pagination));
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<UserDto>>> GetById(int id, CancellationToken ct = default)
     {
         var result = await _userService.GetByIdAsync(id, ct);
-        return result.IsFailure
-            ? StatusCode(result.StatusCode, new { error = result.Error })
-            : Ok(result.Value);
+        if (result.IsFailure)
+            return StatusCode(result.StatusCode,
+                ApiResponse<UserDto>.ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+
+        return Ok(ApiResponse<UserDto>.SuccessResponse(result.Value, "User found"));
     }
-
-
+    
     [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Deactivate(int id, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<string>>> Deactivate(int id, CancellationToken ct = default)
     {
         var result = await _userService.DeactivateUserAsync(id, ct);
-        return result.IsFailure
-            ? StatusCode(result.StatusCode, new { error = result.Error })
-            : NoContent();
+        if (result.IsFailure)
+            return StatusCode(result.StatusCode,
+                ApiResponse<string>.ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+
+        return Ok(ApiResponse<string>.SuccessResponse(result.Value, result.Value));
     }
+
+    private static string GetErrorCode(int statusCode) => statusCode switch
+    {
+        400 => ErrorCodes.ValidationError,
+        404 => ErrorCodes.NotFound,
+        401 => ErrorCodes.Unauthorized,
+        409 => ErrorCodes.Conflict,
+        422 => ErrorCodes.BusinessRuleViolation,
+        _ => ErrorCodes.InternalError
+    };
 }

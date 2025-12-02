@@ -4,6 +4,7 @@ namespace RestaurantReservation.Application.Interfaces.Repositories;
 
 public interface IUserRepository
 {
+    IQueryable<User> Query();
     Task<User?> GetByIdAsync(int id, CancellationToken ct = default);
     Task<User?> GetByEmailAsync(string email, CancellationToken ct = default);
     Task<IEnumerable<User>> GetAllAsync(CancellationToken ct = default);

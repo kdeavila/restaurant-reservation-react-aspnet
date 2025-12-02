@@ -9,6 +9,11 @@ public class UserRepository(RestaurantReservationDbContext context) : IUserRepos
 {
     private readonly RestaurantReservationDbContext _context = context;
 
+    public IQueryable<User> Query()
+    {
+        return _context.Users;
+    }
+
     public async Task<User?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.Users.FindAsync([id], ct);
 
