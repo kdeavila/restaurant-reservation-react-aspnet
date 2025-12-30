@@ -49,7 +49,7 @@ builder.Services.AddAuthorization(options =>
 
 // Register DbContext with SQL Server and specify the migration assembly
 builder.Services.AddDbContext<RestaurantReservationDbContext>(options => options.UseSqlServer
-    (connectionString, x => x.MigrationsAssembly("RestaurantReservation.Infrastructure")));
+    (connectionString, x => x.MigrationsAssembly("Infrastructure")));
 
 // Register repositories
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
@@ -78,6 +78,7 @@ builder.Services.AddScoped<CreatePricingRuleUseCase>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSwaggerGen();
 
 // Configure JSON options
 builder.Services.Configure<JsonOptions>(options =>
@@ -99,6 +100,8 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 
     using var scope = app.Services.CreateScope();
     var context = scope.ServiceProvider.GetRequiredService<RestaurantReservationDbContext>();
