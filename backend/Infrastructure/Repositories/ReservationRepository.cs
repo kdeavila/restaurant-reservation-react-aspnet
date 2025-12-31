@@ -13,15 +13,12 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
     public IQueryable<Reservation> Query()
         => _context.Reservations
             .Include(r => r.Client)
-            .ThenInclude(c => c.Reservations)
             .Include(r => r.Table)
-            .Include(r => r.User)
-            .AsNoTracking();
+            .Include(r => r.User);
 
     public async Task<Reservation?> GetByIdAsync(int id, CancellationToken ct = default)
         => await _context.Reservations
             .Include(r => r.Client)
-            .ThenInclude(c => c.Reservations)
             .Include(r => r.Table)
             .Include(r => r.User)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
