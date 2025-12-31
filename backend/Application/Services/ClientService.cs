@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Pagination;
@@ -11,150 +12,125 @@ namespace RestaurantReservation.Application.Services;
 
 public class ClientService(IClientRepository clientRepository) : IClientService
 {
-    private readonly IClientRepository _clientRepository = clientRepository;
+   private readonly IClientRepository _clientRepository = clientRepository;
 
-    public async Task<Result<ClientDto>> CreateAsync(CreateClientDto dto, CancellationToken ct = default)
-    {
-        var emailExists = await _clientRepository.EmailExistsAsync(dto.Email, ct);
-        if (emailExists) return Result.Failure<ClientDto>("Email address is already in use.", 409);
+   public async Task<Result<ClientDto>> CreateAsync(CreateClientDto dto, CancellationToken ct = default)
+   {
+      var emailExists = await _clientRepository.EmailExistsAsync(dto.Email, ct);
+      if (emailExists) return Result.Failure<ClientDto>("Email address is already in use.", 409);
 
-        var client = new Client()
-        {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            Phone = dto.Phone ?? string.Empty,
-            Status = ClientStatus.Active,
-            CreatedAt = DateTime.UtcNow
-        };
+      var client = new Client()
+      {
+         FirstName = dto.FirstName,
+         LastName = dto.LastName,
+         Email = dto.Email,
+         Phone = dto.Phone ?? string.Empty,
+         Status = ClientStatus.Active,
+         CreatedAt = DateTime.UtcNow
+      };
 
-        await _clientRepository.AddAsync(client, ct);
-        var clientDto = new ClientDto(
-            client.Id,
-            client.FirstName,
-            client.LastName,
-            client.Email,
-            client.Phone,
-            client.Status.ToString(),
-            TotalReservations: 0,
-            client.CreatedAt
-        );
-        return Result.Success(clientDto);
-    }
+      await _clientRepository.AddAsync(client, ct);
+      var clientDto = client.Adapt<ClientDto>();
 
-    public async Task<Result<ClientDto>> GetByIdAsync(int id, CancellationToken ct = default)
-    {
-        var client = await _clientRepository.GetByIdAsync(id, ct);
-        if (client is null) return Result.Failure<ClientDto>("Client not found", 404);
+      return Result.Success(clientDto);
+   }
 
-        var clientDto = new ClientDto(
-            client.Id,
-            client.FirstName,
-            client.LastName,
-            client.Email,
-            client.Phone,
-            client.Status.ToString(),
-            client.Reservations.Count,
-            client.CreatedAt
-        );
-        return Result.Success(clientDto);
-    }
+   public async Task<Result<ClientDto>> GetByIdAsync(int id, CancellationToken ct = default)
+   {
+      var client = await _clientRepository.GetByIdAsync(id, ct);
+      if (client is null) return Result.Failure<ClientDto>("Client not found", 404);
 
-    public async Task<(IEnumerable<ClientDto> Data, PaginationMetadata Pagination)> GetAllAsync(
-        ClientQueryParams queryParams, CancellationToken ct = default)
-    {
-        var query = _clientRepository.Query();
+      var clientDto = client.Adapt<ClientDto>();
+      return Result.Success(clientDto);
+   }
 
-        if (!string.IsNullOrEmpty(queryParams.FirstName))
-            query = query.Where(c => c.FirstName.Contains(queryParams.FirstName));
+   public async Task<(IEnumerable<ClientDto> Data, PaginationMetadata Pagination)> GetAllAsync(
+       ClientQueryParams queryParams, CancellationToken ct = default)
+   {
+      var query = _clientRepository.Query();
 
-        if (!string.IsNullOrEmpty(queryParams.LastName))
-            query = query.Where(c => c.LastName.Contains(queryParams.LastName));
+      if (!string.IsNullOrEmpty(queryParams.FirstName))
+         query = query.Where(c => c.FirstName.Contains(queryParams.FirstName));
 
-        if (!string.IsNullOrEmpty(queryParams.Email))
-            query = query.Where(c => c.Email.Contains(queryParams.Email));
+      if (!string.IsNullOrEmpty(queryParams.LastName))
+         query = query.Where(c => c.LastName.Contains(queryParams.LastName));
 
-        if (!string.IsNullOrEmpty(queryParams.Phone))
-            query = query.Where(c => c.Phone!.Contains(queryParams.Phone));
+      if (!string.IsNullOrEmpty(queryParams.Email))
+         query = query.Where(c => c.Email.Contains(queryParams.Email));
 
-        var totalCount = query.Count();
-        var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
+      if (!string.IsNullOrEmpty(queryParams.Phone))
+         query = query.Where(c => c.Phone!.Contains(queryParams.Phone));
 
-        var clientsPage = await query
-            .Skip(skipNumber)
-            .Take(queryParams.PageSize)
-            .ToListAsync(ct);
+      var totalCount = query.Count();
+      var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
 
-        var data = clientsPage
-            .Select(client => new ClientDto(
-                client.Id,
-                client.FirstName,
-                client.LastName,
-                client.Email,
-                client.Phone,
-                client.Status.ToString(),
-                client.Reservations.Count,
-                client.CreatedAt));
+      var clientsPage = await query
+          .Skip(skipNumber)
+          .Take(queryParams.PageSize)
+          .ToListAsync(ct);
 
-        var pagination = new PaginationMetadata
-        {
-            Page = queryParams.Page,
-            PageSize = queryParams.PageSize,
-            TotalCount = totalCount,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)queryParams.PageSize)
-        };
+      var data = clientsPage
+          .Select(client => client.Adapt<ClientDto>());
 
-        return (data, pagination);
-    }
+      var pagination = new PaginationMetadata
+      {
+         Page = queryParams.Page,
+         PageSize = queryParams.PageSize,
+         TotalCount = totalCount,
+         TotalPages = (int)Math.Ceiling(totalCount / (double)queryParams.PageSize)
+      };
 
-    public async Task<Result> UpdateAsync(UpdateClientDto dto, CancellationToken ct = default)
-    {
-        var client = await _clientRepository.GetByIdAsync(dto.Id, ct);
-        if (client is null) return Result.Failure("Client not found", 404);
+      return (data, pagination);
+   }
 
-        if (!string.IsNullOrEmpty(dto.Email))
-        {
-            var emailExists = await _clientRepository.EmailExistsForOthersClients(dto.Email, dto.Id, ct);
-            if (emailExists) return Result.Failure("Email address is already in use", 409);
+   public async Task<Result> UpdateAsync(UpdateClientDto dto, CancellationToken ct = default)
+   {
+      var client = await _clientRepository.GetByIdAsync(dto.Id, ct);
+      if (client is null) return Result.Failure("Client not found", 404);
 
-            client.Email = dto.Email;
-        }
+      if (!string.IsNullOrEmpty(dto.Email))
+      {
+         var emailExists = await _clientRepository.EmailExistsForOthersClients(dto.Email, dto.Id, ct);
+         if (emailExists) return Result.Failure("Email address is already in use", 409);
 
-        client.FirstName = dto.FirstName ?? client.FirstName;
-        client.LastName = dto.LastName ?? client.LastName;
-        client.Phone = dto.Phone ?? client.Phone;
+         client.Email = dto.Email;
+      }
 
-        if (!string.IsNullOrEmpty(dto.Status) &&
-            Enum.TryParse<ClientStatus>(dto.Status, true, out var parsed))
-            client.Status = parsed;
+      client.FirstName = dto.FirstName ?? client.FirstName;
+      client.LastName = dto.LastName ?? client.LastName;
+      client.Phone = dto.Phone ?? client.Phone;
 
-        await _clientRepository.UpdateAsync(client, ct);
-        return Result.Success();
-    }
+      if (!string.IsNullOrEmpty(dto.Status) &&
+          Enum.TryParse<ClientStatus>(dto.Status, true, out var parsed))
+         client.Status = parsed;
 
-    public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
-    {
-        var client = await _clientRepository.GetByIdAsync(id, ct);
-        if (client is null)
-            return Result.Failure<string>("Client not found", 404);
+      await _clientRepository.UpdateAsync(client, ct);
+      return Result.Success();
+   }
 
-        var futureReservations = client.Reservations
-            .Where(r => r.Status != ReservationStatus.Cancelled
-                        && r.Status != ReservationStatus.Completed &&
-                        (r.Date > DateTime.UtcNow.Date ||
-                         (r.Date == DateTime.UtcNow.Date &&
-                          r.StartTime > DateTime.UtcNow.TimeOfDay))
-            ).ToList();
+   public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
+   {
+      var client = await _clientRepository.GetByIdAsync(id, ct);
+      if (client is null)
+         return Result.Failure<string>("Client not found", 404);
 
-        if (futureReservations.Any())
-            return Result.Failure<string>(
-                $"Cannot deactivate client. They have {futureReservations.Count} future reservation(s). " +
-                $"Please cancel or reassign the reservations first.",
-                409);
+      var futureReservations = client.Reservations
+          .Where(r => r.Status != ReservationStatus.Cancelled
+                      && r.Status != ReservationStatus.Completed &&
+                      (r.Date > DateTime.UtcNow.Date ||
+                       (r.Date == DateTime.UtcNow.Date &&
+                        r.StartTime > DateTime.UtcNow.TimeOfDay))
+          ).ToList();
 
-        client.Status = ClientStatus.Inactive;
-        await _clientRepository.UpdateAsync(client, ct);
+      if (futureReservations.Any())
+         return Result.Failure<string>(
+             $"Cannot deactivate client. They have {futureReservations.Count} future reservation(s). " +
+             $"Please cancel or reassign the reservations first.",
+             409);
 
-        return Result.Success<string>("Client deactivated successfully.");
-    }
+      client.Status = ClientStatus.Inactive;
+      await _clientRepository.UpdateAsync(client, ct);
+
+      return Result.Success<string>("Client deactivated successfully.");
+   }
 }

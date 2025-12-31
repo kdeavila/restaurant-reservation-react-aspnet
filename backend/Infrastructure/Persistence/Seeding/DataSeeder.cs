@@ -17,7 +17,7 @@ public static class DataSeeder
             {
                 Username = "admin",
                 Email = "admin@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("mysuperpassword"),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
                 Role = UserRole.Admin,
                 Status = UserStatus.Active,
                 CreatedAt = DateTime.UtcNow
