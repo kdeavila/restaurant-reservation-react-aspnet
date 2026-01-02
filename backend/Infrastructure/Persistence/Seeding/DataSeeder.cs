@@ -1,3 +1,5 @@
+using System;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
@@ -6,62 +8,49 @@ namespace RestaurantReservation.Infrastructure.Persistence.Seeding;
 
 public static class DataSeeder
 {
-    public static async Task SeedAsync(RestaurantReservationDbContext context)
-    {
-        await context.Database.MigrateAsync();
+   public static async Task SeedAsync(RestaurantReservationDbContext context)
+   {
+      await context.Database.MigrateAsync();
 
-        // Admin user
-        if (!context.Users.Any())
-        {
-            context.Users.Add(new User
-            {
-                Username = "admin",
-                Email = "admin@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"),
-                Role = UserRole.Admin,
-                Status = UserStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            });
-            await context.SaveChangesAsync();
-        }
+        var adminUserId = await EnsureAdminAsync(context);
 
-        // Table types
-        TableType vipTableType = null!;
-        TableType standardTableType = null!;
+      // Table types
+      TableType vipTableType = null!;
+      TableType standardTableType = null!;
 
-        if (!context.TableTypes.Any())
-        {
-            vipTableType = new TableType
-            {
-                Name = "VIP",
-                Description = "Premium dining table with exclusive services",
-                BasePricePerHour = 50m,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+      if (!context.TableTypes.Any())
+      {
+         vipTableType = new TableType
+         {
+            Name = "VIP",
+            Description = "Premium dining table with exclusive services",
+            BasePricePerHour = 50m,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+         };
 
-            standardTableType = new TableType
-            {
-                Name = "Standard",
-                Description = "Regular dining table",
-                BasePricePerHour = 25m,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+         standardTableType = new TableType
+         {
+            Name = "Standard",
+            Description = "Regular dining table",
+            BasePricePerHour = 25m,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+         };
 
-            context.TableTypes.AddRange(vipTableType, standardTableType);
-            await context.SaveChangesAsync();
-        }
-        else
-        {
-            vipTableType = await context.TableTypes.FirstAsync(t => t.Name == "VIP");
-            standardTableType = await context.TableTypes.FirstAsync(t => t.Name == "Standard");
-        }
+         context.TableTypes.AddRange(vipTableType, standardTableType);
+         await context.SaveChangesAsync();
+      }
+      else
+      {
+         vipTableType = await context.TableTypes.FirstAsync(t => t.Name == "VIP");
+         standardTableType = await context.TableTypes.FirstAsync(t => t.Name == "Standard");
+      }
 
-        // Tables
-        if (!context.Tables.Any())
-        {
-            var tables = new List<Table>
+      // Tables
+      if (!context.Tables.Any())
+      {
+         var tables = new List<Table>
             {
                 new Table
                 {
@@ -90,15 +79,15 @@ public static class DataSeeder
                 }
             };
 
-            context.Tables.AddRange(tables);
-            await context.SaveChangesAsync();
-        }
+         context.Tables.AddRange(tables);
+         await context.SaveChangesAsync();
+      }
 
-        // Clients
-        List<Client> clients = new();
-        if (!context.Clients.Any())
-        {
-            clients = new List<Client>
+      // Clients
+      List<Client> clients = new();
+      if (!context.Clients.Any())
+      {
+         clients = new List<Client>
             {
                 new Client
                 {
@@ -122,21 +111,21 @@ public static class DataSeeder
                 }
             };
 
-            context.Clients.AddRange(clients);
-            await context.SaveChangesAsync();
-        }
-        else
-        {
-            clients = await context.Clients.ToListAsync();
-        }
+         context.Clients.AddRange(clients);
+         await context.SaveChangesAsync();
+      }
+      else
+      {
+         clients = await context.Clients.ToListAsync();
+      }
 
-        // Pricing rules
-        if (!context.PricingRules.Any())
-        {
-            var startDate = DateTime.UtcNow;
-            var endDate = DateTime.UtcNow.AddMonths(6);
+      // Pricing rules
+      if (!context.PricingRules.Any())
+      {
+         var startDate = DateTime.UtcNow;
+         var endDate = DateTime.UtcNow.AddMonths(6);
 
-            var pricingRules = new List<PricingRule>
+         var pricingRules = new List<PricingRule>
             {
                 new PricingRule
                 {
@@ -179,44 +168,43 @@ public static class DataSeeder
                 }
             };
 
-            context.PricingRules.AddRange(pricingRules);
-            await context.SaveChangesAsync();
+         context.PricingRules.AddRange(pricingRules);
+         await context.SaveChangesAsync();
 
-            // Add days for pricing rules
-            var pricingRuleDays = new List<PricingRuleDays>();
-            foreach (var rule in pricingRules)
+         // Add days for pricing rules
+         var pricingRuleDays = new List<PricingRuleDays>();
+         foreach (var rule in pricingRules)
+         {
+            if (rule.RuleName == "Weekend Surcharge")
             {
-                if (rule.RuleName == "Weekend Surcharge")
-                {
-                    pricingRuleDays.Add(new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Friday });
-                    pricingRuleDays.Add(
-                        new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Saturday });
-                }
-                else
-                {
-                    for (int i = 1; i <= 5; i++)
-                    {
-                        pricingRuleDays.Add(new PricingRuleDays
-                        {
-                            PricingRuleId = rule.Id,
-                            DayOfWeek = (DaysOfWeek)i
-                        });
-                    }
-                }
+               pricingRuleDays.Add(new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Friday });
+               pricingRuleDays.Add(
+                   new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Saturday });
             }
+            else
+            {
+               for (int i = 1; i <= 5; i++)
+               {
+                  pricingRuleDays.Add(new PricingRuleDays
+                  {
+                     PricingRuleId = rule.Id,
+                     DayOfWeek = (DaysOfWeek)i
+                  });
+               }
+            }
+         }
 
-            context.PricingRuleDays.AddRange(pricingRuleDays);
-            await context.SaveChangesAsync();
-        }
+         context.PricingRuleDays.AddRange(pricingRuleDays);
+         await context.SaveChangesAsync();
+      }
 
-        // Reservations
-        if (!context.Reservations.Any())
-        {
-            var tables = await context.Tables.ToListAsync();
-            var user = await context.Users.FirstAsync();
-            var client = clients.First();
+      // Reservations
+      if (!context.Reservations.Any())
+      {
+         var tables = await context.Tables.ToListAsync();
+         var client = clients.First();
 
-            var reservations = new List<Reservation>
+         var reservations = new List<Reservation>
             {
                 new Reservation
                 {
@@ -230,7 +218,7 @@ public static class DataSeeder
                     TotalPrice = 120m,
                     Status = ReservationStatus.Confirmed,
                     Notes = "Business meeting",
-                    CreatedByUserId = user.Id,
+                    CreatedByUserId = adminUserId,
                     CreatedAt = DateTime.UtcNow
                 },
                 new Reservation
@@ -245,7 +233,7 @@ public static class DataSeeder
                     TotalPrice = 31.88m,
                     Status = ReservationStatus.Confirmed,
                     Notes = "Romantic dinner",
-                    CreatedByUserId = user.Id,
+                    CreatedByUserId = adminUserId,
                     CreatedAt = DateTime.UtcNow
                 },
                 new Reservation
@@ -260,13 +248,75 @@ public static class DataSeeder
                     TotalPrice = 195m,
                     Status = ReservationStatus.Pending,
                     Notes = "Birthday celebration",
-                    CreatedByUserId = user.Id,
+                    CreatedByUserId = adminUserId,
                     CreatedAt = DateTime.UtcNow
                 }
             };
 
-            context.Reservations.AddRange(reservations);
+         context.Reservations.AddRange(reservations);
+         await context.SaveChangesAsync();
+      }
+   }
+
+    private static async Task<string> EnsureAdminAsync(RestaurantReservationDbContext context)
+    {
+        var adminRoleId = await EnsureRoleAsync(context, "Admin");
+        await EnsureRoleAsync(context, "Manager");
+        await EnsureRoleAsync(context, "Employee");
+
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.UserName == "admin");
+        if (admin is null)
+        {
+            admin = new ApplicationUser
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserName = "admin",
+                NormalizedUserName = "ADMIN",
+                Email = "admin@example.com",
+                NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                EmailConfirmed = true,
+                Status = ApplicationUserStatus.Active,
+                CreatedAt = DateTime.UtcNow,
+                SecurityStamp = Guid.NewGuid().ToString()
+            };
+
+            var hasher = new PasswordHasher<ApplicationUser>();
+            admin.PasswordHash = hasher.HashPassword(admin, "Admin123!");
+
+            context.Users.Add(admin);
             await context.SaveChangesAsync();
         }
+
+        var adminRoleExists = await context.UserRoles.AnyAsync(ur => ur.UserId == admin.Id && ur.RoleId == adminRoleId);
+        if (!adminRoleExists)
+        {
+            context.UserRoles.Add(new IdentityUserRole<string>
+            {
+                UserId = admin.Id,
+                RoleId = adminRoleId
+            });
+            await context.SaveChangesAsync();
+        }
+
+        return admin.Id;
+    }
+
+    private static async Task<string> EnsureRoleAsync(RestaurantReservationDbContext context, string roleName)
+    {
+        var role = await context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        if (role is null)
+        {
+            role = new IdentityRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = roleName,
+                NormalizedName = roleName.ToUpperInvariant()
+            };
+
+            context.Roles.Add(role);
+            await context.SaveChangesAsync();
+        }
+
+        return role.Id;
     }
 }

@@ -70,8 +70,8 @@ public class ReservationService(
       return Result.Success(reservationDto);
    }
 
-   public async Task<Result<Reservation>> CreateAsync(
-       CreateReservationDto dto, int createdByUserId,
+      public async Task<Result<Reservation>> CreateAsync(
+         CreateReservationDto dto, string createdByUserId,
        decimal basePrice, decimal totalPrice, CancellationToken ct = default)
    {
       var duration = dto.EndTime - dto.StartTime;

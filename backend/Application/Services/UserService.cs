@@ -1,50 +1,73 @@
-using Mapster;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Pagination;
 using RestaurantReservation.Application.DTOs.User;
-using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 
 namespace RestaurantReservation.Application.Services;
 
-public class UserService(IUserRepository userRepository, ITokenService tokenService) : IUserService
+public class UserService(
+   UserManager<ApplicationUser> userManager,
+   SignInManager<ApplicationUser> signInManager,
+   ITokenService tokenService) : IUserService
 {
-   private readonly IUserRepository _userRepository = userRepository;
+   private readonly UserManager<ApplicationUser> _userManager = userManager;
+   private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
    private readonly ITokenService _tokenService = tokenService;
 
    public async Task<Result<UserDto>> RegisterAsync(CreateUserDto dto, CancellationToken ct = default)
    {
-      if (await _userRepository.GetByEmailAsync(dto.Email, ct) is not null)
+      if (await _userManager.FindByEmailAsync(dto.Email) is not null)
          return Result.Failure<UserDto>("Email address is already in use.", 409);
 
-      var user = new User()
+      var user = new ApplicationUser
       {
-         Username = dto.Username,
+         UserName = dto.Username,
          Email = dto.Email,
-         PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
-         Role = dto.Role,
-         Status = UserStatus.Active,
+         Status = ApplicationUserStatus.Active,
          CreatedAt = DateTime.UtcNow
       };
 
-      await _userRepository.AddAsync(user, ct);
+      var createResult = await _userManager.CreateAsync(user, dto.Password);
+      if (!createResult.Succeeded)
+      {
+         var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
+         return Result.Failure<UserDto>(errors, 400);
+      }
 
-      var userDto = user.Adapt<UserDto>();
+      var roleName = dto.Role.ToString();
+      await _userManager.AddToRoleAsync(user, roleName);
+
+      var userDto = new UserDto(
+         user.Id,
+         user.UserName ?? string.Empty,
+         user.Email ?? string.Empty,
+         roleName,
+         user.Status.ToString());
+
       return Result.Success(userDto);
    }
 
    public async Task<Result<AuthDto>> LoginAsync(LoginDto dto, CancellationToken ct = default)
    {
-      var user = await _userRepository.GetByEmailAsync(dto.Email, ct);
-      if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+      var user = await _userManager.FindByEmailAsync(dto.Email);
+      if (user is null)
          return Result.Failure<AuthDto>("Invalid credentials.", 401);
 
-      if (user.Status != UserStatus.Active)
+      if (user.Status != ApplicationUserStatus.Active)
          return Result.Failure<AuthDto>("User account inactive.", 403);
+
+      var signInResult = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
+      if (!signInResult.Succeeded)
+         return Result.Failure<AuthDto>("Invalid credentials.", 401);
+
+      var roles = await _userManager.GetRolesAsync(user);
+      var primaryRole = roles.FirstOrDefault() ?? string.Empty;
 
       var token = _tokenService.GenerateToken(user);
       var handler = new JwtSecurityTokenHandler();
@@ -53,9 +76,9 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
 
       var authResponse = new AuthDto(
           user.Id,
-          user.Username,
-          user.Email,
-          user.Role.ToString(),
+          user.UserName ?? string.Empty,
+          user.Email ?? string.Empty,
+          primaryRole,
           user.Status.ToString(),
           token,
           expiryUtc
@@ -64,31 +87,42 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
       return Result.Success(authResponse);
    }
 
-   public async Task<Result<UserDto>> GetByIdAsync(int id, CancellationToken ct = default)
+   public async Task<Result<UserDto>> GetByIdAsync(string id, CancellationToken ct = default)
    {
-      var user = await _userRepository.GetByIdAsync(id, ct);
+      var user = await _userManager.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == id, ct);
       if (user is null) return Result.Failure<UserDto>("User not found.", 404);
 
-      var userDto = user.Adapt<UserDto>();
+      var roles = await _userManager.GetRolesAsync(user);
+      var role = roles.FirstOrDefault() ?? string.Empty;
+      var userDto = new UserDto(
+         user.Id,
+         user.UserName ?? string.Empty,
+         user.Email ?? string.Empty,
+         role,
+         user.Status.ToString());
       return Result.Success(userDto);
    }
 
    public async Task<(IEnumerable<UserDto> Data, PaginationMetadata Pagination)>
    GetAllAsync(UserQueryParams queryParams, CancellationToken ct = default)
    {
-      var query = _userRepository.Query().AsNoTracking();
+      var query = _userManager.Users.AsNoTracking();
 
       if (!string.IsNullOrEmpty(queryParams.Username))
-         query = query.Where(u => u.Username.Contains(queryParams.Username));
+         query = query.Where(u => u.UserName!.Contains(queryParams.Username));
 
       if (!string.IsNullOrEmpty(queryParams.Email))
-         query = query.Where(u => u.Email.Contains(queryParams.Email));
+         query = query.Where(u => u.Email!.Contains(queryParams.Email));
 
-      if (!string.IsNullOrEmpty(queryParams.Role) && Enum.TryParse<UserRole>(queryParams.Role, true, out var role))
-         query = query.Where(u => u.Role == role);
-
-      if (!string.IsNullOrEmpty(queryParams.Status) && Enum.TryParse<UserStatus>(queryParams.Status, true, out var status))
+      if (!string.IsNullOrEmpty(queryParams.Status) && Enum.TryParse<ApplicationUserStatus>(queryParams.Status, true, out var status))
          query = query.Where(u => u.Status == status);
+
+      if (!string.IsNullOrEmpty(queryParams.Role))
+      {
+         var usersInRole = await _userManager.GetUsersInRoleAsync(queryParams.Role);
+         var ids = usersInRole.Select(u => u.Id).ToHashSet();
+         query = query.Where(u => ids.Contains(u.Id));
+      }
 
       var totalCount = await query.CountAsync(ct);
       var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
@@ -98,7 +132,18 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
           .Take(queryParams.PageSize)
           .ToListAsync(ct);
 
-      var data = usersPage.Select(user => user.Adapt<UserDto>());
+      var data = new List<UserDto>();
+      foreach (var user in usersPage)
+      {
+         var roles = await _userManager.GetRolesAsync(user);
+         var role = roles.FirstOrDefault() ?? string.Empty;
+         data.Add(new UserDto(
+            user.Id,
+            user.UserName ?? string.Empty,
+            user.Email ?? string.Empty,
+            role,
+            user.Status.ToString()));
+      }
 
       var pagination = new PaginationMetadata
       {
@@ -111,16 +156,21 @@ public class UserService(IUserRepository userRepository, ITokenService tokenServ
       return (data, pagination);
    }
 
-   public async Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default)
+   public async Task<Result<string>> DeactivateAsync(string id, CancellationToken ct = default)
    {
-      var user = await _userRepository.GetByIdAsync(id, ct);
+      var user = await _userManager.FindByIdAsync(id);
       if (user is null) return Result.Failure<string>("User not found.", 404);
 
-      if (user.Status == UserStatus.Inactive)
+      if (user.Status == ApplicationUserStatus.Inactive)
          return Result.Success("User is already inactive.");
 
-      user.Status = UserStatus.Inactive;
-      await _userRepository.UpdateAsync(user, ct);
+      user.Status = ApplicationUserStatus.Inactive;
+      var updateResult = await _userManager.UpdateAsync(user);
+      if (!updateResult.Succeeded)
+      {
+         var errors = string.Join("; ", updateResult.Errors.Select(e => e.Description));
+         return Result.Failure<string>(errors, 400);
+      }
 
       return Result.Success("User deactivated successfully");
    }

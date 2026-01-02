@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RestaurantReservation.API.Middlewares;
@@ -13,6 +14,7 @@ using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Application.Services;
 using RestaurantReservation.Application.UseCases.PricingRules;
 using RestaurantReservation.Application.UseCases.Reservations;
+using RestaurantReservation.Domain;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Infrastructure.Persistence;
 using RestaurantReservation.Infrastructure.Persistence.Seeding;
@@ -25,24 +27,32 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Register DbContext with SQL Server and specify the migration assembly
+builder.Services.AddDbContext<RestaurantReservationDbContext>(options => options.UseSqlServer
+    (connectionString, x => x.MigrationsAssembly("Infrastructure")));
+
 // Configure JWT authentication
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
 var jwtAudience = builder.Configuration["Jwt:Audience"]!;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-        options.TokenValidationParameters = new TokenValidationParameters()
-        {
-           ValidateIssuer = true,
-           ValidateAudience = true,
-           ValidateLifetime = true,
-           ValidateIssuerSigningKey = true,
-           ValidIssuer = jwtIssuer,
-           ValidAudience = jwtAudience,
-           IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        }
-    );
+.AddJwtBearer(options =>
+   options.TokenValidationParameters = new TokenValidationParameters()
+   {
+      ValidateIssuer = true,
+      ValidateAudience = true,
+      ValidateLifetime = true,
+      ValidateIssuerSigningKey = true,
+      ValidIssuer = jwtIssuer,
+      ValidAudience = jwtAudience,
+      IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+   }
+);
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+.AddDefaultTokenProviders()
+.AddEntityFrameworkStores<RestaurantReservationDbContext>();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -50,10 +60,6 @@ builder.Services.AddAuthorization(options =>
    options.AddPolicy("AdminOrManager", policy => policy.RequireRole("Admin", "Manager"));
    options.AddPolicy("AllRoles", policy => policy.RequireRole("Admin", "Manager", "Employee"));
 });
-
-// Register DbContext with SQL Server and specify the migration assembly
-builder.Services.AddDbContext<RestaurantReservationDbContext>(options => options.UseSqlServer
-    (connectionString, x => x.MigrationsAssembly("Infrastructure")));
 
 // Type adapter configuration Mapster DTOs
 TypeAdapterConfig<Client, ClientDto>.NewConfig()

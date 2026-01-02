@@ -1,7 +1,6 @@
 using RestaurantReservation.Application.DTOs.Client;
 using RestaurantReservation.Application.DTOs.Table;
 using RestaurantReservation.Application.DTOs.User;
-using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.DTOs.Reservation;
 

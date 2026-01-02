@@ -22,8 +22,8 @@ public class UsersController(IUserService userService) : ControllerBase
         return Ok(ApiResponse<IEnumerable<UserDto>>.SuccessResponse(data, "Users retrieved successfully", pagination: pagination));
     }
 
-    [HttpGet("{id:int}")]
-    public async Task<ActionResult<ApiResponse<UserDto>>> GetById(int id, CancellationToken ct = default)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<ApiResponse<UserDto>>> GetById(string id, CancellationToken ct = default)
     {
         var result = await _userService.GetByIdAsync(id, ct);
         if (result.IsFailure)
@@ -33,8 +33,8 @@ public class UsersController(IUserService userService) : ControllerBase
         return Ok(ApiResponse<UserDto>.SuccessResponse(result.Value, "User found"));
     }
     
-    [HttpDelete("{id:int}")]
-    public async Task<ActionResult<ApiResponse<string>>> Deactivate(int id, CancellationToken ct = default)
+    [HttpDelete("{id}")]
+    public async Task<ActionResult<ApiResponse<string>>> Deactivate(string id, CancellationToken ct = default)
     {
         var result = await _userService.DeactivateAsync(id, ct);
         if (result.IsFailure)

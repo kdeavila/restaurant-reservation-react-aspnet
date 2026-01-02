@@ -13,7 +13,7 @@ public interface IReservationService
         ReservationQueryParams queryParams, CancellationToken ct = default);
 
     Task<Result<Reservation>> CreateAsync(
-        CreateReservationDto dto, int createdByUserId, decimal basePrice,
+        CreateReservationDto dto, string createdByUserId, decimal basePrice,
         decimal totalPrice, CancellationToken ct = default);
 
     Task<Result<string>> UpdateAsync

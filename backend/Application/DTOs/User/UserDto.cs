@@ -1,7 +1,7 @@
 namespace RestaurantReservation.Application.DTOs.User;
 
 public record UserDto(
-    int Id,
+    string Id,
     string Username,
     string Email,
     string Role,
