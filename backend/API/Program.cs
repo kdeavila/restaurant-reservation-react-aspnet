@@ -1,43 +1,64 @@
 using System.Text;
-using System.Text.Json.Serialization;
 using Mapster;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.IdentityModel.Tokens;
+using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.API.Middlewares;
-using RestaurantReservation.Application.DTOs.Client;
-using RestaurantReservation.Application.DTOs.PricingRule;
-using RestaurantReservation.Application.Interfaces.Repositories;
-using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Application.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using RestaurantReservation.Application.DTOs.Client;
+using RestaurantReservation.Infrastructure.Persistence;
+using RestaurantReservation.Infrastructure.Repositories;
+using RestaurantReservation.Application.DTOs.PricingRule;
+using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Application.UseCases.PricingRules;
 using RestaurantReservation.Application.UseCases.Reservations;
-using RestaurantReservation.Domain;
-using RestaurantReservation.Domain.Entities;
-using RestaurantReservation.Infrastructure.Persistence;
 using RestaurantReservation.Infrastructure.Persistence.Seeding;
-using RestaurantReservation.Infrastructure.Repositories;
+using RestaurantReservation.Application.Interfaces.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
 builder.Services.AddControllers();
 
 // Register DbContext with SQL Server and specify the migration assembly
-builder.Services.AddDbContext<RestaurantReservationDbContext>(options => options.UseSqlServer
-    (connectionString, x => x.MigrationsAssembly("Infrastructure")));
+builder.Services.AddDbContext<RestaurantReservationDbContext>(options =>
+{
+   options.UseSqlServer(connectionString, x => x.MigrationsAssembly("Infrastructure"));
+});
 
-// Configure JWT authentication
+// Configure Identity first
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+{
+   options.Password.RequiredLength = 8;
+   options.Password.RequireLowercase = true;
+   options.Password.RequireUppercase = true;
+   options.Password.RequireNonAlphanumeric = false;
+
+   options.SignIn.RequireConfirmedEmail = false;
+})
+.AddDefaultTokenProviders()
+.AddEntityFrameworkStores<RestaurantReservationDbContext>();
+
+// Configure JWT authentication (replaces Identity's default authentication)
 var jwtKey = builder.Configuration["Jwt:Key"]!;
 var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
 var jwtAudience = builder.Configuration["Jwt:Audience"]!;
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(options =>
+{
+   options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+   options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+   options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
 .AddJwtBearer(options =>
+{
+   options.SaveToken = true;
+   options.RequireHttpsMetadata = false;
    options.TokenValidationParameters = new TokenValidationParameters()
    {
       ValidateIssuer = true,
@@ -47,12 +68,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
       ValidIssuer = jwtIssuer,
       ValidAudience = jwtAudience,
       IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-   }
-);
-
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-.AddDefaultTokenProviders()
-.AddEntityFrameworkStores<RestaurantReservationDbContext>();
+   };
+});
 
 builder.Services.AddAuthorization(options =>
 {

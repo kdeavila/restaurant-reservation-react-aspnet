@@ -10,60 +10,62 @@ namespace RestaurantReservation.API.Controllers;
 [Route("api/auth")]
 public class AuthController(IUserService userService) : ControllerBase
 {
-    private readonly IUserService _userService = userService;
+   private readonly IUserService _userService = userService;
 
-    [HttpPost("register")]
-    public async Task<ActionResult<ApiResponse<UserDto>>> Register([FromBody] CreateUserDto dto, CancellationToken ct = default)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ApiResponse<UserDto>
-                .ErrorResponse("Invalid model state.", ErrorCodes.ValidationError, 400));
+   [HttpPost("register")]
+   public async Task<ActionResult<ApiResponse<UserDto>>>
+   Register([FromBody] CreateUserDto dto, CancellationToken ct = default)
+   {
+      if (!ModelState.IsValid)
+         return BadRequest(ApiResponse<UserDto>
+            .ErrorResponse("Invalid model state.", ErrorCodes.ValidationError, 400));
 
-        var result = await _userService.RegisterAsync(dto, ct);
-        if (result.IsFailure)
-        {
-            var status = result.StatusCode == 0 ? 400 : result.StatusCode;
-            var errorCode = GetErrorCode(status);
-            var response = ApiResponse<UserDto>.ErrorResponse(result.Error, errorCode, status);
-            return StatusCode(status, response);
-        }
+      var result = await _userService.RegisterAsync(dto, ct);
+      if (result.IsFailure)
+      {
+         var status = result.StatusCode == 0 ? 400 : result.StatusCode;
+         var errorCode = GetErrorCode(status);
+         var response = ApiResponse<UserDto>.ErrorResponse(result.Error, errorCode, status);
 
-        var success = ApiResponse<UserDto>.SuccessResponse(result.Value, "User registered successfully", 201);
-        return Created($"/api/users/{result.Value.Id}", success);
-    }
+         return StatusCode(status, response);
+      }
 
-    [HttpPost("login")]
-    public async Task<ActionResult<ApiResponse<AuthDto>>> Login([FromBody] LoginDto dto, CancellationToken ct)
-    {
-        if (!ModelState.IsValid)
-            return BadRequest(ApiResponse<AuthDto>
-                .ErrorResponse("Invalid model state.", "VALIDATION_ERROR", 400));
+      var success = ApiResponse<UserDto>.SuccessResponse(result.Value, "User registered successfully", 201);
+      return Created($"/api/users/{result.Value.Id}", success);
+   }
 
-        var result = await _userService.LoginAsync(dto, ct);
-        if (result.IsFailure)
-        {
-            var status = result.StatusCode == 0 ? 401 : result.StatusCode;
-            var errorCode = GetErrorCode(status);
-            var response = ApiResponse<AuthDto>.ErrorResponse(result.Error, errorCode, status);
-            return StatusCode(status, response);
-        }
+   [HttpPost("login")]
+   public async Task<ActionResult<ApiResponse<AuthDto>>> Login([FromBody] LoginDto dto, CancellationToken ct)
+   {
+      if (!ModelState.IsValid)
+         return BadRequest(ApiResponse<AuthDto>
+            .ErrorResponse("Invalid model state.", "VALIDATION_ERROR", 400));
 
-        var success = ApiResponse<AuthDto>
-            .SuccessResponse(result.Value, "Login successful", 200);
-        return Ok(success);
-    }
+      var result = await _userService.LoginAsync(dto, ct);
+      if (result.IsFailure)
+      {
+         var status = result.StatusCode == 0 ? 401 : result.StatusCode;
+         var errorCode = GetErrorCode(status);
+         var response = ApiResponse<AuthDto>.ErrorResponse(result.Error, errorCode, status);
+         return StatusCode(status, response);
+      }
 
-    private static string GetErrorCode(int statusCode)
-    {
-        return statusCode switch
-        {
-            400 => ErrorCodes.ValidationError,
-            401 => ErrorCodes.Unauthorized,
-            403 => ErrorCodes.AuthError,
-            404 => ErrorCodes.NotFound,
-            409 => ErrorCodes.Conflict,
-            500 => ErrorCodes.InternalError,
-            _ => ErrorCodes.InternalError
-        };
-    }
+      var success = ApiResponse<AuthDto>
+          .SuccessResponse(result.Value, "Login successful", 200);
+      return Ok(success);
+   }
+
+   private static string GetErrorCode(int statusCode)
+   {
+      return statusCode switch
+      {
+         400 => ErrorCodes.ValidationError,
+         401 => ErrorCodes.Unauthorized,
+         403 => ErrorCodes.AuthError,
+         404 => ErrorCodes.NotFound,
+         409 => ErrorCodes.Conflict,
+         500 => ErrorCodes.InternalError,
+         _ => ErrorCodes.InternalError
+      };
+   }
 }

@@ -25,11 +25,11 @@ public class TokenService(IConfiguration configuration, UserManager<ApplicationU
       var roles = _userManager.GetRolesAsync(user).GetAwaiter().GetResult();
 
       var claims = new List<Claim>
-        {
+         {
             new(ClaimTypes.NameIdentifier, user.Id),
             new(ClaimTypes.Name, user.UserName ?? $"Employee {user.Id}"),
             new(ClaimTypes.Email, user.Email ?? string.Empty)
-        };
+         };
 
       claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 

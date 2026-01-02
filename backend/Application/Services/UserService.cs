@@ -7,7 +7,6 @@ using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -33,10 +32,10 @@ public class UserService(
          CreatedAt = DateTime.UtcNow
       };
 
-      var createResult = await _userManager.CreateAsync(user, dto.Password);
-      if (!createResult.Succeeded)
+      var result = await _userManager.CreateAsync(user, dto.Password);
+      if (!result.Succeeded)
       {
-         var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
+         var errors = string.Join(" ", result.Errors.Select(e => e.Description));
          return Result.Failure<UserDto>(errors, 400);
       }
 
@@ -75,13 +74,13 @@ public class UserService(
       var expiryUtc = jwtToken.ValidTo;
 
       var authResponse = new AuthDto(
-          user.Id,
-          user.UserName ?? string.Empty,
-          user.Email ?? string.Empty,
-          primaryRole,
-          user.Status.ToString(),
-          token,
-          expiryUtc
+         user.Id,
+         user.UserName ?? string.Empty,
+         user.Email ?? string.Empty,
+         primaryRole,
+         user.Status.ToString(),
+         token,
+         expiryUtc
       );
 
       return Result.Success(authResponse);
