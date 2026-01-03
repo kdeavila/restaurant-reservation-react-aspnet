@@ -46,8 +46,11 @@ public class TableTypeService(
    {
       var query = _tableTypeRepository.Query();
 
-      if (!string.IsNullOrEmpty(queryParams.Name))
-         query = query.Where(tt => tt.Name.Contains(queryParams.Name));
+      if (!string.IsNullOrWhiteSpace(queryParams.Name))
+      {
+         var term = queryParams.Name.Trim().ToLower();
+         query = query.Where(tt => tt.Name.ToLower().Contains(term));
+      }
 
       if (queryParams.BasePrice.HasValue)
          query = query.Where(tt => tt.BasePricePerHour >= queryParams.BasePrice);
@@ -56,12 +59,13 @@ public class TableTypeService(
       var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
 
       var tableTypesPage = await query
+          .OrderBy(tt => tt.Id)
           .Skip(skipNumber)
           .Take(queryParams.PageSize)
           .ToListAsync(ct);
 
-      var tableTypesIds = query.Select(tt => tt.Id).ToList();
-      var tableCounts = await _tableRepository.GetTableCountsByTableTypeIdsAsync(tableTypesIds, ct);
+      var pageIds = tableTypesPage.Select(tt => tt.Id).ToList();
+      var tableCounts = await _tableRepository.GetTableCountsByTableTypeIdsAsync(pageIds, ct);
 
       var data = tableTypesPage.Select(tableType => MapToDto(tableType, tableCounts.GetValueOrDefault(tableType.Id, 0)));
 

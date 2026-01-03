@@ -49,28 +49,40 @@ public class ClientService(IClientRepository clientRepository) : IClientService
    {
       var query = _clientRepository.Query();
 
-      if (!string.IsNullOrEmpty(queryParams.FirstName))
-         query = query.Where(c => c.FirstName.Contains(queryParams.FirstName));
+      if (!string.IsNullOrWhiteSpace(queryParams.FirstName))
+      {
+         var term = queryParams.FirstName.Trim().ToLower();
+         query = query.Where(c => c.FirstName.ToLower().Contains(term));
+      }
 
-      if (!string.IsNullOrEmpty(queryParams.LastName))
-         query = query.Where(c => c.LastName.Contains(queryParams.LastName));
+      if (!string.IsNullOrWhiteSpace(queryParams.LastName))
+      {
+         var term = queryParams.LastName.Trim().ToLower();
+         query = query.Where(c => c.LastName.ToLower().Contains(term));
+      }
 
-      if (!string.IsNullOrEmpty(queryParams.Email))
-         query = query.Where(c => c.Email.Contains(queryParams.Email));
+      if (!string.IsNullOrWhiteSpace(queryParams.Email))
+      {
+         var term = queryParams.Email.Trim().ToLower();
+         query = query.Where(c => c.Email.ToLower().Contains(term));
+      }
 
-      if (!string.IsNullOrEmpty(queryParams.Phone))
-         query = query.Where(c => c.Phone!.Contains(queryParams.Phone));
+      if (!string.IsNullOrWhiteSpace(queryParams.Phone))
+      {
+         var term = queryParams.Phone.Trim().ToLower();
+         query = query.Where(c => c.Phone != null && c.Phone.ToLower().Contains(term));
+      }
 
-      var totalCount = query.Count();
+      var totalCount = await query.CountAsync(ct);
       var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
 
       var clientsPage = await query
+          .OrderBy(c => c.Id)
           .Skip(skipNumber)
           .Take(queryParams.PageSize)
           .ToListAsync(ct);
 
-      var data = clientsPage
-          .Select(client => client.Adapt<ClientDto>());
+      var data = clientsPage.Select(client => client.Adapt<ClientDto>());
 
       var pagination = new PaginationMetadata
       {

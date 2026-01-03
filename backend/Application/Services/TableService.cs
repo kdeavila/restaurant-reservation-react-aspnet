@@ -32,22 +32,32 @@ public class TableService(ITableRepository tableRepository, ITableTypeRepository
    {
       var query = _tableRepository.Query();
 
-      if (!string.IsNullOrEmpty(queryParams.Code))
-         query = query.Where(t => t.Code.Contains(queryParams.Code));
+      if (!string.IsNullOrWhiteSpace(queryParams.Code))
+      {
+         var term = queryParams.Code.Trim().ToLower();
+         query = query.Where(t => t.Code.ToLower().Contains(term));
+      }
 
       if (queryParams.Capacity.HasValue)
          query = query.Where(t => t.Capacity >= queryParams.Capacity);
 
-      if (!string.IsNullOrEmpty(queryParams.Location))
-         query = query.Where(t => t.Location.Contains(queryParams.Location));
+      if (!string.IsNullOrWhiteSpace(queryParams.Location))
+      {
+         var term = queryParams.Location.Trim().ToLower();
+         query = query.Where(t => t.Location.ToLower().Contains(term));
+      }
 
-      if (!string.IsNullOrEmpty(queryParams.Status))
-         query = query.Where(t => t.Status.ToString().Contains(queryParams.Status));
+      if (!string.IsNullOrWhiteSpace(queryParams.Status) &&
+          Enum.TryParse<TableStatus>(queryParams.Status, true, out var parsedStatus))
+      {
+         query = query.Where(t => t.Status == parsedStatus);
+      }
 
       var totalCount = await query.CountAsync(ct);
 
       var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
       var data = await query
+          .OrderBy(table => table.Id)
           .Skip(skipNumber)
           .Take(queryParams.PageSize)
           .Select(table => table.Adapt<TableDetailedDto>())

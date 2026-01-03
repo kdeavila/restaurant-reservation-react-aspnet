@@ -37,17 +37,21 @@ public class ReservationService(
       if (queryParams.EndTime.HasValue)
          query = query.Where(r => r.EndTime <= queryParams.EndTime.Value);
 
-      if (!string.IsNullOrEmpty(queryParams.Status))
-         query = query.Where(r => r.Status.ToString() == queryParams.Status);
+      if (!string.IsNullOrWhiteSpace(queryParams.Status) &&
+          Enum.TryParse<ReservationStatus>(queryParams.Status, true, out var parsedStatus))
+      {
+         query = query.Where(r => r.Status == parsedStatus);
+      }
 
       var totalCount = await query.CountAsync(ct);
 
       var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
-      var data = await query
-          .Skip(skipNumber)
-          .Take(queryParams.PageSize)
-          .Select(reservation => reservation.Adapt<ReservationDto>())
-          .ToListAsync(ct);
+        var data = await query
+           .OrderBy(r => r.Id)
+           .Skip(skipNumber)
+           .Take(queryParams.PageSize)
+           .Select(reservation => reservation.Adapt<ReservationDto>())
+           .ToListAsync(ct);
 
       var pagination = new PaginationMetadata
       {

@@ -11,7 +11,8 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
 
    public IQueryable<Table> Query()
        => _context.Tables
-       .Include(t => t.TableType);
+       .Include(t => t.TableType)
+       .AsNoTracking();
 
    public async Task<Table?> GetByIdAsync(int id, CancellationToken ct = default)
        => await _context.Tables
