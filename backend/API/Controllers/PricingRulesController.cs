@@ -21,6 +21,7 @@ public class PricingRulesController(
    private readonly CreatePricingRuleUseCase _createPricingRuleUseCase = createPricingRuleUseCase;
 
    [HttpGet]
+   [ResponseCache(Duration = 1800, Location = ResponseCacheLocation.Any, NoStore = false)]
    public async Task<ActionResult<ApiResponse<IEnumerable<PricingRuleDto>>>> GetAll(
        [FromQuery] PricingRuleQueryParams queryParams, CancellationToken ct = default)
    {
@@ -31,6 +32,7 @@ public class PricingRulesController(
    }
 
    [HttpGet("{id:int}")]
+   [ResponseCache(Duration = 1800, Location = ResponseCacheLocation.Any, NoStore = false)]
    public async Task<ActionResult<ApiResponse<PricingRuleDto>>> GetById(int id, CancellationToken ct = default)
    {
       var result = await _pricingRuleService.GetByIdAsync(id, ct);

@@ -16,7 +16,6 @@ public class TokenService(IConfiguration configuration, UserManager<ApplicationU
    private readonly string _audience = configuration["Jwt:Audience"]!;
    private readonly int _expiryInMinutes = configuration.GetValue<int>("Jwt:ExpiryInMinutes");
    private readonly UserManager<ApplicationUser> _userManager = userManager;
-
    public string GenerateToken(ApplicationUser user)
    {
       var tokenHandler = new JwtSecurityTokenHandler();

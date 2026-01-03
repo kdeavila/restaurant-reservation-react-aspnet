@@ -2,6 +2,7 @@ using Mapster;
 using System.Text;
 using Asp.Versioning;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Any;
 using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -22,7 +23,9 @@ using RestaurantReservation.Application.UseCases.PricingRules;
 using RestaurantReservation.Application.UseCases.Reservations;
 using RestaurantReservation.Infrastructure.Persistence.Seeding;
 using RestaurantReservation.Application.Interfaces.Repositories;
+using DotNetEnv;
 
+Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -153,6 +156,22 @@ builder.Services.AddSwaggerGen(options =>
       }
    });
 
+   // Render TimeSpan as simple HH:mm:ss strings in Swagger UI (helps query params like startTime/endTime)
+   options.MapType<TimeSpan>(() => new OpenApiSchema
+   {
+      Type = "string",
+      Format = "time-span",
+      Example = new OpenApiString("12:00:00")
+   });
+
+   options.MapType<TimeSpan?>(() => new OpenApiSchema
+   {
+      Type = "string",
+      Format = "time-span",
+      Example = new OpenApiString("14:00:00"),
+      Nullable = true
+   });
+
    options.DocInclusionPredicate((docName, apiDesc) => apiDesc.GroupName == docName);
 });
 
@@ -195,6 +214,12 @@ builder.Services.AddCors(options =>
    });
 });
 
+builder.Services.AddResponseCaching(options =>
+{
+   options.MaximumBodySize = 256 * 1024;  // 256 KB - sufficient for catalog data
+   options.UseCaseSensitivePaths = false;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -222,6 +247,7 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
 app.UseCors("frontend");
+app.UseResponseCaching();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

@@ -16,6 +16,7 @@ public class ClientsController(IClientService clientService) : ControllerBase
    private readonly IClientService _clientService = clientService;
 
    [HttpGet]
+   [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, NoStore = false)]
    public async Task<ActionResult<ApiResponse<IEnumerable<ClientDto>>>> GetAll(
        [FromQuery] ClientQueryParams queryParams, CancellationToken ct = default)
    {
@@ -25,6 +26,7 @@ public class ClientsController(IClientService clientService) : ControllerBase
    }
 
    [HttpGet("{id:int}")]
+   [ResponseCache(Duration = 300, Location = ResponseCacheLocation.Any, NoStore = false)]
    public async Task<ActionResult<ApiResponse<ClientDto>>> GetById(int id, CancellationToken ct = default)
    {
       var result = await _clientService.GetByIdAsync(id, ct);
@@ -36,8 +38,9 @@ public class ClientsController(IClientService clientService) : ControllerBase
    }
 
    [HttpPost]
+   [Authorize(Policy = "AllRoles")]
    public async Task<ActionResult<ApiResponse<ClientDto>>> Create([FromBody] CreateClientDto dto,
-       CancellationToken ct = default)
+      CancellationToken ct = default)
    {
       if (!ModelState.IsValid)
          return BadRequest(ApiResponse<ClientDto>.ErrorResponse(
@@ -53,8 +56,9 @@ public class ClientsController(IClientService clientService) : ControllerBase
    }
 
    [HttpPatch("{id:int}")]
+   [Authorize(Policy = "AllRoles")]
    public async Task<ActionResult<ApiResponse<ClientDto>>> Update
-       (int id, [FromBody] UpdateClientDto dto, CancellationToken ct = default)
+      (int id, [FromBody] UpdateClientDto dto, CancellationToken ct = default)
    {
       if (id != dto.Id)
          return BadRequest(ApiResponse<ClientDto>.ErrorResponse("ID mismatch", ErrorCodes.ValidationError));

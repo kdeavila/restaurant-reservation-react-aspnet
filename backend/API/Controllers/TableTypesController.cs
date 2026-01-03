@@ -16,6 +16,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
    private readonly ITableTypeService _tableTypeService = tableTypeService;
 
    [HttpGet]
+   [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, NoStore = false)]
    public async Task<ActionResult<ApiResponse<IEnumerable<TableTypeDto>>>> GetAll(
        [FromQuery] TableTypeQueryParams queryParams,
        CancellationToken ct = default)
@@ -27,6 +28,7 @@ public class TableTypesController(ITableTypeService tableTypeService) : Controll
    }
 
    [HttpGet("{id:int}")]
+   [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Any, NoStore = false)]
    public async Task<ActionResult<ApiResponse<TableTypeDto>>> GetById(int id, CancellationToken ct = default)
    {
       var result = await _tableTypeService.GetByIdAsync(id, ct);

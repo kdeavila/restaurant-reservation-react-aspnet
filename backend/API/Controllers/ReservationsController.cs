@@ -1,4 +1,5 @@
 using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Responses;
@@ -11,6 +12,7 @@ namespace RestaurantReservation.API.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/reservations")]
+[Authorize(Policy = "AllRoles")]
 public class ReservationsController(
     CreateReservationUseCase createReservationUseCase,
     UpdateReservationUseCase updateReservationUseCase,

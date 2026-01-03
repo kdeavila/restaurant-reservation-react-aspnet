@@ -18,6 +18,20 @@ Sistema web para gestión de reservas de restaurante. Backend en **ASP.NET Core 
 - Backend: en uso, faltan notificaciones, versión API y ajustes de CORS/Identity.
 - Frontend: pendiente.
 
+## Roles y permisos (RBAC)
+- **Admin**: acceso total. CRUD de usuarios, clientes, mesas, tipos de mesa, reglas de precio y reservas; puede desactivar/eliminar recursos.
+- **Manager**: operación completa salvo usuarios. CRUD de clientes, mesas y tipos; crear/actualizar/desactivar reglas de precio; CRUD de reservas.
+- **Employee**: operación diaria. Puede crear/actualizar clientes y crear/actualizar/cancelar reservas; consulta catálogos (clientes, mesas, tipos, reglas). No puede crear/editar/borrar usuarios, reglas de precio, mesas ni tipos; no elimina clientes.
+
+## Configuración de variables de entorno (JWT y DB)
+No se versionan credenciales. Define antes de ejecutar:
+- `ConnectionStrings__DefaultConnection`
+- `Jwt__Key`
+- `Jwt__Issuer`
+- `Jwt__Audience`
+
+Se carga `.env` automáticamente con DotNetEnv (ver `.env.example`). `ExpiryInMinutes` puede mantenerse en appsettings o sobreescribirse con `Jwt__ExpiryInMinutes`.
+
 ## Cómo probar rápido (backend)
 ```bash
 cd backend/API
