@@ -1,13 +1,17 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
-using RestaurantReservation.Application.Common.Responses;
+using Microsoft.AspNetCore.Authorization;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.User;
+using RestaurantReservation.Application.Common.Responses;
 using RestaurantReservation.Application.Interfaces.Services;
 
 namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/auth")]
+[AllowAnonymous]
 public class AuthController(IUserService userService) : ControllerBase
 {
    private readonly IUserService _userService = userService;

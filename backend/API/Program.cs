@@ -1,15 +1,19 @@
-using System.Text;
 using Mapster;
+using System.Text;
+using Asp.Versioning;
+using Microsoft.OpenApi.Models;
+using Asp.Versioning.ApiExplorer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http.Json;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.API.Middlewares;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using RestaurantReservation.Application.Services;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using RestaurantReservation.Application.DTOs.Client;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using RestaurantReservation.Infrastructure.Persistence;
 using RestaurantReservation.Infrastructure.Repositories;
 using RestaurantReservation.Application.DTOs.PricingRule;
@@ -23,7 +27,14 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+   // Require authentication by default for all endpoints
+   var policy = new AuthorizationPolicyBuilder()
+       .RequireAuthenticatedUser()
+       .Build();
+   options.Filters.Add(new AuthorizeFilter(policy));
+});
 
 // Register DbContext with SQL Server and specify the migration assembly
 builder.Services.AddDbContext<RestaurantReservationDbContext>(options =>
@@ -112,10 +123,41 @@ builder.Services.AddScoped<CreatePricingRuleUseCase>();
 
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+   options.SwaggerDoc("v1", new OpenApiInfo
+   {
+      Title = "Restaurant Reservation API",
+      Version = "v1",
+      Description = "API versionada. Prefijo de ruta: api/v1/"
+   });
+   options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+   {
+      In = ParameterLocation.Header,
+      Description = "Introduce el token JWT en el header Authorization como: Bearer {tu_token_jwt}",
+      Name = "Authorization",
+      Type = SecuritySchemeType.Http,
+      BearerFormat = "JWT",
+      Scheme = "Bearer"
+   });
+   options.AddSecurityRequirement(new OpenApiSecurityRequirement
+   {
+      {
+         new OpenApiSecurityScheme {
+            Reference = new OpenApiReference {
+               Type = ReferenceType.SecurityScheme,
+               Id = "Bearer"
+            }
+         },
+         Array.Empty<string>()
+      }
+   });
+
+   options.DocInclusionPredicate((docName, apiDesc) => apiDesc.GroupName == docName);
+});
 
 // Configure JSON options
-builder.Services.Configure<JsonOptions>(options =>
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
@@ -128,6 +170,31 @@ builder.Services.Configure<Microsoft.AspNetCore.Mvc.JsonOptions>(options =>
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
+var apiVersioningBuilder = builder.Services.AddApiVersioning(options =>
+{
+   options.AssumeDefaultVersionWhenUnspecified = true;
+   options.DefaultApiVersion = new ApiVersion(1, 0);
+   options.ReportApiVersions = true;
+   options.ApiVersionReader = new UrlSegmentApiVersionReader();
+});
+
+apiVersioningBuilder.AddApiExplorer(options =>
+{
+   options.GroupNameFormat = "'v'VVV";
+   options.SubstituteApiVersionInUrl = true;
+});
+
+builder.Services.AddCors(options =>
+{
+   options.AddPolicy("frontend", app =>
+   {
+      app.WithOrigins("http://localhost:3000")
+         .AllowAnyMethod()
+         .AllowAnyHeader()
+         .AllowCredentials();
+   });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -135,7 +202,16 @@ if (app.Environment.IsDevelopment())
 {
    app.MapOpenApi();
    app.UseSwagger();
-   app.UseSwaggerUI();
+
+   var apiVersionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+   app.UseSwaggerUI(options =>
+   {
+      foreach (var description in apiVersionDescriptionProvider.ApiVersionDescriptions)
+      {
+         options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
+            $"API {description.GroupName.ToUpperInvariant()}");
+      }
+   });
 
    using var scope = app.Services.CreateScope();
    var context = scope.ServiceProvider.GetRequiredService<RestaurantReservationDbContext>();
@@ -145,6 +221,7 @@ if (app.Environment.IsDevelopment())
 // Middlewares
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
+app.UseCors("frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

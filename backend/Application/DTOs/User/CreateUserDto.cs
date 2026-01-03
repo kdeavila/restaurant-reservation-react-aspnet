@@ -15,5 +15,5 @@ public class CreateUserDto
     [Required]
     [MinLength(6)]
     public string Password { get; set; } = string.Empty;
-    public UserRole Role { get; set; } = UserRole.Employee;
+    public ApplicationUserRole Role { get; set; } = ApplicationUserRole.Employee;
 }

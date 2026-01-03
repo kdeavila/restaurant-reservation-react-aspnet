@@ -1,14 +1,16 @@
-using Microsoft.AspNetCore.Authorization;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using RestaurantReservation.Application.Common;
-using RestaurantReservation.Application.Common.Responses;
 using RestaurantReservation.Application.DTOs.User;
+using RestaurantReservation.Application.Common.Responses;
 using RestaurantReservation.Application.Interfaces.Services;
 
 namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
-[Route("api/users")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/users")]
 [Authorize(Policy = "AdminOnly")]
 public class UsersController(IUserService userService) : ControllerBase
 {

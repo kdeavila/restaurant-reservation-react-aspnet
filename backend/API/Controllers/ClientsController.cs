@@ -1,16 +1,16 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Responses;
 using RestaurantReservation.Application.DTOs.Client;
 using RestaurantReservation.Application.Interfaces.Services;
-using RestaurantReservation.Domain.Entities;
 
 namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
-[Route("api/clients")]
-[Authorize(Policy = "AllRoles")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/clients")]
 public class ClientsController(IClientService clientService) : ControllerBase
 {
    private readonly IClientService _clientService = clientService;
