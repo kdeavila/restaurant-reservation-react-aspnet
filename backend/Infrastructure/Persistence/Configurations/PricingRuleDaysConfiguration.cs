@@ -11,10 +11,10 @@ public class PricingRuleDaysConfiguration : IEntityTypeConfiguration<PricingRule
         builder.ToTable("PricingRuleDays");
         builder.HasKey(prd => prd.Id);
 
-        builder.Property(prd => prd.DayOfWeek)
-            .IsRequired();
+        builder.Property(prd => prd.DayOfWeek).IsRequired();
 
-        builder.HasOne(prd => prd.PricingRule)
+        builder
+            .HasOne(prd => prd.PricingRule)
             .WithMany(pd => pd.PricingRuleDays)
             .HasForeignKey(prd => prd.PricingRuleId)
             .OnDelete(DeleteBehavior.Cascade);

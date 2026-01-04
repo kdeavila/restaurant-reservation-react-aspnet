@@ -14,15 +14,14 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 name: "IX_TableTypes_Name",
                 table: "TableTypes",
                 column: "Name",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_TableTypes_Name",
-                table: "TableTypes");
+            migrationBuilder.DropIndex(name: "IX_TableTypes_Name", table: "TableTypes");
         }
     }
 }

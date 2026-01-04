@@ -11,25 +11,16 @@ public class TableTypeConfiguration : IEntityTypeConfiguration<TableType>
         builder.ToTable("TableTypes");
         builder.HasKey(tt => tt.Id);
 
-        builder.Property(tt => tt.Name)
-            .IsRequired()
-            .HasMaxLength(100);
+        builder.Property(tt => tt.Name).IsRequired().HasMaxLength(100);
 
-        builder.HasIndex(tt => tt.Name)
-            .IsUnique();
+        builder.HasIndex(tt => tt.Name).IsUnique();
 
-        builder.Property(tt => tt.Description)
-            .HasMaxLength(500);
+        builder.Property(tt => tt.Description).HasMaxLength(500);
 
-        builder.Property(tt => tt.BasePricePerHour)
-            .IsRequired()
-            .HasColumnType("decimal(18,2)");
+        builder.Property(tt => tt.BasePricePerHour).IsRequired().HasColumnType("decimal(18,2)");
 
-        builder.Property(tt => tt.IsActive)
-            .IsRequired()
-            .HasDefaultValue(1);
+        builder.Property(tt => tt.IsActive).IsRequired().HasDefaultValue(1);
 
-        builder.Property(tt => tt.CreatedAt)
-            .HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(tt => tt.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
     }
 }

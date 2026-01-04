@@ -10,9 +10,13 @@ public interface IReservationRepository
     Task<IEnumerable<Reservation>> GetByTableIdAsync(int tableId, CancellationToken ct = default);
 
     Task<bool> ExistsOverlappingReservationAsync(
-        int tableId, DateTime date,
-        TimeSpan startTime, TimeSpan endTime,
-        int? exclusionReservationId = null, CancellationToken ct = default);
+        int tableId,
+        DateTime date,
+        TimeSpan startTime,
+        TimeSpan endTime,
+        int? exclusionReservationId = null,
+        CancellationToken ct = default
+    );
 
     Task AddAsync(Reservation reservation, CancellationToken ct = default);
     Task UpdateAsync(Reservation reservation, CancellationToken ct = default);

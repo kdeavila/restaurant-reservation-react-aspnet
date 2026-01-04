@@ -18,7 +18,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "int",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
 
             migrationBuilder.AlterColumn<string>(
                 name: "Status",
@@ -28,7 +29,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "int",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
 
             migrationBuilder.AlterColumn<string>(
                 name: "Status",
@@ -38,7 +40,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "int",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
 
             migrationBuilder.AlterColumn<string>(
                 name: "Status",
@@ -48,21 +51,21 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "int",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tables_Code",
                 table: "Tables",
                 column: "Code",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Tables_Code",
-                table: "Tables");
+            migrationBuilder.DropIndex(name: "IX_Tables_Code", table: "Tables");
 
             migrationBuilder.AlterColumn<int>(
                 name: "Status",
@@ -72,7 +75,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(20)",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
 
             migrationBuilder.AlterColumn<int>(
                 name: "Status",
@@ -82,7 +86,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(20)",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
 
             migrationBuilder.AlterColumn<int>(
                 name: "Status",
@@ -92,7 +97,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(20)",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
 
             migrationBuilder.AlterColumn<int>(
                 name: "Status",
@@ -102,7 +108,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(20)",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
         }
     }
 }

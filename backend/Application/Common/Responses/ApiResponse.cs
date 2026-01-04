@@ -1,5 +1,3 @@
-
-
 using RestaurantReservation.Application.Common.Pagination;
 
 namespace RestaurantReservation.Application.Common.Responses;
@@ -14,8 +12,11 @@ public class ApiResponse<T>
     public PaginationMetadata? Pagination { get; set; }
 
     public static ApiResponse<T> SuccessResponse(
-        T data, string message = "Success",
-        int statusCode = 200, PaginationMetadata? pagination = null)
+        T data,
+        string message = "Success",
+        int statusCode = 200,
+        PaginationMetadata? pagination = null
+    )
     {
         return new ApiResponse<T>
         {
@@ -23,22 +24,22 @@ public class ApiResponse<T>
             Data = data,
             Message = message,
             StatusCode = statusCode,
-            Pagination = pagination
+            Pagination = pagination,
         };
     }
 
-    public static ApiResponse<T> ErrorResponse(string message, string errorCode, int statusCode = 400)
+    public static ApiResponse<T> ErrorResponse(
+        string message,
+        string errorCode,
+        int statusCode = 400
+    )
     {
         return new ApiResponse<T>
         {
             Success = false,
             Message = message,
             StatusCode = statusCode,
-            Error = new ApiError
-            {
-                Code = errorCode,
-                Message = message
-            },
+            Error = new ApiError { Code = errorCode, Message = message },
         };
     }
 }

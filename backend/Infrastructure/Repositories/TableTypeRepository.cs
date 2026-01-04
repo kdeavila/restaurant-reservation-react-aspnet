@@ -9,12 +9,10 @@ public class TableTypeRepository(RestaurantReservationDbContext context) : ITabl
 {
     private readonly RestaurantReservationDbContext _context = context;
 
-    public IQueryable<TableType> Query()
-        => _context.TableTypes
-            .AsNoTracking();
-    
-    public async Task<TableType?> GetByIdAsync(int id, CancellationToken ct = default)
-        => await _context.TableTypes.FindAsync([id], ct);
+    public IQueryable<TableType> Query() => _context.TableTypes.AsNoTracking();
+
+    public async Task<TableType?> GetByIdAsync(int id, CancellationToken ct = default) =>
+        await _context.TableTypes.FindAsync([id], ct);
 
     public async Task<bool> ExistsByNameAsync(string name, CancellationToken ct = default)
     {
@@ -37,7 +35,8 @@ public class TableTypeRepository(RestaurantReservationDbContext context) : ITabl
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var tableType = await _context.TableTypes.FindAsync([id], ct);
-        if (tableType is null) return;
+        if (tableType is null)
+            return;
 
         _context.TableTypes.Remove(tableType);
         await _context.SaveChangesAsync(ct);

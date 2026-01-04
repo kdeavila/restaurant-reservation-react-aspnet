@@ -7,7 +7,9 @@ namespace RestaurantReservation.Application.Interfaces.Services;
 public interface ITableService
 {
     Task<(IEnumerable<TableDetailedDto> Data, PaginationMetadata pagination)> GetAllAsync(
-        TableQueryParams queryParams, CancellationToken ct = default);
+        TableQueryParams queryParams,
+        CancellationToken ct = default
+    );
 
     Task<Result<TableDetailedDto>> GetByIdAsync(int id, CancellationToken ct = default);
     Task<Result<TableDetailedDto>> CreateAsync(CreateTableDto dto, CancellationToken ct = default);

@@ -7,8 +7,8 @@ namespace RestaurantReservation.Application.Services;
 public class PricingService(
     ITableRepository tableRepository,
     ITableTypeRepository tableTypeRepository,
-    IPricingRuleRepository pricingRuleRepository)
-    : IPricingService
+    IPricingRuleRepository pricingRuleRepository
+) : IPricingService
 {
     private readonly ITableRepository _tableRepository = tableRepository;
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
@@ -19,13 +19,16 @@ public class PricingService(
         DateTime date,
         TimeSpan startTime,
         TimeSpan endTime,
-        CancellationToken ct = default)
+        CancellationToken ct = default
+    )
     {
         var table = await _tableRepository.GetByIdAsync(tableId, ct);
-        if (table is null) return Result.Failure<(decimal, decimal)>("Table not found", 404);
+        if (table is null)
+            return Result.Failure<(decimal, decimal)>("Table not found", 404);
 
         var tableType = await _tableTypeRepository.GetByIdAsync(table.TableTypeId, ct);
-        if (tableType is null) return Result.Failure<(decimal, decimal)>("Table type not found", 404);
+        if (tableType is null)
+            return Result.Failure<(decimal, decimal)>("Table type not found", 404);
 
         var duration = endTime - startTime;
         var hours = (decimal)duration.TotalHours;
@@ -34,9 +37,13 @@ public class PricingService(
         var basePrice = tableType.BasePricePerHour * hours;
         basePrice = decimal.Round(basePrice, 2);
 
-        var applicableRules =
-            await _pricingRuleRepository.GetApplicableRulesAsync
-                (table.TableTypeId, date, startTime, endTime, ct);
+        var applicableRules = await _pricingRuleRepository.GetApplicableRulesAsync(
+            table.TableTypeId,
+            date,
+            startTime,
+            endTime,
+            ct
+        );
 
         var totalPrice = basePrice;
         foreach (var rule in applicableRules)

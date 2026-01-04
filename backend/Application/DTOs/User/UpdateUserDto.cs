@@ -5,12 +5,14 @@ namespace RestaurantReservation.Application.DTOs.User;
 
 public class UpdateUserDto
 {
-   [Required]
-   public int Id { get; set; }
-   [MaxLength(50)]
-   public string? Username { get; set; }
-   [EmailAddress]
-   [MaxLength(100)]
-   public string? Email { get; set; }
-   public ApplicationUserRole? Role { get; set; }
+    [Required]
+    public int Id { get; set; }
+
+    [MaxLength(50)]
+    public string? Username { get; set; }
+
+    [EmailAddress]
+    [MaxLength(100)]
+    public string? Email { get; set; }
+    public ApplicationUserRole? Role { get; set; }
 }

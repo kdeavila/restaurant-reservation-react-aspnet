@@ -9,33 +9,36 @@ namespace RestaurantReservation.Infrastructure.Repositories;
 public class PricingRuleRepository(RestaurantReservationDbContext context) : IPricingRuleRepository
 {
     private readonly RestaurantReservationDbContext _context = context;
-    
-    public IQueryable<PricingRule> Query()
-        => _context.PricingRules
-            .Include(r => r.PricingRuleDays)
+
+    public IQueryable<PricingRule> Query() =>
+        _context
+            .PricingRules.Include(r => r.PricingRuleDays)
             .Include(r => r.TableType)
             .AsNoTracking();
 
-    public async Task<PricingRule?> GetByIdAsync(int id, CancellationToken ct = default)
-        => await _context.PricingRules
-            .Include(r => r.PricingRuleDays)
+    public async Task<PricingRule?> GetByIdAsync(int id, CancellationToken ct = default) =>
+        await _context
+            .PricingRules.Include(r => r.PricingRuleDays)
             .Include(r => r.TableType)
             .FirstOrDefaultAsync(r => r.Id == id, ct);
 
-    public async Task<IEnumerable<PricingRule>> GetApplicableRulesAsync(int tableTypeId, DateTime date,
+    public async Task<IEnumerable<PricingRule>> GetApplicableRulesAsync(
+        int tableTypeId,
+        DateTime date,
         TimeSpan startTime,
         TimeSpan endTime,
-        CancellationToken ct = default)
-        => await _context.PricingRules
-            .Include(r => r.PricingRuleDays)
+        CancellationToken ct = default
+    ) =>
+        await _context
+            .PricingRules.Include(r => r.PricingRuleDays)
             .Where(r =>
-                r.IsActive &&
-                r.TableTypeId == tableTypeId &&
-                date.Date >= r.StartDate.Date &&
-                date.Date <= r.EndDate.Date &&
-                startTime >= r.StartTime &&
-                endTime <= r.EndTime &&
-                r.PricingRuleDays.Any(d => d.DayOfWeek == (DaysOfWeek)(int)date.DayOfWeek)
+                r.IsActive
+                && r.TableTypeId == tableTypeId
+                && date.Date >= r.StartDate.Date
+                && date.Date <= r.EndDate.Date
+                && startTime >= r.StartTime
+                && endTime <= r.EndTime
+                && r.PricingRuleDays.Any(d => d.DayOfWeek == (DaysOfWeek)(int)date.DayOfWeek)
             )
             .ToListAsync(ct);
 
@@ -54,7 +57,8 @@ public class PricingRuleRepository(RestaurantReservationDbContext context) : IPr
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var rule = await _context.PricingRules.FindAsync([id], ct);
-        if (rule is null) return;
+        if (rule is null)
+            return;
 
         _context.PricingRules.Remove(rule);
         await _context.SaveChangesAsync(ct);

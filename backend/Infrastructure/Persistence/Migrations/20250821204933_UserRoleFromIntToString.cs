@@ -17,7 +17,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 maxLength: 20,
                 nullable: false,
                 oldClrType: typeof(int),
-                oldType: "int");
+                oldType: "int"
+            );
         }
 
         /// <inheritdoc />
@@ -30,7 +31,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(20)",
-                oldMaxLength: 20);
+                oldMaxLength: 20
+            );
         }
     }
 }
