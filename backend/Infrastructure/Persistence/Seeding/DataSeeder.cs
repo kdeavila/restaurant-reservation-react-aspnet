@@ -1,3 +1,5 @@
+using System;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Domain.Enums;
@@ -10,20 +12,7 @@ public static class DataSeeder
     {
         await context.Database.MigrateAsync();
 
-        // Admin user
-        if (!context.Users.Any())
-        {
-            context.Users.Add(new User
-            {
-                Username = "admin",
-                Email = "admin@example.com",
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword("mysuperpassword"),
-                Role = UserRole.Admin,
-                Status = UserStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            });
-            await context.SaveChangesAsync();
-        }
+        var adminUserId = await EnsureAdminAsync(context);
 
         // Table types
         TableType vipTableType = null!;
@@ -37,7 +26,7 @@ public static class DataSeeder
                 Description = "Premium dining table with exclusive services",
                 BasePricePerHour = 50m,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             standardTableType = new TableType
@@ -46,7 +35,7 @@ public static class DataSeeder
                 Description = "Regular dining table",
                 BasePricePerHour = 25m,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
             };
 
             context.TableTypes.AddRange(vipTableType, standardTableType);
@@ -65,29 +54,49 @@ public static class DataSeeder
             {
                 new Table
                 {
-                    Code = "VIP01", Capacity = 6, Location = "Main hall", TableTypeId = vipTableType.Id,
-                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                    Code = "VIP01",
+                    Capacity = 6,
+                    Location = "Main hall",
+                    TableTypeId = vipTableType.Id,
+                    Status = TableStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Table
                 {
-                    Code = "VIP02", Capacity = 4, Location = "Terrace", TableTypeId = vipTableType.Id,
-                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                    Code = "VIP02",
+                    Capacity = 4,
+                    Location = "Terrace",
+                    TableTypeId = vipTableType.Id,
+                    Status = TableStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Table
                 {
-                    Code = "STD01", Capacity = 4, Location = "Main hall", TableTypeId = standardTableType.Id,
-                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                    Code = "STD01",
+                    Capacity = 4,
+                    Location = "Main hall",
+                    TableTypeId = standardTableType.Id,
+                    Status = TableStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Table
                 {
-                    Code = "STD02", Capacity = 2, Location = "Terrace", TableTypeId = standardTableType.Id,
-                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
+                    Code = "STD02",
+                    Capacity = 2,
+                    Location = "Terrace",
+                    TableTypeId = standardTableType.Id,
+                    Status = TableStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Table
                 {
-                    Code = "STD03", Capacity = 8, Location = "Private room", TableTypeId = standardTableType.Id,
-                    Status = TableStatus.Active, CreatedAt = DateTime.UtcNow
-                }
+                    Code = "STD03",
+                    Capacity = 8,
+                    Location = "Private room",
+                    TableTypeId = standardTableType.Id,
+                    Status = TableStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
+                },
             };
 
             context.Tables.AddRange(tables);
@@ -102,24 +111,40 @@ public static class DataSeeder
             {
                 new Client
                 {
-                    FirstName = "Keyner", LastName = "De Ávila", Email = "kda.ts@gmail.com", Phone = "3022851699",
-                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
+                    FirstName = "Keyner",
+                    LastName = "De Ávila",
+                    Email = "kda.ts@gmail.com",
+                    Phone = "3022851699",
+                    Status = ClientStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Client
                 {
-                    FirstName = "John", LastName = "Doe", Email = "johndoe_12@yahoo.com", Phone = "4155557285",
-                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
+                    FirstName = "John",
+                    LastName = "Doe",
+                    Email = "johndoe_12@yahoo.com",
+                    Phone = "4155557285",
+                    Status = ClientStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Client
                 {
-                    FirstName = "Maria", LastName = "Garcia", Email = "maria.garcia@hotmail.com", Phone = "3055551234",
-                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
+                    FirstName = "Maria",
+                    LastName = "Garcia",
+                    Email = "maria.garcia@hotmail.com",
+                    Phone = "3055551234",
+                    Status = ClientStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Client
                 {
-                    FirstName = "Carlos", LastName = "Rodriguez", Email = "c.rodriguez@gmail.com", Phone = "7865559876",
-                    Status = ClientStatus.Active, CreatedAt = DateTime.UtcNow
-                }
+                    FirstName = "Carlos",
+                    LastName = "Rodriguez",
+                    Email = "c.rodriguez@gmail.com",
+                    Phone = "7865559876",
+                    Status = ClientStatus.Active,
+                    CreatedAt = DateTime.UtcNow,
+                },
             };
 
             context.Clients.AddRange(clients);
@@ -133,8 +158,8 @@ public static class DataSeeder
         // Pricing rules
         if (!context.PricingRules.Any())
         {
-            var startDate = DateTime.UtcNow;
-            var endDate = DateTime.UtcNow.AddMonths(6);
+            var startDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            var endDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6));
 
             var pricingRules = new List<PricingRule>
             {
@@ -149,7 +174,7 @@ public static class DataSeeder
                     EndDate = endDate,
                     TableTypeId = vipTableType.Id,
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new PricingRule
                 {
@@ -162,7 +187,7 @@ public static class DataSeeder
                     EndDate = endDate,
                     TableTypeId = vipTableType.Id,
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new PricingRule
                 {
@@ -175,8 +200,8 @@ public static class DataSeeder
                     EndDate = endDate,
                     TableTypeId = standardTableType.Id,
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow
-                }
+                    CreatedAt = DateTime.UtcNow,
+                },
             };
 
             context.PricingRules.AddRange(pricingRules);
@@ -188,19 +213,32 @@ public static class DataSeeder
             {
                 if (rule.RuleName == "Weekend Surcharge")
                 {
-                    pricingRuleDays.Add(new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Friday });
                     pricingRuleDays.Add(
-                        new PricingRuleDays { PricingRuleId = rule.Id, DayOfWeek = DaysOfWeek.Saturday });
+                        new PricingRuleDays
+                        {
+                            PricingRuleId = rule.Id,
+                            DayOfWeek = DaysOfWeek.Friday,
+                        }
+                    );
+                    pricingRuleDays.Add(
+                        new PricingRuleDays
+                        {
+                            PricingRuleId = rule.Id,
+                            DayOfWeek = DaysOfWeek.Saturday,
+                        }
+                    );
                 }
                 else
                 {
                     for (int i = 1; i <= 5; i++)
                     {
-                        pricingRuleDays.Add(new PricingRuleDays
-                        {
-                            PricingRuleId = rule.Id,
-                            DayOfWeek = (DaysOfWeek)i
-                        });
+                        pricingRuleDays.Add(
+                            new PricingRuleDays
+                            {
+                                PricingRuleId = rule.Id,
+                                DayOfWeek = (DaysOfWeek)i,
+                            }
+                        );
                     }
                 }
             }
@@ -213,7 +251,6 @@ public static class DataSeeder
         if (!context.Reservations.Any())
         {
             var tables = await context.Tables.ToListAsync();
-            var user = await context.Users.FirstAsync();
             var client = clients.First();
 
             var reservations = new List<Reservation>
@@ -230,8 +267,8 @@ public static class DataSeeder
                     TotalPrice = 120m,
                     Status = ReservationStatus.Confirmed,
                     Notes = "Business meeting",
-                    CreatedByUserId = user.Id,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedByUserId = adminUserId,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Reservation
                 {
@@ -245,8 +282,8 @@ public static class DataSeeder
                     TotalPrice = 31.88m,
                     Status = ReservationStatus.Confirmed,
                     Notes = "Romantic dinner",
-                    CreatedByUserId = user.Id,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedByUserId = adminUserId,
+                    CreatedAt = DateTime.UtcNow,
                 },
                 new Reservation
                 {
@@ -260,13 +297,78 @@ public static class DataSeeder
                     TotalPrice = 195m,
                     Status = ReservationStatus.Pending,
                     Notes = "Birthday celebration",
-                    CreatedByUserId = user.Id,
-                    CreatedAt = DateTime.UtcNow
-                }
+                    CreatedByUserId = adminUserId,
+                    CreatedAt = DateTime.UtcNow,
+                },
             };
 
             context.Reservations.AddRange(reservations);
             await context.SaveChangesAsync();
         }
+    }
+
+    private static async Task<string> EnsureAdminAsync(RestaurantReservationDbContext context)
+    {
+        var adminRoleId = await EnsureRoleAsync(context, "Admin");
+        await EnsureRoleAsync(context, "Manager");
+        await EnsureRoleAsync(context, "Employee");
+
+        var admin = await context.Users.FirstOrDefaultAsync(u => u.UserName == "admin");
+        if (admin is null)
+        {
+            admin = new ApplicationUser
+            {
+                Id = Guid.NewGuid().ToString(),
+                UserName = "admin",
+                NormalizedUserName = "ADMIN",
+                Email = "admin@example.com",
+                NormalizedEmail = "ADMIN@EXAMPLE.COM",
+                EmailConfirmed = true,
+                Status = ApplicationUserStatus.Active,
+                CreatedAt = DateTime.UtcNow,
+                SecurityStamp = Guid.NewGuid().ToString(),
+            };
+
+            var hasher = new PasswordHasher<ApplicationUser>();
+            admin.PasswordHash = hasher.HashPassword(admin, "Admin123!");
+
+            context.Users.Add(admin);
+            await context.SaveChangesAsync();
+        }
+
+        var adminRoleExists = await context.UserRoles.AnyAsync(ur =>
+            ur.UserId == admin.Id && ur.RoleId == adminRoleId
+        );
+        if (!adminRoleExists)
+        {
+            context.UserRoles.Add(
+                new IdentityUserRole<string> { UserId = admin.Id, RoleId = adminRoleId }
+            );
+            await context.SaveChangesAsync();
+        }
+
+        return admin.Id;
+    }
+
+    private static async Task<string> EnsureRoleAsync(
+        RestaurantReservationDbContext context,
+        string roleName
+    )
+    {
+        var role = await context.Roles.FirstOrDefaultAsync(r => r.Name == roleName);
+        if (role is null)
+        {
+            role = new IdentityRole
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = roleName,
+                NormalizedName = roleName.ToUpperInvariant(),
+            };
+
+            context.Roles.Add(role);
+            await context.SaveChangesAsync();
+        }
+
+        return role.Id;
     }
 }

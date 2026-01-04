@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RestaurantReservation.Application.Common;
@@ -9,8 +10,8 @@ using RestaurantReservation.Application.UseCases.PricingRules;
 namespace RestaurantReservation.API.Controllers;
 
 [ApiController]
-[Route("api/pricing-rules")]
-[Authorize(Policy = "AllRoles")]
+[ApiVersion("1.0")]
+[Route("api/v{version:apiVersion}/pricing-rules")]
 public class PricingRulesController(
     IPricingRuleService pricingRuleService,
     CreatePricingRuleUseCase createPricingRuleUseCase
@@ -20,22 +21,40 @@ public class PricingRulesController(
     private readonly CreatePricingRuleUseCase _createPricingRuleUseCase = createPricingRuleUseCase;
 
     [HttpGet]
+    [ResponseCache(Duration = 1800, Location = ResponseCacheLocation.Any, NoStore = false)]
     public async Task<ActionResult<ApiResponse<IEnumerable<PricingRuleDto>>>> GetAll(
-        [FromQuery] PricingRuleQueryParams queryParams, CancellationToken ct = default)
+        [FromQuery] PricingRuleQueryParams queryParams,
+        CancellationToken ct = default
+    )
     {
         var (data, pagination) = await _pricingRuleService.GetAllAsync(queryParams, ct);
 
-        return Ok(ApiResponse<IEnumerable<PricingRuleDto>>
-            .SuccessResponse(data, "Pricing rules retrieved successfully", pagination: pagination));
+        return Ok(
+            ApiResponse<IEnumerable<PricingRuleDto>>.SuccessResponse(
+                data,
+                "Pricing rules retrieved successfully",
+                pagination: pagination
+            )
+        );
     }
 
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<ApiResponse<PricingRuleDto>>> GetById(int id, CancellationToken ct = default)
+    [ResponseCache(Duration = 1800, Location = ResponseCacheLocation.Any, NoStore = false)]
+    public async Task<ActionResult<ApiResponse<PricingRuleDto>>> GetById(
+        int id,
+        CancellationToken ct = default
+    )
     {
         var result = await _pricingRuleService.GetByIdAsync(id, ct);
         if (result.IsFailure)
-            return StatusCode(result.StatusCode, ApiResponse<PricingRuleDto>
-                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+            return StatusCode(
+                result.StatusCode,
+                ApiResponse<PricingRuleDto>.ErrorResponse(
+                    result.Error,
+                    GetErrorCode(result.StatusCode),
+                    result.StatusCode
+                )
+            );
 
         return Ok(ApiResponse<PricingRuleDto>.SuccessResponse(result.Value, "Pricing rule found"));
     }
@@ -43,61 +62,105 @@ public class PricingRulesController(
     [HttpPost]
     [Authorize(Policy = "AdminOrManager")]
     public async Task<ActionResult<ApiResponse<PricingRuleDto>>> Create(
-        [FromBody] CreatePricingRuleDto dto, CancellationToken ct = default)
+        [FromBody] CreatePricingRuleDto dto,
+        CancellationToken ct = default
+    )
     {
         if (!ModelState.IsValid)
-            return BadRequest(ApiResponse<PricingRuleDto>
-                .ErrorResponse("Invalid model", ErrorCodes.ValidationError));
+            return BadRequest(
+                ApiResponse<PricingRuleDto>.ErrorResponse(
+                    "Invalid model",
+                    ErrorCodes.ValidationError
+                )
+            );
 
         var result = await _createPricingRuleUseCase.ExecuteAsync(dto, ct);
         if (result.IsFailure)
-            return StatusCode(result.StatusCode, ApiResponse<PricingRuleDto>
-                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+            return StatusCode(
+                result.StatusCode,
+                ApiResponse<PricingRuleDto>.ErrorResponse(
+                    result.Error,
+                    GetErrorCode(result.StatusCode),
+                    result.StatusCode
+                )
+            );
 
-        return CreatedAtAction(nameof(GetById), new { id = result.Value.Id },
-            ApiResponse<PricingRuleDto>.SuccessResponse(result.Value, "Pricing rule created", 201));
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Value.Id },
+            ApiResponse<PricingRuleDto>.SuccessResponse(result.Value, "Pricing rule created", 201)
+        );
     }
 
     [HttpPatch("{id:int}")]
     [Authorize(Policy = "AdminOrManager")]
     public async Task<ActionResult<ApiResponse<PricingRuleDto>>> Update(
-        int id, UpdatePricingRuleDto dto, CancellationToken ct = default)
+        int id,
+        UpdatePricingRuleDto dto,
+        CancellationToken ct = default
+    )
     {
         if (id != dto.Id)
-            return BadRequest(ApiResponse<PricingRuleDto>.ErrorResponse("ID mismatch", ErrorCodes.ValidationError));
+            return BadRequest(
+                ApiResponse<PricingRuleDto>.ErrorResponse("ID mismatch", ErrorCodes.ValidationError)
+            );
 
         var result = await _pricingRuleService.UpdateAsync(dto, ct);
         if (result.IsFailure)
-            return StatusCode(result.StatusCode, ApiResponse<PricingRuleDto>
-                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+            return StatusCode(
+                result.StatusCode,
+                ApiResponse<PricingRuleDto>.ErrorResponse(
+                    result.Error,
+                    GetErrorCode(result.StatusCode),
+                    result.StatusCode
+                )
+            );
 
         var updatedResult = await _pricingRuleService.GetByIdAsync(id, ct);
         if (updatedResult.IsFailure)
-            return StatusCode(updatedResult.StatusCode, ApiResponse<PricingRuleDto>
-                .ErrorResponse(updatedResult.Error, GetErrorCode(updatedResult.StatusCode), updatedResult.StatusCode));
+            return StatusCode(
+                updatedResult.StatusCode,
+                ApiResponse<PricingRuleDto>.ErrorResponse(
+                    updatedResult.Error,
+                    GetErrorCode(updatedResult.StatusCode),
+                    updatedResult.StatusCode
+                )
+            );
 
-        return Ok(ApiResponse<PricingRuleDto>.SuccessResponse(updatedResult.Value, "Pricing rule updated"));
+        return Ok(
+            ApiResponse<PricingRuleDto>.SuccessResponse(updatedResult.Value, "Pricing rule updated")
+        );
     }
 
     [HttpDelete("{id:int}")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<ActionResult<ApiResponse<string>>> Delete(int id, CancellationToken ct = default)
+    public async Task<ActionResult<ApiResponse<string>>> Delete(
+        int id,
+        CancellationToken ct = default
+    )
     {
         var result = await _pricingRuleService.DeactivateAsync(id, ct);
         if (result.IsFailure)
-            return StatusCode(result.StatusCode, ApiResponse<string>
-                .ErrorResponse(result.Error, GetErrorCode(result.StatusCode), result.StatusCode));
+            return StatusCode(
+                result.StatusCode,
+                ApiResponse<string>.ErrorResponse(
+                    result.Error,
+                    GetErrorCode(result.StatusCode),
+                    result.StatusCode
+                )
+            );
 
         return Ok(ApiResponse<string>.SuccessResponse(result.Value, result.Value));
     }
 
-    private static string GetErrorCode(int statusCode) => statusCode switch
-    {
-        400 => ErrorCodes.ValidationError,
-        404 => ErrorCodes.NotFound,
-        401 => ErrorCodes.Unauthorized,
-        409 => ErrorCodes.Conflict,
-        422 => ErrorCodes.BusinessRuleViolation,
-        _ => ErrorCodes.InternalError
-    };
+    private static string GetErrorCode(int statusCode) =>
+        statusCode switch
+        {
+            400 => ErrorCodes.ValidationError,
+            404 => ErrorCodes.NotFound,
+            401 => ErrorCodes.Unauthorized,
+            409 => ErrorCodes.Conflict,
+            422 => ErrorCodes.BusinessRuleViolation,
+            _ => ErrorCodes.InternalError,
+        };
 }

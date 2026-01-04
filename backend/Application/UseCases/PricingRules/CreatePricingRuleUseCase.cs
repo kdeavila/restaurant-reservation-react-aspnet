@@ -1,6 +1,6 @@
+using Mapster;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.DTOs.PricingRule;
-using RestaurantReservation.Application.DTOs.TableType;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
@@ -15,10 +15,13 @@ public class CreatePricingRuleUseCase(
 {
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
     private readonly IPricingRuleService _pricingRuleService = pricingRuleService;
-    private readonly IPricingRuleDaysRepository _pricingRuleDaysRepository = pricingRuleDaysRepository;
+    private readonly IPricingRuleDaysRepository _pricingRuleDaysRepository =
+        pricingRuleDaysRepository;
 
     public async Task<Result<PricingRuleDto>> ExecuteAsync(
-        CreatePricingRuleDto dto, CancellationToken ct = default)
+        CreatePricingRuleDto dto,
+        CancellationToken ct = default
+    )
     {
         var tableTypeExists = await _tableTypeRepository.GetByIdAsync(dto.TableTypeId, ct);
         if (tableTypeExists is null || !tableTypeExists.IsActive)
@@ -30,34 +33,18 @@ public class CreatePricingRuleUseCase(
 
         var rule = pricingRule.Value;
 
-        var pricingRuleDays = dto.DaysOfWeek.Select(day => new PricingRuleDays()
-        {
-            PricingRuleId = rule.Id,
-            DayOfWeek = day
-        }).ToList();
+        var pricingRuleDays = dto
+            .DaysOfWeek.Select(day => new PricingRuleDays()
+            {
+                PricingRuleId = rule.Id,
+                DayOfWeek = day,
+            })
+            .ToList();
 
         foreach (var prd in pricingRuleDays)
             await _pricingRuleDaysRepository.AddAsync(prd, ct);
 
-        var pricingRuleDto = new PricingRuleDto(
-            rule.Id,
-            rule.RuleName,
-            rule.RuleType,
-            rule.StartTime,
-            rule.EndTime,
-            rule.SurchargePercentage,
-            rule.StartDate,
-            rule.EndDate,
-            new TableTypeSimpleDto(
-                rule.TableTypeId,
-                rule.TableType.Name,
-                rule.TableType.BasePricePerHour,
-                rule.TableType.IsActive
-            ),
-            rule.IsActive,
-            rule.CreatedAt,
-            dto.DaysOfWeek
-        );
-        return Result.Success(pricingRuleDto);
+        var pricincRuleDto = rule.Adapt<PricingRuleDto>();
+        return Result.Success(pricincRuleDto);
     }
 }

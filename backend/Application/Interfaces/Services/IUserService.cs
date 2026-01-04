@@ -8,7 +8,10 @@ public interface IUserService
 {
     Task<Result<UserDto>> RegisterAsync(CreateUserDto dto, CancellationToken ct = default);
     Task<Result<AuthDto>> LoginAsync(LoginDto dto, CancellationToken ct = default);
-    Task<Result<UserDto>> GetByIdAsync(int id, CancellationToken ct = default);
-    Task<(IEnumerable<UserDto> Data, PaginationMetadata Pagination)> GetAllAsync(UserQueryParams queryParams, CancellationToken ct = default);
-    Task<Result<string>> DeactivateAsync(int id, CancellationToken ct = default);
+    Task<Result<UserDto>> GetByIdAsync(string id, CancellationToken ct = default);
+    Task<(IEnumerable<UserDto> Data, PaginationMetadata Pagination)> GetAllAsync(
+        UserQueryParams queryParams,
+        CancellationToken ct = default
+    );
+    Task<Result<string>> DeactivateAsync(string id, CancellationToken ct = default);
 }

@@ -17,10 +17,10 @@ public class Reservation
     public string Notes { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public int CreatedByUserId { get; set; }
+    public string CreatedByUserId { get; set; } = string.Empty;
 
     // Navigation
-    public User User { get; set; } = null!;
+    public ApplicationUser User { get; set; } = null!;
     public Client Client { get; set; } = null!;
     public Table Table { get; set; } = null!;
 }

@@ -14,5 +14,5 @@ public class TableQueryParams
     public int Page { get; set; } = 1;
 
     [Range(1, 100, ErrorMessage = "PageSize must be between 1 and 100")]
-    public int PageSize { get; set; } = 5;
+    public int PageSize { get; set; } = 10;
 }

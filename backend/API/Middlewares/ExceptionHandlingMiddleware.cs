@@ -25,17 +25,20 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
             ValidationException vex => ApiResponse<object>.ErrorResponse(
                 vex.Message,
                 ErrorCodes.ValidationError,
-                StatusCodes.Status400BadRequest),
+                StatusCodes.Status400BadRequest
+            ),
 
             NotFoundException nex => ApiResponse<object>.ErrorResponse(
                 nex.Message,
                 ErrorCodes.NotFound,
-                StatusCodes.Status404NotFound),
+                StatusCodes.Status404NotFound
+            ),
 
             UnauthorizedAccessException uex => ApiResponse<object>.ErrorResponse(
                 uex.Message,
                 ErrorCodes.Unauthorized,
-                StatusCodes.Status401Unauthorized),
+                StatusCodes.Status401Unauthorized
+            ),
 
             ConflictException cex => ApiResponse<object>.ErrorResponse(
                 cex.Message,
@@ -46,12 +49,14 @@ public class ExceptionHandlingMiddleware(RequestDelegate next)
             BusinessRuleException brex => ApiResponse<object>.ErrorResponse(
                 brex.Message,
                 ErrorCodes.BusinessRuleViolation,
-                StatusCodes.Status422UnprocessableEntity),
+                StatusCodes.Status422UnprocessableEntity
+            ),
 
             _ => ApiResponse<object>.ErrorResponse(
                 "An unexpected error occurred",
                 ErrorCodes.InternalError,
-                StatusCodes.Status500InternalServerError)
+                StatusCodes.Status500InternalServerError
+            ),
         };
 
         context.Response.StatusCode = response.StatusCode;

@@ -1,7 +1,7 @@
 namespace RestaurantReservation.Domain.Enums;
 
-public enum UserStatus
+public enum ApplicationUserStatus
 {
+    Inactive,
     Active,
-    Inactive
 }

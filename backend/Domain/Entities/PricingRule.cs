@@ -8,8 +8,8 @@ public class PricingRule
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
     public decimal SurchargePercentage { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DateOnly EndDate { get; set; }
     public int TableTypeId { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -10,8 +10,10 @@ public class UpdateReservationDto
     public DateTime? Date { get; set; }
     public TimeSpan? StartTime { get; set; }
     public TimeSpan? EndTime { get; set; }
-    [Range(1,50)]
+
+    [Range(1, 50)]
     public int? NumberOfGuests { get; set; }
+
     [MaxLength(200)]
     public string? Notes { get; set; }
     public string? Status { get; set; }

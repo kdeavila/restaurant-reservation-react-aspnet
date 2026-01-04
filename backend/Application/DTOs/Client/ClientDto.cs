@@ -8,5 +8,5 @@ public record ClientDto(
     string? Phone,
     string Status,
     int TotalReservations,
-    DateTime MemberSince
+    DateTime CreatedAt
 );

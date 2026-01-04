@@ -5,32 +5,34 @@ using RestaurantReservation.Infrastructure.Persistence;
 
 namespace RestaurantReservation.Infrastructure.Repositories;
 
-public class PricingRuleDaysRepository(RestaurantReservationDbContext context) : IPricingRuleDaysRepository
+public class PricingRuleDaysRepository(RestaurantReservationDbContext context)
+    : IPricingRuleDaysRepository
 {
     private readonly RestaurantReservationDbContext _context = context;
 
-    public async Task<PricingRuleDays?> GetByIdAsync(int id, CancellationToken ct = default)
-        => await _context.PricingRuleDays
-            .AsNoTracking()
-            .FirstOrDefaultAsync(d => d.Id == id, ct);
+    public async Task<PricingRuleDays?> GetByIdAsync(int id, CancellationToken ct = default) =>
+        await _context.PricingRuleDays.AsNoTracking().FirstOrDefaultAsync(d => d.Id == id, ct);
 
     public async Task<IEnumerable<PricingRuleDays>> GetByPricingRuleIdsAsync(
         IEnumerable<int> ruleIds,
         CancellationToken ct = default
-    )
-        => await _context.PricingRuleDays
-            .Where(prd => ruleIds.Contains(prd.PricingRuleId))
+    ) =>
+        await _context
+            .PricingRuleDays.Where(prd => ruleIds.Contains(prd.PricingRuleId))
             .ToListAsync(ct);
-    
+
     public async Task<IEnumerable<PricingRuleDays>> GetByPricingRuleIdAsync(
         int pricingRuleId,
         CancellationToken ct = default
-    )
-        => await _context.PricingRuleDays
-            .Where(prd => prd.PricingRuleId == pricingRuleId)
+    ) =>
+        await _context
+            .PricingRuleDays.Where(prd => prd.PricingRuleId == pricingRuleId)
             .ToListAsync(ct);
 
-    public async Task AddRangeAsync(IEnumerable<PricingRuleDays> dayEntities, CancellationToken ct = default)
+    public async Task AddRangeAsync(
+        IEnumerable<PricingRuleDays> dayEntities,
+        CancellationToken ct = default
+    )
     {
         await _context.PricingRuleDays.AddRangeAsync(dayEntities, ct);
         await _context.SaveChangesAsync(ct);
@@ -38,8 +40,8 @@ public class PricingRuleDaysRepository(RestaurantReservationDbContext context) :
 
     public async Task DeleteByPricingRuleIdAsync(int pricingRuleId, CancellationToken ct = default)
     {
-        var existing = await _context.PricingRuleDays
-            .Where(prd => prd.PricingRuleId == pricingRuleId)
+        var existing = await _context
+            .PricingRuleDays.Where(prd => prd.PricingRuleId == pricingRuleId)
             .ToListAsync(ct);
 
         if (existing.Count > 0)
@@ -58,7 +60,8 @@ public class PricingRuleDaysRepository(RestaurantReservationDbContext context) :
     public async Task DeleteAsync(int id, CancellationToken ct = default)
     {
         var day = await _context.PricingRuleDays.FindAsync([id], ct);
-        if (day is null) return;
+        if (day is null)
+            return;
 
         _context.PricingRuleDays.Remove(day);
         await _context.SaveChangesAsync(ct);

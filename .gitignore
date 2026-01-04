@@ -259,3 +259,6 @@ pids/
 # Uncomment these lines if you don't want to commit lock files
 # package-lock.json
 # yarn.lock
+
+# Project docs (keep out of VCS)
+PROJECT_SCOPE.md

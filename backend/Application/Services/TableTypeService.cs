@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 using RestaurantReservation.Application.Common;
 using RestaurantReservation.Application.Common.Pagination;
@@ -5,15 +6,30 @@ using RestaurantReservation.Application.DTOs.TableType;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
+using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.Services;
 
 public class TableTypeService(
     ITableTypeRepository tableTypeRepository,
-    ITableRepository tableRepository) : ITableTypeService
+    ITableRepository tableRepository
+) : ITableTypeService
 {
     private readonly ITableTypeRepository _tableTypeRepository = tableTypeRepository;
     private readonly ITableRepository _tableRepository = tableRepository;
+
+    private static TableTypeDto MapToDto(TableType tableType, int tableCount = 0)
+    {
+        return new(
+            tableType.Id,
+            tableType.Name,
+            tableType.Description,
+            tableType.BasePricePerHour,
+            tableType.IsActive,
+            tableCount,
+            tableType.CreatedAt
+        );
+    }
 
     public async Task<Result<TableTypeDto>> GetByIdAsync(int id, CancellationToken ct = default)
     {
@@ -24,25 +40,22 @@ public class TableTypeService(
         var tables = await _tableRepository.GetByTableTypeIdAsync(id, ct);
         var tableCount = tables.Count();
 
-        var tableTypeDto = new TableTypeDto(
-            tableType.Id,
-            tableType.Name,
-            tableType.Description,
-            tableType.BasePricePerHour,
-            tableType.IsActive,
-            tableCount,
-            tableType.CreatedAt
-        );
+        var tableTypeDto = MapToDto(tableType, tableCount);
         return Result.Success(tableTypeDto);
     }
 
     public async Task<(IEnumerable<TableTypeDto> Data, PaginationMetadata Pagination)> GetAllAsync(
-        TableTypeQueryParams queryParams, CancellationToken ct = default)
+        TableTypeQueryParams queryParams,
+        CancellationToken ct = default
+    )
     {
         var query = _tableTypeRepository.Query();
 
-        if (!string.IsNullOrEmpty(queryParams.Name))
-            query = query.Where(tt => tt.Name.Contains(queryParams.Name));
+        if (!string.IsNullOrWhiteSpace(queryParams.Name))
+        {
+            var term = queryParams.Name.Trim().ToLower();
+            query = query.Where(tt => tt.Name.ToLower().Contains(term));
+        }
 
         if (queryParams.BasePrice.HasValue)
             query = query.Where(tt => tt.BasePricePerHour >= queryParams.BasePrice);
@@ -51,40 +64,40 @@ public class TableTypeService(
         var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
 
         var tableTypesPage = await query
+            .OrderBy(tt => tt.Id)
             .Skip(skipNumber)
             .Take(queryParams.PageSize)
             .ToListAsync(ct);
 
-        var tableTypesIds = query.Select(tt => tt.Id).ToList();
-        var tableCounts = await _tableRepository.GetTableCountsByTableTypeIdsAsync(tableTypesIds, ct);
+        var pageIds = tableTypesPage.Select(tt => tt.Id).ToList();
+        var tableCounts = await _tableRepository.GetTableCountsByTableTypeIdsAsync(pageIds, ct);
 
-        var data = tableTypesPage.Select(tt => new TableTypeDto(
-            tt.Id,
-            tt.Name,
-            tt.Description,
-            tt.BasePricePerHour,
-            tt.IsActive,
-            tableCounts.GetValueOrDefault(tt.Id, 0),
-            tt.CreatedAt
-        ));
+        var data = tableTypesPage.Select(tableType =>
+            MapToDto(tableType, tableCounts.GetValueOrDefault(tableType.Id, 0))
+        );
 
         var pagination = new PaginationMetadata
         {
             Page = queryParams.Page,
             PageSize = queryParams.PageSize,
             TotalCount = totalCount,
-            TotalPages = (int)Math.Ceiling(totalCount / (double)queryParams.PageSize)
+            TotalPages = (int)Math.Ceiling(totalCount / (double)queryParams.PageSize),
         };
 
         return (data, pagination);
     }
 
-    public async Task<Result<TableTypeDto>> CreateAsync(CreateTableTypeDto dto, CancellationToken ct = default)
+    public async Task<Result<TableTypeDto>> CreateAsync(
+        CreateTableTypeDto dto,
+        CancellationToken ct = default
+    )
     {
         var tableExists = await _tableTypeRepository.ExistsByNameAsync(dto.Name, ct);
         if (tableExists)
             return Result.Failure<TableTypeDto>(
-                "Table type with the same name already exists.", 409);
+                "Table type with the same name already exists.",
+                409
+            );
 
         var tableType = new TableType()
         {
@@ -92,26 +105,20 @@ public class TableTypeService(
             Description = dto.Description ?? string.Empty,
             BasePricePerHour = dto.BasePricePerHour,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _tableTypeRepository.AddAsync(tableType, ct);
-        var tableTypeDto = new TableTypeDto(
-            tableType.Id,
-            tableType.Name,
-            tableType.Description,
-            tableType.BasePricePerHour,
-            tableType.IsActive,
-            0,
-            tableType.CreatedAt
-        );
+        var tableTypeDto = MapToDto(tableType, 0);
+
         return Result.Success(tableTypeDto);
     }
 
     public async Task<Result> UpdateAsync(UpdateTableTypeDto dto, CancellationToken ct = default)
     {
         var tableType = await _tableTypeRepository.GetByIdAsync(dto.Id, ct);
-        if (tableType is null) return Result.Failure("Table type not found.", 404);
+        if (tableType is null)
+            return Result.Failure("Table type not found.", 404);
 
         if (!string.IsNullOrEmpty(dto.Name) && dto.Name != tableType.Name)
         {
@@ -140,9 +147,27 @@ public class TableTypeService(
 
         if (tables.Any())
         {
+            // Check for future reservations using tables of this type
+            var futureReservations = tables
+                .SelectMany(t => t.Reservations)
+                .Where(r =>
+                    r.Status != ReservationStatus.Cancelled
+                    && r.Status != ReservationStatus.Completed
+                    && DateTime.UtcNow.Date <= r.Date.Date
+                )
+                .Any();
+
+            if (futureReservations)
+                return Result.Failure<string>(
+                    "Cannot deactivate table type. There are future reservations using tables of this type.",
+                    409
+                );
+
             tableType.IsActive = false;
             await _tableTypeRepository.UpdateAsync(tableType, ct);
-            return Result.Success($"Table type deactivated. It's being used by {tables.Count} tables.");
+            return Result.Success(
+                $"Table type deactivated. It's being used by {tables.Count} tables."
+            );
         }
 
         await _tableTypeRepository.DeleteAsync(id, ct);

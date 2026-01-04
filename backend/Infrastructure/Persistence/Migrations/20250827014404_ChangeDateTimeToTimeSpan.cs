@@ -17,7 +17,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "time",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "datetime2");
+                oldType: "datetime2"
+            );
 
             migrationBuilder.AlterColumn<TimeSpan>(
                 name: "EndTime",
@@ -25,7 +26,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "time",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "datetime2");
+                oldType: "datetime2"
+            );
 
             migrationBuilder.AlterColumn<TimeSpan>(
                 name: "StartTime",
@@ -33,7 +35,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "time",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "datetime2");
+                oldType: "datetime2"
+            );
 
             migrationBuilder.AlterColumn<TimeSpan>(
                 name: "EndTime",
@@ -41,7 +44,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "time",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "datetime2");
+                oldType: "datetime2"
+            );
         }
 
         /// <inheritdoc />
@@ -53,7 +57,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "datetime2",
                 nullable: false,
                 oldClrType: typeof(TimeSpan),
-                oldType: "time");
+                oldType: "time"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "EndTime",
@@ -61,7 +66,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "datetime2",
                 nullable: false,
                 oldClrType: typeof(TimeSpan),
-                oldType: "time");
+                oldType: "time"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "StartTime",
@@ -69,7 +75,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "datetime2",
                 nullable: false,
                 oldClrType: typeof(TimeSpan),
-                oldType: "time");
+                oldType: "time"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "EndTime",
@@ -77,7 +84,8 @@ namespace RestaurantReservation.Infrastructure.Persistence.Migrations
                 type: "datetime2",
                 nullable: false,
                 oldClrType: typeof(TimeSpan),
-                oldType: "time");
+                oldType: "time"
+            );
         }
     }
 }
