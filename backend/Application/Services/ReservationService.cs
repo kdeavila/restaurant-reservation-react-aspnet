@@ -164,8 +164,8 @@ public class ReservationService(IReservationRepository reservationRepository) : 
 
         await _reservationRepository.UpdateAsync(reservation, ct);
 
-        var updatedReservation = await _reservationRepository.GetByIdAsync(dto.Id, ct);
-        return Result.Success<string>("Reservation updated successfully.");
+        await _reservationRepository.GetByIdAsync(dto.Id, ct);
+        return Result.Success("Reservation updated successfully.");
     }
 
     public async Task<Result<string>> CancelAsync(int id, CancellationToken ct = default)
@@ -181,6 +181,6 @@ public class ReservationService(IReservationRepository reservationRepository) : 
         reservation.UpdatedAt = DateTime.UtcNow;
 
         await _reservationRepository.UpdateAsync(reservation, ct);
-        return Result.Success<string>($"Reservation #{id} has been cancelled.");
+        return Result.Success($"Reservation #{id} has been cancelled.");
     }
 }

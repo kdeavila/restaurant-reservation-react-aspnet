@@ -8,7 +8,7 @@ public record ReservationDto(
     int Id,
     ClientDto Client,
     TableDto Table,
-    DateTime Date,
+    DateOnly Date,
     TimeSpan StartTime,
     TimeSpan EndTime,
     int NumberOfGuests,
@@ -16,5 +16,5 @@ public record ReservationDto(
     decimal TotalPrice,
     string Status,
     string Notes,
-    UserDto User
+    UserSimpleDto User
 );

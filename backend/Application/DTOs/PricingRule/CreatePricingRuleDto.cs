@@ -24,10 +24,10 @@ public class CreatePricingRuleDto
     public decimal SurchargePercentage { get; set; }
 
     [Required]
-    public DateTime StartDate { get; set; }
+    public DateOnly StartDate { get; set; }
 
     [Required]
-    public DateTime EndDate { get; set; }
+    public DateOnly EndDate { get; set; }
 
     [Required]
     public int TableTypeId { get; set; }

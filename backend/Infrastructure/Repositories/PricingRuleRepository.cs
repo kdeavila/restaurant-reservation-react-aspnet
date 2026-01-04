@@ -34,8 +34,8 @@ public class PricingRuleRepository(RestaurantReservationDbContext context) : IPr
             .Where(r =>
                 r.IsActive
                 && r.TableTypeId == tableTypeId
-                && date.Date >= r.StartDate.Date
-                && date.Date <= r.EndDate.Date
+                && DateOnly.FromDateTime(date) >= r.StartDate
+                && DateOnly.FromDateTime(date) <= r.EndDate
                 && startTime >= r.StartTime
                 && endTime <= r.EndTime
                 && r.PricingRuleDays.Any(d => d.DayOfWeek == (DaysOfWeek)(int)date.DayOfWeek)

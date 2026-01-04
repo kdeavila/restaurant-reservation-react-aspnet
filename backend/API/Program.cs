@@ -15,6 +15,8 @@ using Microsoft.OpenApi.Models;
 using RestaurantReservation.API.Middlewares;
 using RestaurantReservation.Application.DTOs.Client;
 using RestaurantReservation.Application.DTOs.PricingRule;
+using RestaurantReservation.Application.DTOs.Reservation;
+using RestaurantReservation.Application.DTOs.User;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Application.Services;
@@ -96,6 +98,20 @@ builder.Services.AddAuthorization(options =>
 TypeAdapterConfig<Client, ClientDto>
     .NewConfig()
     .Map(dest => dest.TotalReservations, src => src.Reservations.Count);
+
+TypeAdapterConfig<PricingRule, PricingRuleDto>
+    .NewConfig()
+    .Map(dest => dest.DaysOfWeek, src => src.PricingRuleDays.Select(d => d.DayOfWeek));
+
+TypeAdapterConfig<ApplicationUser, UserSimpleDto>
+    .NewConfig()
+    .Map(dest => dest.Username, src => src.UserName ?? string.Empty)
+    .Map(dest => dest.Email, src => src.Email ?? string.Empty)
+    .Map(dest => dest.Status, src => src.Status.ToString());
+
+TypeAdapterConfig<Reservation, ReservationDto>
+    .NewConfig()
+    .Map(dest => dest.Date, src => DateOnly.FromDateTime(src.Date));
 
 TypeAdapterConfig<PricingRule, PricingRuleDto>
     .NewConfig()

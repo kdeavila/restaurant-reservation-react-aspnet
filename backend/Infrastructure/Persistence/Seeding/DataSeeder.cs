@@ -158,8 +158,8 @@ public static class DataSeeder
         // Pricing rules
         if (!context.PricingRules.Any())
         {
-            var startDate = DateTime.UtcNow;
-            var endDate = DateTime.UtcNow.AddMonths(6);
+            var startDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            var endDate = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(6));
 
             var pricingRules = new List<PricingRule>
             {

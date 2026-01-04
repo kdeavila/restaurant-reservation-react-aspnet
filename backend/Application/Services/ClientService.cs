@@ -152,10 +152,9 @@ public class ClientService(IClientRepository clientRepository) : IClientService
             )
             .ToList();
 
-        if (futureReservations.Any())
+        if (futureReservations.Count != 0)
             return Result.Failure<string>(
-                $"Cannot deactivate client. They have {futureReservations.Count} future reservation(s). "
-                    + $"Please cancel or reassign the reservations first.",
+                $"Cannot deactivate client. They have {futureReservations.Count} future reservation(s).",
                 409
             );
 
