@@ -6,6 +6,7 @@ using RestaurantReservation.Application.DTOs.TableType;
 using RestaurantReservation.Application.Interfaces.Repositories;
 using RestaurantReservation.Application.Interfaces.Services;
 using RestaurantReservation.Domain.Entities;
+using RestaurantReservation.Domain.Enums;
 
 namespace RestaurantReservation.Application.Services;
 
@@ -146,6 +147,22 @@ public class TableTypeService(
 
         if (tables.Any())
         {
+            // Check for future reservations using tables of this type
+            var futureReservations = tables
+                .SelectMany(t => t.Reservations)
+                .Where(r =>
+                    r.Status != ReservationStatus.Cancelled
+                    && r.Status != ReservationStatus.Completed
+                    && DateTime.UtcNow.Date <= r.Date.Date
+                )
+                .Any();
+
+            if (futureReservations)
+                return Result.Failure<string>(
+                    "Cannot deactivate table type. There are future reservations using tables of this type.",
+                    409
+                );
+
             tableType.IsActive = false;
             await _tableTypeRepository.UpdateAsync(tableType, ct);
             return Result.Success(

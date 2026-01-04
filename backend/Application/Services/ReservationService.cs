@@ -91,7 +91,7 @@ public class ReservationService(IReservationRepository reservationRepository) : 
             );
 
         var reservationDateTime = dto.Date.Date + dto.StartTime;
-        if (reservationDateTime <= DateTime.Now)
+        if (reservationDateTime <= DateTime.UtcNow)
             return Result.Failure<Reservation>("Reservation date must be in the future.", 400);
 
         if (basePrice < 0 || totalPrice < 0)
@@ -129,6 +129,11 @@ public class ReservationService(IReservationRepository reservationRepository) : 
         if (reservation is null)
             return Result.Failure<string>("Reservation not found.", 404);
 
+        // Prevent modifying past reservations
+        var reservationStartDateTime = reservation.Date + reservation.StartTime;
+        if (DateTime.UtcNow > reservationStartDateTime)
+            return Result.Failure<string>("Cannot modify a past reservation.", 400);
+
         var finalStartTime = dto.StartTime ?? reservation.StartTime;
         var finalEndTime = dto.EndTime ?? reservation.EndTime;
 
@@ -139,20 +144,61 @@ public class ReservationService(IReservationRepository reservationRepository) : 
         if (finalStartTime >= finalEndTime)
             return Result.Failure<string>("End time must be after start time.", 400);
 
+        // Validate status transitions (state machine)
+        if (
+            !string.IsNullOrEmpty(dto.Status)
+            && Enum.TryParse<ReservationStatus>(dto.Status, out var parsedStatus)
+        )
+        {
+            var validTransitions = new Dictionary<ReservationStatus, List<ReservationStatus>>
+            {
+                {
+                    ReservationStatus.Pending,
+                    new() { ReservationStatus.Confirmed, ReservationStatus.Cancelled }
+                },
+                {
+                    ReservationStatus.Confirmed,
+                    new() { ReservationStatus.Cancelled, ReservationStatus.Completed }
+                },
+                { ReservationStatus.Completed, new() },
+                { ReservationStatus.Cancelled, new() },
+            };
+
+            if (!validTransitions[reservation.Status].Contains(parsedStatus))
+                return Result.Failure<string>(
+                    $"Invalid status transition from {reservation.Status} to {parsedStatus}.",
+                    400
+                );
+
+            reservation.Status = parsedStatus;
+        }
+
+        // Check for table conflicts if table is being changed
+        if (dto.TableId.HasValue && dto.TableId.Value != reservation.TableId)
+        {
+            var finalDate = dto.Date ?? reservation.Date;
+            var hasConflict = await _reservationRepository.ExistsOverlappingReservationAsync(
+                dto.TableId.Value,
+                finalDate,
+                finalStartTime,
+                finalEndTime,
+                reservation.Id,
+                ct
+            );
+
+            if (hasConflict)
+                return Result.Failure<string>(
+                    "The selected table has conflicting reservations for the specified time.",
+                    409
+                );
+        }
+
         reservation.TableId = dto.TableId ?? reservation.TableId;
         reservation.Date = dto.Date ?? reservation.Date;
         reservation.StartTime = finalStartTime;
         reservation.EndTime = finalEndTime;
         reservation.NumberOfGuests = dto.NumberOfGuests ?? reservation.NumberOfGuests;
         reservation.Notes = dto.Notes ?? reservation.Notes;
-
-        if (
-            !string.IsNullOrEmpty(dto.Status)
-            && Enum.TryParse<ReservationStatus>(dto.Status, out var parsed)
-        )
-        {
-            reservation.Status = parsed;
-        }
 
         if (basePrice.HasValue && totalPrice.HasValue)
         {
@@ -176,6 +222,15 @@ public class ReservationService(IReservationRepository reservationRepository) : 
 
         if (reservation.Status == ReservationStatus.Cancelled)
             return Result.Failure<string>("Reservation is already cancelled.", 400);
+
+        // Prevent cancelling completed reservations
+        if (reservation.Status == ReservationStatus.Completed)
+            return Result.Failure<string>("Cannot cancel a completed reservation.", 400);
+
+        // Prevent cancelling past reservations
+        var reservationEndDateTime = reservation.Date + reservation.EndTime;
+        if (DateTime.UtcNow > reservationEndDateTime)
+            return Result.Failure<string>("Cannot cancel a past reservation.", 400);
 
         reservation.Status = ReservationStatus.Cancelled;
         reservation.UpdatedAt = DateTime.UtcNow;

@@ -17,7 +17,8 @@ namespace Infrastructure.Persitence.Migrations
                 type: "date",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "datetime2");
+                oldType: "datetime2"
+            );
 
             migrationBuilder.AlterColumn<DateOnly>(
                 name: "EndDate",
@@ -25,7 +26,8 @@ namespace Infrastructure.Persitence.Migrations
                 type: "date",
                 nullable: false,
                 oldClrType: typeof(DateTime),
-                oldType: "datetime2");
+                oldType: "datetime2"
+            );
         }
 
         /// <inheritdoc />
@@ -37,7 +39,8 @@ namespace Infrastructure.Persitence.Migrations
                 type: "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateOnly),
-                oldType: "date");
+                oldType: "date"
+            );
 
             migrationBuilder.AlterColumn<DateTime>(
                 name: "EndDate",
@@ -45,7 +48,8 @@ namespace Infrastructure.Persitence.Migrations
                 type: "datetime2",
                 nullable: false,
                 oldClrType: typeof(DateOnly),
-                oldType: "date");
+                oldType: "date"
+            );
         }
     }
 }
