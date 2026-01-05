@@ -23,7 +23,7 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
 
         builder.Property(c => c.Status).IsRequired().HasConversion<string>().HasMaxLength(20);
 
-        builder.Property(c => c.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(c => c.CreatedAt).HasDefaultValueSql("NOW()");
 
         // Navigation: Client (1) -> Reservations (many)
         builder

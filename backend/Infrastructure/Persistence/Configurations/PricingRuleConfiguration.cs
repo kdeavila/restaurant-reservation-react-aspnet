@@ -19,7 +19,7 @@ public class PricingRuleConfiguration : IEntityTypeConfiguration<PricingRule>
 
         builder.Property(pr => pr.IsActive).IsRequired().HasDefaultValue(true);
 
-        builder.Property(pr => pr.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(pr => pr.CreatedAt).HasDefaultValueSql("NOW()");
 
         builder
             .HasOne(pr => pr.TableType)

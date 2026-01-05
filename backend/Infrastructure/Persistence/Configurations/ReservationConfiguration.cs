@@ -27,9 +27,9 @@ public class ReservationConfiguration : IEntityTypeConfiguration<Reservation>
 
         builder.Property(r => r.Notes).HasMaxLength(500);
 
-        builder.Property(r => r.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(r => r.CreatedAt).HasDefaultValueSql("NOW()");
 
-        builder.Property(r => r.UpdatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(r => r.UpdatedAt).HasDefaultValueSql("NOW()");
 
         builder.HasOne(r => r.Client).WithMany(c => c.Reservations).HasForeignKey(r => r.ClientId);
 
