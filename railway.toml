@@ -1,0 +1,11 @@
+[build]
+builder = "nixpacks"
+buildCommand = "dotnet publish backend/API/API.csproj -c Release -o backend/API/out"
+
+[deploy]
+startCommand = "cd backend/API/out && dotnet API.dll"
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+
+[nixpacks]
+providers = ["dotnet"]

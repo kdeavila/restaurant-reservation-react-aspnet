@@ -19,8 +19,8 @@ public class TableTypeConfiguration : IEntityTypeConfiguration<TableType>
 
         builder.Property(tt => tt.BasePricePerHour).IsRequired().HasColumnType("decimal(18,2)");
 
-        builder.Property(tt => tt.IsActive).IsRequired().HasDefaultValue(1);
+        builder.Property(tt => tt.IsActive).IsRequired().HasDefaultValue(true);
 
-        builder.Property(tt => tt.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(tt => tt.CreatedAt).HasDefaultValueSql("NOW()");
     }
 }

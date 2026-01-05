@@ -23,7 +23,7 @@ public class TableConfiguration : IEntityTypeConfiguration<Table>
 
         builder.Property(t => t.Status).IsRequired().HasConversion<string>().HasMaxLength(20);
 
-        builder.Property(t => t.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        builder.Property(t => t.CreatedAt).HasDefaultValueSql("NOW()");
 
         builder
             .HasOne(t => t.TableType)

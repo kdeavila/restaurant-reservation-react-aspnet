@@ -29,6 +29,11 @@ using RestaurantReservation.Infrastructure.Repositories;
 
 Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar puerto dinámico para Railway
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // Add services to the container.
@@ -39,10 +44,10 @@ builder.Services.AddControllers(options =>
     options.Filters.Add(new AuthorizeFilter(policy));
 });
 
-// Register DbContext with SQL Server and specify the migration assembly
+// Register DbContext with PostgreSQL and specify the migration assembly
 builder.Services.AddDbContext<RestaurantReservationDbContext>(options =>
 {
-    options.UseSqlServer(connectionString, x => x.MigrationsAssembly("Infrastructure"));
+    options.UseNpgsql(connectionString, x => x.MigrationsAssembly("Infrastructure"));
 });
 
 // Configure Identity first
@@ -242,7 +247,7 @@ builder.Services.AddCors(options =>
         "frontend",
         app =>
         {
-            app.WithOrigins("http://localhost:3000")
+            app.WithOrigins("http://localhost:3000", "https://localhost:3000")
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();
@@ -257,6 +262,14 @@ builder.Services.AddResponseCaching(options =>
 });
 
 var app = builder.Build();
+
+// Aplicar migraciones automáticamente en producción (Railway)
+if (!app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<RestaurantReservationDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

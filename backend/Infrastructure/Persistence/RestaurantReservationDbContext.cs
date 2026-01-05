@@ -25,4 +25,10 @@ public class RestaurantReservationDbContext(
         );
         base.OnModelCreating(modelBuilder);
     }
+
+    // Override to specify migrations location
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        base.OnConfiguring(optionsBuilder);
+    }
 }

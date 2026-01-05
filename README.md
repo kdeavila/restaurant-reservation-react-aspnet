@@ -2,7 +2,7 @@
 
 Sistema web para gestión de reservas de restaurante. Backend en **ASP.NET Core 9 Web API**; frontend en **React** (pendiente). Solo el personal autorizado (Admin, Manager, Employee) puede gestionar clientes, mesas, reglas de precio y reservas con cálculo automático y control de disponibilidad.
 
-**Última actualización:** 2026-01-01
+**Última actualización:** 2026-01-05
 
 ## Qué ofrece
 - CRUD de clientes, mesas, tipos de mesa, usuarios y reglas de precio.
@@ -11,7 +11,7 @@ Sistema web para gestión de reservas de restaurante. Backend en **ASP.NET Core 
 - Requisito real: notificaciones por correo al crear/modificar reservas (pendiente de implementar).
 
 ## Stack
-- Backend: ASP.NET Core 9, Entity Framework Core, SQL Server, JWT Bearer, Clean Architecture.
+- Backend: ASP.NET Core 9, Entity Framework Core, PostgreSQL, JWT Bearer, Clean Architecture.
 - Frontend: React + Tailwind (a implementar).
 
 ## Estado
