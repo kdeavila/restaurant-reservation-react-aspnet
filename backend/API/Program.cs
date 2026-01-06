@@ -26,6 +26,7 @@ using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Infrastructure.Persistence;
 using RestaurantReservation.Infrastructure.Persistence.Seeding;
 using RestaurantReservation.Infrastructure.Repositories;
+using Npgsql;
 
 Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -40,10 +41,19 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
 if (!string.IsNullOrEmpty(databaseUrl) && string.IsNullOrEmpty(connectionString))
 {
-    // Convertir postgresql://user:password@host:port/database a formato Npgsql
-    var uri = new Uri(databaseUrl);
-    var userInfo = uri.UserInfo.Split(':');
-    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+    try
+    {
+        // NpgsqlConnectionStringBuilder puede convertir de postgresql:// a formato Npgsql
+        var npgsqlBuilder = new NpgsqlConnectionStringBuilder(databaseUrl);
+        // Asegurar SSL en Railway
+        npgsqlBuilder.SslMode = SslMode.Require;
+        npgsqlBuilder.TrustServerCertificate = true;
+        connectionString = npgsqlBuilder.ConnectionString;
+    }
+    catch (Exception ex)
+    {
+        throw new InvalidOperationException($"Error parsing DATABASE_URL: {databaseUrl}", ex);
+    }
 }
 
 // Add services to the container.
