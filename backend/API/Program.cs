@@ -26,7 +26,6 @@ using RestaurantReservation.Domain.Entities;
 using RestaurantReservation.Infrastructure.Persistence;
 using RestaurantReservation.Infrastructure.Persistence.Seeding;
 using RestaurantReservation.Infrastructure.Repositories;
-using Npgsql;
 
 Env.TraversePath().Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -35,25 +34,8 @@ var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// Si Railway proporciona DATABASE_URL, convertirlo a formato Npgsql
-var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-if (!string.IsNullOrEmpty(databaseUrl) && string.IsNullOrEmpty(connectionString))
-{
-    try
-    {
-        // NpgsqlConnectionStringBuilder puede convertir de postgresql:// a formato Npgsql
-        var npgsqlBuilder = new NpgsqlConnectionStringBuilder(databaseUrl);
-        // Asegurar SSL en Railway
-        npgsqlBuilder.SslMode = SslMode.Require;
-        connectionString = npgsqlBuilder.ConnectionString;
-    }
-    catch (Exception ex)
-    {
-        throw new InvalidOperationException($"Error parsing DATABASE_URL: {databaseUrl}", ex);
-    }
-}
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 // Add services to the container.
 builder.Services.AddControllers(options =>
