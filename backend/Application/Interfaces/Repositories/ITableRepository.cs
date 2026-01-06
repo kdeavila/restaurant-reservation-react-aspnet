@@ -6,6 +6,7 @@ public interface ITableRepository
 {
     IQueryable<Table> Query();
     Task<Table?> GetByIdAsync(int id, CancellationToken ct = default);
+    Task<Table?> GetByIdWithReservationsAsync(int id, CancellationToken ct = default);
     Task<IEnumerable<Table>> GetByTableTypeIdAsync(int tableTypeId, CancellationToken ct = default);
 
     Task<Dictionary<int, int>> GetTableCountsByTableTypeIdsAsync(

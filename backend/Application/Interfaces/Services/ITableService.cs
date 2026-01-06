@@ -12,6 +12,12 @@ public interface ITableService
     );
 
     Task<Result<TableDetailedDto>> GetByIdAsync(int id, CancellationToken ct = default);
+    
+    Task<IEnumerable<TableDetailedDto>> GetAvailableTablesAsync(
+        TableAvailabilityQueryDto query,
+        CancellationToken ct = default
+    );
+
     Task<Result<TableDetailedDto>> CreateAsync(CreateTableDto dto, CancellationToken ct = default);
 
     Task<Result> UpdateAsync(UpdateTableDto dto, CancellationToken ct = default);
