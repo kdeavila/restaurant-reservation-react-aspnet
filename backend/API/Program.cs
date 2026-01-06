@@ -36,6 +36,16 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// Si Railway proporciona DATABASE_URL, convertirlo a formato Npgsql
+var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
+if (!string.IsNullOrEmpty(databaseUrl) && string.IsNullOrEmpty(connectionString))
+{
+    // Convertir postgresql://user:password@host:port/database a formato Npgsql
+    var uri = new Uri(databaseUrl);
+    var userInfo = uri.UserInfo.Split(':');
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+}
+
 // Add services to the container.
 builder.Services.AddControllers(options =>
 {
