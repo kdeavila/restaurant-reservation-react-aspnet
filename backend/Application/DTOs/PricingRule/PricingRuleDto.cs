@@ -15,5 +15,5 @@ public record PricingRuleDto(
     TableTypeSimpleDto TableType,
     bool IsActive,
     DateTime CreatedAt,
-    IEnumerable<DaysOfWeek> DaysOfWeek
+    List<int> DaysOfWeek
 );

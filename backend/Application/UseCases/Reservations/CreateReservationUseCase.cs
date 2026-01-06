@@ -57,9 +57,12 @@ public class CreateReservationUseCase(
                 400
             );
 
+        // Ensure date is UTC for PostgreSQL compatibility
+        var utcDate = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
+        
         var overlap = await _reservationRepository.ExistsOverlappingReservationAsync(
             dto.TableId,
-            dto.Date,
+            utcDate,
             dto.StartTime,
             dto.EndTime,
             null,
@@ -73,7 +76,7 @@ public class CreateReservationUseCase(
 
         var priceResult = await _pricingService.CalculatePriceAsync(
             dto.TableId,
-            dto.Date,
+            utcDate,
             dto.StartTime,
             dto.EndTime,
             ct

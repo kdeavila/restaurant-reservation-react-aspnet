@@ -73,7 +73,8 @@ public class UpdateReservationUseCase(
         if (shouldCheckAvailability)
         {
             var tableId = dto.TableId ?? reservation.TableId;
-            var date = dto.Date ?? reservation.Date;
+            // Ensure date is UTC for PostgreSQL compatibility
+            var date = dto.Date.HasValue ? DateTime.SpecifyKind(dto.Date.Value, DateTimeKind.Utc) : reservation.Date;
             var start = dto.StartTime ?? reservation.StartTime;
             var end = dto.EndTime ?? reservation.EndTime;
 

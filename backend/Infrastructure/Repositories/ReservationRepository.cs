@@ -53,9 +53,12 @@ public class ReservationRepository(RestaurantReservationDbContext context) : IRe
         CancellationToken ct = default
     )
     {
+        // Normalize to date-only for comparison
+        var dateOnly = new DateOnly(date.Year, date.Month, date.Day);
+        
         var query = _context.Reservations.Where(r =>
             r.TableId == tableId
-            && r.Date == date
+            && DateOnly.FromDateTime(r.Date) == dateOnly
             && r.Status != ReservationStatus.Cancelled
             && r.Status != ReservationStatus.Completed
             && (
