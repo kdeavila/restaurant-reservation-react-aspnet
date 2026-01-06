@@ -47,7 +47,6 @@ if (!string.IsNullOrEmpty(databaseUrl) && string.IsNullOrEmpty(connectionString)
         var npgsqlBuilder = new NpgsqlConnectionStringBuilder(databaseUrl);
         // Asegurar SSL en Railway
         npgsqlBuilder.SslMode = SslMode.Require;
-        npgsqlBuilder.TrustServerCertificate = true;
         connectionString = npgsqlBuilder.ConnectionString;
     }
     catch (Exception ex)
