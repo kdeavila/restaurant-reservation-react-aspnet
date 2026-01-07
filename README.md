@@ -2,21 +2,31 @@
 
 Sistema web para gestión de reservas de restaurante. Backend en **ASP.NET Core 9 Web API**; frontend en **React** (pendiente). Solo el personal autorizado (Admin, Manager, Employee) puede gestionar clientes, mesas, reglas de precio y reservas con cálculo automático y control de disponibilidad.
 
-**Última actualización:** 2026-01-05
+**Última actualización:** 2026-01-07
 
 ## Qué ofrece
-- CRUD de clientes, mesas, tipos de mesa, usuarios y reglas de precio.
-- Reservas con validaciones de capacidad y no solapamiento; cálculo dinámico de precios.
-- Autenticación y autorización por roles; documentación Swagger en desarrollo.
-- Requisito real: notificaciones por correo al crear/modificar reservas (pendiente de implementar).
+Implementa los 6 requisitos funcionales especificados en `docs/restaurant-reservation.md`:
+1. ✅ **Registro de Clientes**: CRUD completo con validación de email único e historial de reservas.
+2. ✅ **Gestión de Reservas**: Crear, modificar y cancelar reservas con validación de disponibilidad.
+3. ✅ **Consulta de Disponibilidad**: Endpoint para verificar mesas disponibles en tiempo real.
+4. ✅ **Gestión por Administradores**: Control total de reservas por parte del personal.
+5. 🔮 **Notificaciones de Confirmación**: Envío de correos automáticos (pendiente de implementar).
+6. ✅ **Historial de Reservas**: Consulta de reservas pasadas por cliente.
+
+Además incluye:
+- CRUD de mesas, tipos de mesa, usuarios y reglas de precio dinámicas.
+- Autenticación JWT y autorización por roles (Admin, Manager, Employee).
+- Validación de no solapamiento de reservas y capacidad de mesas.
+- Documentación Swagger en desarrollo.
 
 ## Stack
 - Backend: ASP.NET Core 9, Entity Framework Core, PostgreSQL, JWT Bearer, Clean Architecture.
 - Frontend: React + Tailwind (a implementar).
 
 ## Estado
-- Backend: en uso, faltan notificaciones, versión API y ajustes de CORS/Identity.
-- Frontend: pendiente.
+- **Backend**: 5 de 6 requisitos funcionales implementados. Falta: notificaciones por correo.
+- **Testing**: Setup básico configurado (fixtures, factory, contenedores de prueba).
+- **Frontend**: Pendiente de desarrollo.
 
 ## Roles y permisos (RBAC)
 - **Admin**: acceso total. CRUD de usuarios, clientes, mesas, tipos de mesa, reglas de precio y reservas; puede desactivar/eliminar recursos.
