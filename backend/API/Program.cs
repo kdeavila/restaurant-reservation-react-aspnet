@@ -34,16 +34,15 @@ var builder = WebApplication.CreateBuilder(args);
 var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-// Si Railway proporciona DATABASE_URL, convertirlo a formato Npgsql
-var databaseUrl = Environment.GetEnvironmentVariable("DATABASE_URL");
-if (!string.IsNullOrEmpty(databaseUrl) && string.IsNullOrEmpty(connectionString))
+// Convertir formato URI de PostgreSQL (postgresql://...) a formato Npgsql (Host=...;Port=...;...)
+if (connectionString.StartsWith("postgresql://") || connectionString.StartsWith("postgres://"))
 {
-    // Convertir postgresql://user:password@host:port/database a formato Npgsql
-    var uri = new Uri(databaseUrl);
+    var uri = new Uri(connectionString);
     var userInfo = uri.UserInfo.Split(':');
-    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.LocalPath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]};SSL Mode=Require;Trust Server Certificate=true";
+    connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={userInfo[0]};Password={userInfo[1]}";
 }
 
 // Add services to the container.
@@ -315,3 +314,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Needed for WebApplicationFactory in integration tests
+public partial class Program { }

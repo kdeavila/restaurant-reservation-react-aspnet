@@ -28,7 +28,11 @@ public class ReservationService(IReservationRepository reservationRepository) : 
             query = query.Where(r => r.TableId == queryParams.TableId.Value);
 
         if (queryParams.Date.HasValue)
-            query = query.Where(r => r.Date == queryParams.Date.Value);
+        {
+            // Ensure date is UTC for PostgreSQL compatibility
+            var utcDate = DateTime.SpecifyKind(queryParams.Date.Value, DateTimeKind.Utc);
+            query = query.Where(r => r.Date == utcDate);
+        }
 
         if (queryParams.StartTime.HasValue)
             query = query.Where(r => r.StartTime >= queryParams.StartTime.Value);
@@ -90,7 +94,9 @@ public class ReservationService(IReservationRepository reservationRepository) : 
                 400
             );
 
-        var reservationDateTime = dto.Date.Date + dto.StartTime;
+        // Ensure date is UTC for PostgreSQL compatibility
+        var utcDate = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
+        var reservationDateTime = utcDate.Date + dto.StartTime;
         if (reservationDateTime <= DateTime.UtcNow)
             return Result.Failure<Reservation>("Reservation date must be in the future.", 400);
 
@@ -102,7 +108,7 @@ public class ReservationService(IReservationRepository reservationRepository) : 
             ClientId = dto.ClientId,
             TableId = dto.TableId,
             CreatedByUserId = createdByUserId,
-            Date = dto.Date,
+            Date = utcDate,
             StartTime = dto.StartTime,
             EndTime = dto.EndTime,
             NumberOfGuests = dto.NumberOfGuests,
@@ -176,7 +182,8 @@ public class ReservationService(IReservationRepository reservationRepository) : 
         // Check for table conflicts if table is being changed
         if (dto.TableId.HasValue && dto.TableId.Value != reservation.TableId)
         {
-            var finalDate = dto.Date ?? reservation.Date;
+            // Ensure date is UTC for PostgreSQL compatibility
+            var finalDate = dto.Date.HasValue ? DateTime.SpecifyKind(dto.Date.Value, DateTimeKind.Utc) : reservation.Date;
             var hasConflict = await _reservationRepository.ExistsOverlappingReservationAsync(
                 dto.TableId.Value,
                 finalDate,
@@ -194,7 +201,7 @@ public class ReservationService(IReservationRepository reservationRepository) : 
         }
 
         reservation.TableId = dto.TableId ?? reservation.TableId;
-        reservation.Date = dto.Date ?? reservation.Date;
+        reservation.Date = dto.Date.HasValue ? DateTime.SpecifyKind(dto.Date.Value, DateTimeKind.Utc) : reservation.Date;
         reservation.StartTime = finalStartTime;
         reservation.EndTime = finalEndTime;
         reservation.NumberOfGuests = dto.NumberOfGuests ?? reservation.NumberOfGuests;

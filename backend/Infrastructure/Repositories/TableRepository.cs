@@ -17,6 +17,12 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
             .AsNoTracking()
             .FirstOrDefaultAsync(t => t.Id == id, ct);
 
+        public async Task<Table?> GetByIdWithReservationsAsync(int id, CancellationToken ct = default) =>
+            await _context
+                .Tables.Include(t => t.TableType)
+                .Include(t => t.Reservations)
+                .FirstOrDefaultAsync(t => t.Id == id, ct);
+
     public async Task<IEnumerable<Table>> GetByTableTypeIdAsync(
         int tableTypeId,
         CancellationToken ct = default
@@ -42,19 +48,25 @@ public class TableRepository(RestaurantReservationDbContext context) : ITableRep
         TimeSpan endTime,
         int capacity,
         CancellationToken ct = default
-    ) =>
-        await _context
+    )
+    {
+        var dateUtc = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+        
+        return await _context
             .Tables.Include(t => t.TableType)
             .Where(t =>
                 t.Capacity >= capacity
+                && t.Status == Domain.Enums.TableStatus.Active
                 && !_context.Reservations.Any(r =>
                     r.TableId == t.Id
-                    && r.Date == date
+                    && r.Date == dateUtc
+                    && r.Status != Domain.Enums.ReservationStatus.Cancelled
                     && r.StartTime < endTime
                     && r.EndTime > startTime
                 )
             )
             .ToListAsync(ct);
+    }
 
     public async Task AddAsync(Table table, CancellationToken ct = default)
     {

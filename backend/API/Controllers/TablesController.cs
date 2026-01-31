@@ -33,6 +33,30 @@ public class TablesController(ITableService tableService) : ControllerBase
         );
     }
 
+    [HttpGet("available")]
+    public async Task<ActionResult<ApiResponse<IEnumerable<TableDetailedDto>>>> GetAvailable(
+        [FromQuery] TableAvailabilityQueryDto query,
+        CancellationToken ct = default
+    )
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(
+                ApiResponse<IEnumerable<TableDetailedDto>>.ErrorResponse(
+                    "Invalid query parameters",
+                    ErrorCodes.ValidationError
+                )
+            );
+
+        var availableTables = await _tableService.GetAvailableTablesAsync(query, ct);
+
+        return Ok(
+            ApiResponse<IEnumerable<TableDetailedDto>>.SuccessResponse(
+                availableTables,
+                $"Found {availableTables.Count()} available table(s)"
+            )
+        );
+    }
+
     [HttpGet("{id:int}")]
     [ResponseCache(Duration = 600, Location = ResponseCacheLocation.Any, NoStore = false)]
     public async Task<ActionResult<ApiResponse<TableDetailedDto>>> GetById(
