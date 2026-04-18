@@ -1,7 +1,0 @@
-[build]
-builder = "dockerfile"
-
-[deploy]
-startCommand = "dotnet API.dll"
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 10
