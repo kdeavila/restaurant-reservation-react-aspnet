@@ -232,8 +232,18 @@ temp/
 # =============================================================================
 
 # Logs
-logs/
+logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
 
 # Runtime data
 pids/
@@ -263,3 +273,17 @@ pids/
 # Project docs (keep out of VCS)
 PROJECT_SCOPE.md
 frontend-ai-instructions.md
+.aider*
+reference/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.agents/
