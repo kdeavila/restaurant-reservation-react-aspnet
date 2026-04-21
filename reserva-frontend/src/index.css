@@ -47,12 +47,29 @@
   --color-status-inactive:       hsl(220 9% 46%);
   --color-status-inactive-bg:    hsl(220 9% 92%);
 
+  /* shadcn/ui compatibility aliases */
+  --color-primary-foreground:    hsl(36 33% 97%);
+  --color-secondary-foreground:  hsl(36 33% 97%);
+  --color-muted-foreground:      hsl(240 5% 38%);
+  --color-destructive-foreground:hsl(0 0% 100%);
+  --color-accent-foreground:     hsl(240 6% 11%);
+  --color-popover:               hsl(0 0% 100%);
+  --color-popover-foreground:    hsl(240 6% 11%);
+  --color-card:                  hsl(0 0% 100%);
+  --color-card-foreground:       hsl(240 6% 11%);
+  --color-input:                 hsl(36 18% 88%);
+  --color-ring:                  hsl(11 47% 52%);
+
   /* Typography */
   --font-sans:    "Inter", system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
 
   /* Radius and shadows */
   --radius:          0.625rem;
+  --radius-sm:       calc(var(--radius) - 4px);
+  --radius-md:       calc(var(--radius) - 2px);
+  --radius-lg:       var(--radius);
+  --radius-xl:       calc(var(--radius) + 4px);
   --shadow-card:     0 1px 2px hsl(240 6% 11% / 0.04), 0 4px 12px hsl(240 6% 11% / 0.04);
   --shadow-elevated: 0 4px 16px hsl(240 6% 11% / 0.08), 0 12px 32px hsl(240 6% 11% / 0.06);
   --shadow-cta:      0 4px 14px hsl(11 47% 52% / 0.28);

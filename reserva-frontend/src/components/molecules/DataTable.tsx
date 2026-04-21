@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface DataTableProps<T> {
-  columns: ColumnDef<T>[];
+  columns: ColumnDef<T, any>[];
   data: T[];
   loading?: boolean;
   className?: string;
@@ -64,7 +64,10 @@ export function DataTable<T>({
               <TableRow key={i}>
                 {columns.map((_, j) => (
                   <TableCell key={j}>
-                    <Skeleton className="h-4 w-full" />
+                    <div className="space-y-1.5">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-3 w-2/3" />
+                    </div>
                   </TableCell>
                 ))}
               </TableRow>

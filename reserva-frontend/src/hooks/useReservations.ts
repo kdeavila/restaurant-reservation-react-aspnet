@@ -1,10 +1,14 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { reservationsApi } from "@/api/reservations.api";
 import { qk } from "./query-keys";
 import { toast } from "sonner";
 
 export const useReservationList = (params: Record<string, unknown>) =>
-  useQuery({ queryKey: qk.reservations(params), queryFn: () => reservationsApi.list(params) });
+  useQuery({
+    queryKey: qk.reservations(params),
+    queryFn: () => reservationsApi.list(params),
+    placeholderData: keepPreviousData,
+  });
 
 export const useReservationDetail = (id: number) =>
   useQuery({ queryKey: qk.reservation(id), queryFn: () => reservationsApi.detail(id), enabled: !!id });
