@@ -13,7 +13,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { ChevronsUpDown, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Client } from "@/types";
 import { useClientList } from "@/hooks/useClients";
@@ -63,17 +63,17 @@ export function ClientSearchSelect({
           className={cn(
             "w-full justify-between",
             !selectedClient && "text-muted-fg",
-            className
+            className,
           )}
         >
           {selectedClient
             ? `${selectedClient.firstName} ${selectedClient.lastName} (${selectedClient.email})`
             : "Seleccionar cliente..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 flex-shrink-0" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
+        <Command className="bg-surface-card p-0">
           <div className="p-2 border-b">
             <Input
               placeholder="Buscar por nombre..."
@@ -84,27 +84,22 @@ export function ClientSearchSelect({
           </div>
           <CommandList>
             <CommandEmpty>No se encontraron clientes.</CommandEmpty>
-            <CommandGroup>
+            <CommandGroup className="p-0">
               {clients.map((client) => (
                 <CommandItem
                   key={client.id}
                   value={String(client.id)}
                   onSelect={() => handleSelect(client)}
-                  className="cursor-pointer"
+                  className="cursor-pointer rounded-none border-b border-border/70 bg-transparent px-3 py-2.5 data-[selected=true]:bg-accent/45 last:border-b-0 [&>svg:last-child]:hidden"
                 >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedClient?.id === client.id
-                        ? "opacity-100"
-                        : "opacity-0"
-                    )}
-                  />
-                  <div className="flex flex-col flex-1">
+                  <UserRound className="size-4 mr-2 text-muted-fg" />
+                  <div className="flex flex-1 flex-col gap-y-0.5">
                     <span className="font-medium">
                       {client.firstName} {client.lastName}
                     </span>
-                    <span className="text-xs text-muted-fg">{client.email}</span>
+                    <span className="text-xs text-muted-fg">
+                      {client.email}
+                    </span>
                   </div>
                 </CommandItem>
               ))}

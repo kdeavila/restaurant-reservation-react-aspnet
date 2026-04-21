@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 
 interface FormFieldProps {
   label: string;
+  icon?: ReactNode;
   error?: string;
   required?: boolean;
   children: ReactNode;
@@ -11,6 +12,7 @@ interface FormFieldProps {
 
 export function FormField({
   label,
+  icon,
   error,
   required,
   children,
@@ -18,9 +20,17 @@ export function FormField({
 }: FormFieldProps) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <label className="text-sm font-medium flex items-center gap-1">
+      <label
+        className={cn(
+          "flex items-center gap-1.5",
+          icon
+            ? "text-[11px] font-medium uppercase tracking-wider text-muted-fg"
+            : "text-sm font-medium",
+        )}
+      >
+        {icon}
         {label}
-        {required && <span className="text-destructive">*</span>}
+        {required && <span className="text-destructive ml-0.5">*</span>}
       </label>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}

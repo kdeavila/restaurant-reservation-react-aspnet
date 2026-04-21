@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { reservationsApi } from "@/api/reservations.api";
 import { qk } from "./query-keys";
+import type { UpdateReservationDto } from "@/types";
 import { toast } from "sonner";
 
 export const useReservationList = (params: Record<string, unknown>) =>
@@ -28,7 +29,7 @@ export const useCreateReservation = () => {
 export const useUpdateReservation = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, dto }: { id: number; dto: Record<string, unknown> }) =>
+    mutationFn: ({ id, dto }: { id: number; dto: UpdateReservationDto }) =>
       reservationsApi.update(id, dto),
     onSuccess: (_, { id }) => {
       qc.invalidateQueries({ queryKey: qk.reservations() });

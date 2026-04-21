@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
-import { CalendarDays, Search, Sparkles } from "lucide-react";
+import { CalendarDays, Clock, Search, Sparkles, Users } from "lucide-react";
 import { PageHeader } from "@/components/molecules/PageHeader";
 import { EmptyState } from "@/components/molecules/EmptyState";
 import { FormField } from "@/components/molecules/FormField";
@@ -40,7 +39,6 @@ const defaultValues: AvailabilityFormValues = {
 };
 
 export default function Disponibilidad() {
-  const navigate = useNavigate();
   const [hasSearched, setHasSearched] = useState(false);
   const [searchParams, setSearchParams] = useState(defaultValues);
 
@@ -73,39 +71,30 @@ export default function Disponibilidad() {
 
   return (
     <main>
-      <PageHeader
-        title="Disponibilidad"
-        actions={
-          <Button asChild>
-            <button type="button" onClick={() => navigate("/reservas/nueva")}>Nueva reserva</button>
+      <PageHeader title="Disponibilidad" />
+
+      <section className="filter-bar px-8 py-4">
+        <form className="flex flex-wrap items-end gap-3" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <FormField label="Fecha" icon={<CalendarDays className="size-3.5" />} error={errors.date?.message} required>
+            <Input type="date" min={todayISO()} className="w-40" {...register("date")} />
+          </FormField>
+
+          <FormField label="Inicio" icon={<Clock className="size-3.5" />} error={errors.startTime?.message} required>
+            <Input type="time" className="w-30" {...register("startTime")} />
+          </FormField>
+
+          <FormField label="Fin" icon={<Clock className="size-3.5" />} error={errors.endTime?.message} required>
+            <Input type="time" className="w-30" {...register("endTime")} />
+          </FormField>
+
+          <FormField label="Comensales" icon={<Users className="size-3.5" />} error={errors.numberOfGuests?.message} required>
+            <Input type="number" min={1} className="w-25" {...register("numberOfGuests")} />
+          </FormField>
+
+          <Button type="submit">
+            <Search className="size-4" />
+            Buscar disponibilidad
           </Button>
-        }
-      />
-
-      <section className="filter-bar px-8 py-5">
-        <form className="grid gap-4 lg:grid-cols-[1.1fr_1fr_1fr_0.8fr_auto]" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <FormField label="Fecha" error={errors.date?.message} required>
-            <Input type="date" min={todayISO()} {...register("date")} />
-          </FormField>
-
-          <FormField label="Hora inicio" error={errors.startTime?.message} required>
-            <Input type="time" {...register("startTime")} />
-          </FormField>
-
-          <FormField label="Hora fin" error={errors.endTime?.message} required>
-            <Input type="time" {...register("endTime")} />
-          </FormField>
-
-          <FormField label="Comensales" error={errors.numberOfGuests?.message} required>
-            <Input type="number" min={1} {...register("numberOfGuests")} />
-          </FormField>
-
-          <div className="flex items-end">
-            <Button type="submit" className="w-full lg:w-auto" size="lg">
-              <Search className="mr-2 size-4" />
-              Buscar disponibilidad
-            </Button>
-          </div>
         </form>
       </section>
 
