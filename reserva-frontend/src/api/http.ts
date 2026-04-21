@@ -15,7 +15,8 @@ http.interceptors.request.use((config) => {
 http.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthEndpoint = error.config?.url?.includes("/auth/");
+    if (error.response?.status === 401 && !isAuthEndpoint) {
       useAuthStore.getState().clearSession();
       window.location.href = "/login";
     }

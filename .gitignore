@@ -287,3 +287,4 @@ reference/
 *.sln
 *.sw?
 .agents/
+.claude/
