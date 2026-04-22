@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
-import { CalendarDays, Eye, Search, Trash2, X } from "lucide-react";
+import { CalendarDays, Eye, Pencil, Search, X } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import {
   useReservationList,
@@ -149,39 +149,41 @@ export default function Reservas() {
             (reservation.status === "Pending" ||
               reservation.status === "Confirmed") &&
             can.cancelReservation(role ?? "Employee");
+          const canEdit =
+            reservation.status !== "Completed" &&
+            reservation.status !== "Cancelled";
           const canDelete = role ? can.deleteReservation(role) : false;
 
           return (
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex items-center justify-end gap-1">
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => navigate(`/reservas/${reservation.id}`)}
               >
                 <Eye className="size-4" />
-                Ver
               </Button>
-              {canCancel && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setReservationToCancel(reservation)}
-                >
-                  <X className="size-4" />
-                  Cancelar
-                </Button>
-              )}
-              {canDelete && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => setReservationToDelete(reservation)}
-                >
-                  <Trash2 className="size-4" />
-                  Eliminar
-                </Button>
-              )}
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => navigate(`/reservas/${reservation.id}`)}
+                disabled={!canEdit}
+              >
+                <Pencil className="size-4" />
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setReservationToCancel(reservation)}
+                disabled={!canCancel && !canDelete}
+                className={cn(
+                  !canCancel && !canDelete
+                    ? "text-muted-fg"
+                    : "text-destructive hover:text-destructive"
+                )}
+              >
+                <X className="size-4" />
+              </Button>
             </div>
           );
         },
