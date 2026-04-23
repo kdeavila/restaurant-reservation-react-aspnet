@@ -16,5 +16,6 @@ public record ReservationDto(
     decimal TotalPrice,
     string Status,
     string Notes,
-    UserSimpleDto User
+    UserSimpleDto User,
+    DateTime CreatedAt
 );

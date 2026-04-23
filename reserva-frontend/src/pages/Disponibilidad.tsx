@@ -71,7 +71,10 @@ export default function Disponibilidad() {
 
   return (
     <main>
-      <PageHeader title="Disponibilidad" />
+      <PageHeader
+        title="Disponibilidad"
+        description="Consulta mesas disponibles y crea una reserva con un clic."
+      />
 
       <section className="filter-bar px-8 py-4">
         <form className="flex flex-wrap items-end gap-3" onSubmit={handleSubmit(onSubmit)} noValidate>

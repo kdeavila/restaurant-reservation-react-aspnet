@@ -15,44 +15,49 @@ export function PriceSummary({
   hours,
   pendingNote,
   className,
-}: PriceSummaryProps) {
-  const surcharge = totalPrice ? Math.max(0, totalPrice - basePrice) : 0;
+}: PriceSummaryProps): React.ReactNode {
+  const surcharge =
+    totalPrice != null ? Math.max(0, totalPrice - basePrice) : null;
 
   return (
-    <div className={cn("space-y-2 text-sm", className)}>
+    <dl className={cn("space-y-2.5 text-sm", className)}>
       {hours !== undefined && (
-        <div className="flex justify-between text-muted-fg">
-          <span>Duración:</span>
-          <span>{hours.toFixed(1)} h</span>
+        <div className="flex justify-between text-[color:var(--color-muted-fg)]">
+          <dt>Duración</dt>
+          <dd className="tabular-nums font-medium">{hours.toFixed(1)} h</dd>
         </div>
       )}
 
-      <div className="flex justify-between text-muted-fg">
-        <span>Precio base:</span>
-        <span>{formatCurrency(Math.max(0, basePrice))}</span>
+      <div className="flex justify-between">
+        <dt className="text-[color:var(--color-muted-fg)]">Precio base</dt>
+        <dd className="tabular-nums font-medium">
+          {formatCurrency(Math.max(0, basePrice))}
+        </dd>
       </div>
 
-      {surcharge > 0 && (
-        <div className="flex justify-between text-muted-fg">
-          <span>Recargo:</span>
-          <span className="text-destructive">
-            {formatCurrency(surcharge)}
-          </span>
+      {surcharge !== null && surcharge > 0 && (
+        <div className="flex justify-between">
+          <dt className="text-[color:var(--color-muted-fg)]">
+            Recargos aplicados
+          </dt>
+          <dd className="tabular-nums font-medium text-[color:var(--color-primary)]">
+            + {formatCurrency(surcharge)}
+          </dd>
         </div>
       )}
 
-      {totalPrice !== undefined && (
-        <div className="flex justify-between font-semibold border-t border-border pt-2">
-          <span>Total:</span>
-          <span>{formatCurrency(Math.max(0, totalPrice))}</span>
-        </div>
-      )}
+      <div className="border-t border-[color:var(--color-border)] pt-2.5 flex justify-between items-baseline">
+        <dt className="font-display font-semibold">Total</dt>
+        <dd className="font-display text-2xl font-bold tabular-nums">
+          {formatCurrency(Math.max(0, totalPrice ?? basePrice))}
+        </dd>
+      </div>
 
       {pendingNote && (
-        <div className="mt-3 p-2 bg-accent rounded text-muted-fg text-xs">
-          El precio final se calculará al confirmar.
-        </div>
+        <p className="text-xs text-[color:var(--color-muted-fg)] pt-1">
+          El precio final con recargos se calculará al confirmar.
+        </p>
       )}
-    </div>
+    </dl>
   );
 }

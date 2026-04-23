@@ -55,6 +55,8 @@ export default function Reservas() {
       status: status === "all" ? undefined : status,
       page,
       pageSize,
+      sortBy: "createdAt",
+      sortOrder: "desc",
     }),
     [date, page, pageSize, status],
   );

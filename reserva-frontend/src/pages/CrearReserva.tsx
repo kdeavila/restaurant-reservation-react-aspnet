@@ -3,7 +3,7 @@ import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -65,6 +65,7 @@ export default function CrearReserva() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CreateReservaFormValues>({
     resolver: zodResolver(createReservaSchema) as Resolver<CreateReservaFormValues>,
@@ -119,6 +120,7 @@ export default function CrearReserva() {
     <main>
       <PageHeader
         title="Nueva reserva"
+        description="Selecciona cliente, mesa y horario para registrar la reserva."
         actions={
           <Button variant="outline" size="sm" onClick={() => navigate(-1)}>
             <ArrowLeft className="mr-2 size-4" />
@@ -129,6 +131,7 @@ export default function CrearReserva() {
 
       <section className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 px-8 py-8">
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)} noValidate>
+          <input type="hidden" {...register("clientId")} />
           <section className="surface-card p-5 space-y-4">
             <div className="flex items-center gap-2.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">1</div>
@@ -136,8 +139,13 @@ export default function CrearReserva() {
             </div>
             <ClientSearchSelect
               value={watchClientId || null}
-              onChange={(_, client) => {
+              onChange={(id, client) => {
                 setSelectedClient(client);
+                if (id) {
+                  setValue("clientId", id);
+                } else {
+                  setValue("clientId", 0);
+                }
               }}
             />
           </section>
@@ -204,53 +212,95 @@ export default function CrearReserva() {
           </section>
         </form>
 
-        <aside className="lg:sticky lg:top-8 lg:h-fit space-y-6">
-          <div className="surface-card p-6 space-y-4">
-            <h4 className="font-semibold">Resumen</h4>
+        <aside className="lg:sticky lg:top-8 lg:h-fit space-y-4">
+          <div className="surface-card p-5 sticky top-6">
+            <h3 className="font-display text-lg font-semibold mb-4">Resumen</h3>
+            <dl className="space-y-3 text-sm mb-5">
+              <Row label="Cliente">
+                {selectedClient ? (
+                  `${selectedClient.firstName} ${selectedClient.lastName}`
+                ) : (
+                  <Muted>Sin seleccionar</Muted>
+                )}
+              </Row>
+              <Row label="Mesa">
+                {selectedTable ? (
+                  <span>
+                    {selectedTable.code} ·{" "}
+                    <span className="text-(--color-muted-fg)">
+                      {selectedTable.tableType.name}
+                    </span>
+                  </span>
+                ) : (
+                  <Muted>Sin seleccionar</Muted>
+                )}
+              </Row>
+              <Row label="Fecha">{formatDate(watchDate)}</Row>
+              <Row label="Horario">
+                {watchStartTime} – {watchEndTime}
+              </Row>
+              <Row label="Comensales">
+                {watch("numberOfGuests")} {selectedTable && <span className="text-sm text-(--color-muted-fg)">máx {selectedTable.capacity}</span>}
+              </Row>
+            </dl>
 
-            {selectedClient && (
-              <div className="space-y-1 pb-4 border-b border-border">
-                <div className="text-sm text-muted-fg">Cliente</div>
-                <div className="font-medium">
-                  {selectedClient.firstName} {selectedClient.lastName}
-                </div>
-              </div>
-            )}
-
-            {selectedTable && (
-              <div className="space-y-1 pb-4 border-b border-border">
-                <div className="text-sm text-muted-fg">Mesa</div>
-                <div className="font-medium">{selectedTable.code}</div>
-              </div>
-            )}
-
-            {watchDate && (
-              <div className="space-y-1 pb-4 border-b border-border">
-                <div className="text-sm text-muted-fg">Fecha y horario</div>
-                <div className="font-medium">
-                  {formatDate(watchDate)} • {watchStartTime} - {watchEndTime}
-                </div>
-              </div>
-            )}
-
-            <PriceSummary
-              basePrice={basePrice}
-              hours={hours}
-              pendingNote
-              className="pt-2"
-            />
+            <div className="border-t border-(--color-border) pt-4">
+              <PriceSummary basePrice={basePrice} hours={hours} pendingNote />
+            </div>
 
             <Button
               type="submit"
-              className="w-full mt-6"
+              className="w-full mt-5"
               disabled={createMutation.isPending || !selectedClient || !selectedTable}
               onClick={handleSubmit(onSubmit)}
             >
-              {createMutation.isPending ? "Confirmando..." : "Confirmar reserva"}
+              {createMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" /> Confirmando…
+                </>
+              ) : (
+                <>
+                  Confirmar reserva <ArrowRight className="h-4 w-4 ml-2" />
+                </>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full mt-2"
+              onClick={() => navigate(-1)}
+            >
+              Cancelar
             </Button>
           </div>
         </aside>
       </section>
     </main>
+  );
+}
+
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}): React.ReactNode {
+  return (
+    <div className="flex justify-between gap-3">
+      <dt className="text-(--color-muted-fg) shrink-0">{label}</dt>
+      <dd className="text-right font-medium">{children}</dd>
+    </div>
+  );
+}
+
+function Muted({
+  children,
+}: {
+  children: React.ReactNode;
+}): React.ReactNode {
+  return (
+    <span className="text-(--color-muted-fg) italic font-normal">
+      {children}
+    </span>
   );
 }

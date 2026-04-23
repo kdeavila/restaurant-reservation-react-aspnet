@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -6,21 +6,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { ChevronsUpDown, UserRound } from "lucide-react";
+import { Check, ChevronsUpDown, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StatusBadge } from "@/components/atoms/StatusBadge";
 import type { Client } from "@/types";
 import { useClientList } from "@/hooks/useClients";
 
 interface ClientSearchSelectProps {
   value: number | null;
-  onChange: (id: number, client: Client) => void;
+  onChange: (id: number | null, client: Client | null) => void;
   className?: string;
 }
 
@@ -38,7 +32,19 @@ export function ClientSearchSelect({
     pageSize: 10,
   });
 
-  const clients = listData?.data || [];
+  const clients: Client[] = listData?.data || [];
+
+  const results: Client[] = useMemo(() => {
+    if (!search.trim()) return clients.slice(0, 6);
+    const term = search.trim().toLowerCase();
+    return clients
+      .filter(
+        (c) =>
+          `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) ||
+          c.email.toLowerCase().includes(term)
+      )
+      .slice(0, 8);
+  }, [clients, search]);
 
   useEffect(() => {
     if (value && !selectedClient) {
@@ -48,12 +54,54 @@ export function ClientSearchSelect({
   }, [value, clients, selectedClient]);
 
   const handleSelect = (client: Client) => {
+    if (client.status === "Inactive") return;
     setSelectedClient(client);
     onChange(client.id, client);
     setOpen(false);
     setSearch("");
   };
 
+  const handleClear = () => {
+    setSelectedClient(null);
+    onChange(null, null);
+    setSearch("");
+  };
+
+  // Estado seleccionado: mostrar tarjeta con datos
+  if (selectedClient) {
+    return (
+      <div className={cn(
+        "flex items-center gap-3 rounded-lg border border-(--color-border) bg-(--color-surface-card) px-4 py-3",
+        className
+      )}>
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-(--color-primary)/10 text-(--color-primary) text-sm font-semibold shrink-0">
+          {selectedClient.firstName[0]}
+          {selectedClient.lastName[0]}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-medium truncate">
+            {selectedClient.firstName} {selectedClient.lastName}
+          </div>
+          <div className="text-xs text-(--color-muted-fg) truncate">
+            {selectedClient.email}
+          </div>
+        </div>
+        {selectedClient.status === "Inactive" && (
+          <StatusBadge status="Inactive" />
+        )}
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="shrink-0 h-8 px-2"
+          onClick={handleClear}
+        >
+          <X className="h-4 w-4" /> Cambiar
+        </Button>
+      </div>
+    );
+  }
+
+  // Estado sin seleccionar: input de búsqueda
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -61,51 +109,67 @@ export function ClientSearchSelect({
           variant="outline"
           role="combobox"
           className={cn(
-            "w-full justify-between",
-            !selectedClient && "text-muted-fg",
-            className,
+            "w-full justify-between font-normal text-(--color-muted-fg) h-11",
+            className
           )}
         >
-          {selectedClient
-            ? `${selectedClient.firstName} ${selectedClient.lastName} (${selectedClient.email})`
-            : "Seleccionar cliente..."}
-          <ChevronsUpDown className="ml-2 h-4 w-4 opacity-50 shrink-0" />
+          <span className="flex items-center gap-2">
+            <Search className="h-4 w-4" />
+            Buscar cliente por nombre o correo
+          </span>
+          <ChevronsUpDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0" align="start">
-        <Command className="bg-surface-card p-0">
-          <div className="p-2 border-b">
-            <Input
-              placeholder="Buscar por nombre..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="h-8"
-            />
-          </div>
-          <CommandList>
-            <CommandEmpty>No se encontraron clientes.</CommandEmpty>
-            <CommandGroup className="p-0">
-              {clients.map((client) => (
-                <CommandItem
-                  key={client.id}
-                  value={String(client.id)}
-                  onSelect={() => handleSelect(client)}
-                  className="cursor-pointer rounded-none border-b border-border/70 bg-transparent px-3 py-2.5 data-[selected=true]:bg-accent/45 last:border-b-0 [&>svg:last-child]:hidden"
-                >
-                  <UserRound className="size-4 mr-2 text-muted-fg" />
-                  <div className="flex flex-1 flex-col gap-y-0.5">
-                    <span className="font-medium">
-                      {client.firstName} {client.lastName}
-                    </span>
-                    <span className="text-xs text-muted-fg">
-                      {client.email}
-                    </span>
+      <PopoverContent 
+        className="w-[--radix-popover-trigger-width] p-0" 
+        align="start"
+      >
+        <div className="p-2 border-b border-(--color-border)">
+          <Input
+            autoFocus
+            placeholder="Escribe para filtrar..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9"
+          />
+        </div>
+        <div className="max-h-72 overflow-auto py-1">
+          {results.length === 0 ? (
+            <div className="px-3 py-6 text-center text-sm text-(--color-muted-fg)">
+              Sin coincidencias
+            </div>
+          ) : (
+            results.map((client: Client) => (
+              <button
+                key={client.id}
+                onClick={() => handleSelect(client)}
+                disabled={client.status === "Inactive"}
+                className={cn(
+                  "w-full text-left px-3 py-2.5 flex items-center gap-3 hover:bg-accent transition-colors",
+                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                )}
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium shrink-0">
+                  {client.firstName[0]}
+                  {client.lastName[0]}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">
+                    {client.firstName} {client.lastName}
                   </div>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+                  <div className="text-xs text-(--color-muted-fg) truncate">
+                    {client.email}
+                  </div>
+                </div>
+                {client.status === "Inactive" ? (
+                  <StatusBadge status="Inactive" />
+                ) : (
+                  <Check className="h-4 w-4 opacity-0 shrink-0" />
+                )}
+              </button>
+            ))
+          )}
+        </div>
       </PopoverContent>
     </Popover>
   );

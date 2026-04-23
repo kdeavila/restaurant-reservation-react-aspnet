@@ -10,6 +10,10 @@ public class ReservationQueryParams
     public DateTime? Date { get; set; }
     public TimeSpan? StartTime { get; set; }
     public TimeSpan? EndTime { get; set; }
+    
+    // Sorting
+    public string? SortBy { get; set; } = "createdAt"; // "date", "createdAt"
+    public string? SortOrder { get; set; } = "desc"; // "asc", "desc"
 
     // Pagination
     [Range(1, int.MaxValue, ErrorMessage = "Page number must be greater than 0")]

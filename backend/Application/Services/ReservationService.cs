@@ -51,8 +51,18 @@ public class ReservationService(IReservationRepository reservationRepository) : 
         var totalCount = await query.CountAsync(ct);
 
         var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;
-        var data = await query
-            .OrderBy(r => r.Id)
+        
+        // Apply sorting
+        var sortedQuery = (queryParams.SortBy?.ToLower(), queryParams.SortOrder?.ToLower()) switch
+        {
+            ("date", "asc") => query.OrderBy(r => r.Date),
+            ("date", _) => query.OrderByDescending(r => r.Date),
+            ("createdat", "asc") => query.OrderBy(r => r.CreatedAt),
+            ("createdat", _) => query.OrderByDescending(r => r.CreatedAt),
+            _ => query.OrderByDescending(r => r.CreatedAt) // Default: newest first
+        };
+
+        var data = await sortedQuery
             .Skip(skipNumber)
             .Take(queryParams.PageSize)
             .Select(reservation => reservation.Adapt<ReservationDto>())
