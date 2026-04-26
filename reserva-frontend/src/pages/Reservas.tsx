@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
-import { CalendarDays, Eye, Pencil, Search, X } from "lucide-react";
+import { CalendarDays, Eye, Pencil, Search, SlidersHorizontal, X } from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import {
   useReservationList,
@@ -10,6 +10,7 @@ import {
   useUpdateReservation,
 } from "@/hooks/useReservations";
 import { PageHeader } from "@/components/molecules/PageHeader";
+import { FormField } from "@/components/molecules/FormField";
 import { DataTable } from "@/components/molecules/DataTable";
 import { Pagination } from "@/components/molecules/Pagination";
 import { EmptyState } from "@/components/molecules/EmptyState";
@@ -27,6 +28,7 @@ import {
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import { can } from "@/lib/permissions";
 import { formatCurrency } from "@/lib/format";
+import { usePacerDebouncedValue } from "@/hooks/usePacerDebouncedValue";
 import type { Reservation } from "@/types";
 
 type StatusFilter = "all" | "Pending" | "Confirmed" | "Completed" | "Cancelled";
@@ -41,7 +43,7 @@ export default function Reservas() {
 
   const [date, setDate] = useState("");
   const [status, setStatus] = useState<StatusFilter>("all");
-  const [search, setSearch] = useState("");
+  const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [reservationToCancel, setReservationToCancel] =
@@ -49,34 +51,28 @@ export default function Reservas() {
   const [reservationToDelete, setReservationToDelete] =
     useState<Reservation | null>(null);
 
+  const {
+    debouncedValue: debouncedSearch,
+    schedule: scheduleSearch,
+    setImmediate: setSearchImmediate,
+  } = usePacerDebouncedValue("", { wait: 350 });
+
   const queryParams = useMemo(
     () => ({
       date: date || undefined,
       status: status === "all" ? undefined : status,
+      searchTerm: debouncedSearch.trim() || undefined,
       page,
       pageSize,
       sortBy: "createdAt",
       sortOrder: "desc",
     }),
-    [date, page, pageSize, status],
+    [date, debouncedSearch, page, pageSize, status],
   );
 
   const reservationsQuery = useReservationList(queryParams);
   const reservations = reservationsQuery.data?.data ?? [];
   const pagination = reservationsQuery.data?.pagination;
-
-  const displayReservations = useMemo(() => {
-    if (!search.trim()) return reservations;
-    const q = search.toLowerCase();
-    return reservations.filter(
-      (r) =>
-        `${r.client.firstName} ${r.client.lastName}`
-          .toLowerCase()
-          .includes(q) ||
-        r.client.email.toLowerCase().includes(q) ||
-        r.table.code.toLowerCase().includes(q),
-    );
-  }, [reservations, search]);
 
   const columns = useMemo(
     () => [
@@ -197,7 +193,8 @@ export default function Reservas() {
   const clearFilters = () => {
     setDate("");
     setStatus("all");
-    setSearch("");
+    setSearchInput("");
+    setSearchImmediate("");
     setPage(1);
   };
 
@@ -227,48 +224,72 @@ export default function Reservas() {
         description="Consulta, filtra y opera todas las reservas del sistema."
       />
 
-      <div className="filter-bar px-8 py-4 flex items-center gap-3 flex-wrap">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-fg pointer-events-none" />
-          <Input
-            placeholder="Buscar por cliente o mesa…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-65 pl-9"
-          />
+      <section className="filter-bar px-8 py-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-wrap items-end gap-3">
+            <FormField
+              label="Buscar"
+              icon={<Search className="size-3.5" />}
+            >
+              <Input
+                placeholder="Cliente o mesa"
+                value={searchInput}
+                onChange={(e) => {
+                  const nextValue = e.target.value;
+                  setSearchInput(nextValue);
+                  scheduleSearch(nextValue);
+                  setPage(1);
+                }}
+                className="w-65"
+              />
+            </FormField>
+
+            <FormField
+              label="Estado"
+              icon={<SlidersHorizontal className="size-3.5" />}
+            >
+              <Select
+                value={status}
+                onValueChange={(v) => {
+                  setStatus(v as StatusFilter);
+                  setPage(1);
+                }}
+              >
+                <SelectTrigger className="w-45">
+                  <SelectValue placeholder="Todos los estados" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="Pending">Pendiente</SelectItem>
+                  <SelectItem value="Confirmed">Confirmada</SelectItem>
+                  <SelectItem value="Completed">Completada</SelectItem>
+                  <SelectItem value="Cancelled">Cancelada</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
+
+            <FormField
+              label="Fecha"
+              icon={<CalendarDays className="size-3.5" />}
+            >
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  setPage(1);
+                }}
+                className="w-40"
+              />
+            </FormField>
+          </div>
+
+          <Button variant="ghost" size="sm" onClick={clearFilters}>
+            <X className="size-4" />
+            Limpiar filtros
+          </Button>
         </div>
-
-        <Select
-          value={status}
-          onValueChange={(v) => setStatus(v as StatusFilter)}
-        >
-          <SelectTrigger className="w-45">
-            <SelectValue placeholder="Todos los estados" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="Pending">Pendiente</SelectItem>
-            <SelectItem value="Confirmed">Confirmada</SelectItem>
-            <SelectItem value="Completed">Completada</SelectItem>
-            <SelectItem value="Cancelled">Cancelada</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Input
-          type="date"
-          value={date}
-          onChange={(e) => {
-            setDate(e.target.value);
-            setPage(1);
-          }}
-          className="w-40"
-        />
-
-        <Button variant="ghost" size="sm" onClick={clearFilters}>
-          <X className="size-4" />
-          Limpiar filtros
-        </Button>
-      </div>
+      </section>
 
       <section className="px-8 py-8 space-y-6">
         {hasError ? (
@@ -276,7 +297,7 @@ export default function Reservas() {
             message="No se pudieron cargar las reservas."
             onRetry={() => reservationsQuery.refetch()}
           />
-        ) : displayReservations.length === 0 && !isLoading && !isFetching ? (
+        ) : reservations.length === 0 && !isLoading && !isFetching ? (
           <EmptyState
             icon={<CalendarDays className="size-7 text-primary" />}
             title="Sin reservas"
@@ -294,13 +315,13 @@ export default function Reservas() {
           >
             <DataTable
               columns={columns}
-              data={displayReservations}
+              data={reservations}
               loading={isLoading || (isFetching && reservations.length === 0)}
             />
           </div>
         )}
 
-        {pagination && displayReservations.length > 0 && (
+        {pagination && reservations.length > 0 && (
           <Pagination
             page={pagination.page}
             pageSize={pagination.pageSize}

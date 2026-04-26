@@ -275,6 +275,8 @@ PROJECT_SCOPE.md
 frontend-ai-instructions.md
 .aider*
 reference/
+REACT-FIXES-GUIDE.md
+REACT-ISSUES-ANALYSIS.md
 
 # Editor directories and files
 .vscode/*

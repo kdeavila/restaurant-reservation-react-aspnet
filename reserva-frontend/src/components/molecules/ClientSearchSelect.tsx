@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,12 +11,15 @@ import { cn } from "@/lib/utils";
 import { StatusBadge } from "@/components/atoms/StatusBadge";
 import type { Client } from "@/types";
 import { useClientList } from "@/hooks/useClients";
+import { usePacerDebouncedValue } from "@/hooks/usePacerDebouncedValue";
 
 interface ClientSearchSelectProps {
   value: number | null;
   onChange: (id: number | null, client: Client | null) => void;
   className?: string;
 }
+
+const EMPTY_CLIENTS: Client[] = [];
 
 export function ClientSearchSelect({
   value,
@@ -25,14 +28,37 @@ export function ClientSearchSelect({
 }: ClientSearchSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [selectedClientState, setSelectedClientState] = useState<Client | null>(
+    null,
+  );
+
+  const {
+    debouncedValue: debouncedSearch,
+    schedule: scheduleSearch,
+    setImmediate: setSearchImmediate,
+  } = usePacerDebouncedValue("", { wait: 350 });
 
   const { data: listData } = useClientList({
-    firstName: search,
+    firstName: debouncedSearch,
     pageSize: 10,
   });
 
-  const clients: Client[] = listData?.data || [];
+  const clients = useMemo(
+    () => listData?.data ?? EMPTY_CLIENTS,
+    [listData?.data],
+  );
+
+  const selectedClient = useMemo(() => {
+    if (value == null) {
+      return null;
+    }
+
+    if (selectedClientState?.id === value) {
+      return selectedClientState;
+    }
+
+    return clients.find((c) => c.id === value) ?? null;
+  }, [clients, selectedClientState, value]);
 
   const results: Client[] = useMemo(() => {
     if (!search.trim()) return clients.slice(0, 6);
@@ -41,39 +67,41 @@ export function ClientSearchSelect({
       .filter(
         (c) =>
           `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) ||
-          c.email.toLowerCase().includes(term)
+          c.email.toLowerCase().includes(term),
       )
       .slice(0, 8);
   }, [clients, search]);
 
-  useEffect(() => {
-    if (value && !selectedClient) {
-      const found = clients.find((c) => c.id === value);
-      if (found) setSelectedClient(found);
-    }
-  }, [value, clients, selectedClient]);
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    scheduleSearch(value);
+  };
 
   const handleSelect = (client: Client) => {
     if (client.status === "Inactive") return;
-    setSelectedClient(client);
+    setSelectedClientState(client);
     onChange(client.id, client);
     setOpen(false);
+    setSearchImmediate("");
     setSearch("");
   };
 
   const handleClear = () => {
-    setSelectedClient(null);
+    setSelectedClientState(null);
     onChange(null, null);
+    setSearchImmediate("");
     setSearch("");
   };
 
   // Estado seleccionado: mostrar tarjeta con datos
   if (selectedClient) {
     return (
-      <div className={cn(
-        "flex items-center gap-3 rounded-lg border border-(--color-border) bg-(--color-surface-card) px-4 py-3",
-        className
-      )}>
+      <div
+        className={cn(
+          "flex items-center gap-3 rounded-lg border border-(--color-border) bg-(--color-surface-card) px-4 py-3",
+          className,
+        )}
+      >
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-(--color-primary)/10 text-(--color-primary) text-sm font-semibold shrink-0">
           {selectedClient.firstName[0]}
           {selectedClient.lastName[0]}
@@ -89,9 +117,9 @@ export function ClientSearchSelect({
         {selectedClient.status === "Inactive" && (
           <StatusBadge status="Inactive" />
         )}
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           className="shrink-0 h-8 px-2"
           onClick={handleClear}
         >
@@ -110,7 +138,7 @@ export function ClientSearchSelect({
           role="combobox"
           className={cn(
             "w-full justify-between font-normal text-(--color-muted-fg) h-11",
-            className
+            className,
           )}
         >
           <span className="flex items-center gap-2">
@@ -120,8 +148,8 @@ export function ClientSearchSelect({
           <ChevronsUpDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent 
-        className="w-[--radix-popover-trigger-width] p-0" 
+      <PopoverContent
+        className="w-(--radix-popover-trigger-width) p-0"
         align="start"
       >
         <div className="p-2 border-b border-(--color-border)">
@@ -129,7 +157,7 @@ export function ClientSearchSelect({
             autoFocus
             placeholder="Escribe para filtrar..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="h-9"
           />
         </div>
@@ -146,7 +174,7 @@ export function ClientSearchSelect({
                 disabled={client.status === "Inactive"}
                 className={cn(
                   "w-full text-left px-3 py-2.5 flex items-center gap-3 hover:bg-accent transition-colors",
-                  "disabled:opacity-50 disabled:cursor-not-allowed"
+                  "disabled:opacity-50 disabled:cursor-not-allowed",
                 )}
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium shrink-0">

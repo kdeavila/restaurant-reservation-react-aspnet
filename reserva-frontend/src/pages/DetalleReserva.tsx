@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ArrowLeft, Lock, Save, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Lock, Save, Search, X } from "lucide-react";
 import { PageHeader } from "@/components/molecules/PageHeader";
 import { ErrorState } from "@/components/molecules/ErrorState";
 import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
@@ -99,8 +99,12 @@ export default function DetalleReserva() {
       numberOfGuests: reservation.numberOfGuests,
       notes: reservation.notes ?? "",
       status: reservation.status,
+    }, {
+      keepDefaultValues: true,
+      keepDirty: false,
+      keepValues: false,
     });
-  }, [reservation, reset]);
+  }, [reservation]);
 
   const watchDate = watch("date");
   const watchStartTime = watch("startTime");
@@ -116,8 +120,12 @@ export default function DetalleReserva() {
       endTime: toBackendTime(watchEndTime),
       numberOfGuests: watchGuests,
     },
-    { enabled: Boolean(!isLocked && reservation) },
+    { enabled: false },
   );
+
+  const handleFindTables = () => {
+    availableTablesQuery.refetch();
+  };
 
   const availableTables = availableTablesQuery.data?.data ?? [];
 
@@ -236,21 +244,35 @@ export default function DetalleReserva() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 space-y-1.5">
                   <label className="text-sm font-medium">Mesa</label>
-                  <Select
-                    value={String(watchTableId)}
-                    onValueChange={(v) => setValue("tableId", Number(v), { shouldDirty: true })}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Seleccionar mesa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tableOptions.map((t) => (
-                        <SelectItem key={t.id} value={String(t.id)}>
-                          {t.code} · {t.tableType?.name ?? "—"} · {t.capacity}p
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      value={String(watchTableId)}
+                      onValueChange={(v) => setValue("tableId", Number(v), { shouldDirty: true })}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Seleccionar mesa" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tableOptions.map((t) => (
+                          <SelectItem key={t.id} value={String(t.id)}>
+                            {t.code} · {t.tableType?.name ?? "—"} · {t.capacity}p
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {!isLocked && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={handleFindTables}
+                        disabled={availableTablesQuery.isFetching}
+                        title="Buscar mesas disponibles"
+                      >
+                        <Search className="size-4" />
+                      </Button>
+                    )}
+                  </div>
                   {!isLocked && availableTablesQuery.isFetching && (
                     <p className="text-xs text-muted-fg">Actualizando mesas disponibles…</p>
                   )}

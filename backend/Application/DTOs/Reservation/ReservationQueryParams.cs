@@ -7,6 +7,7 @@ public class ReservationQueryParams
     public int? ClientId { get; set; }
     public int? TableId { get; set; }
     public string? Status { get; set; }
+    public string? SearchTerm { get; set; }
     public DateTime? Date { get; set; }
     public TimeSpan? StartTime { get; set; }
     public TimeSpan? EndTime { get; set; }

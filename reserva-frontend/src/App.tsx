@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/auth.store";
 import type { AuthUser } from "@/types";
 
 function App() {
-  const { user, setSession } = useAuthStore();
+  const { user } = useAuthStore();
 
   useEffect(() => {
     if (user) return;
@@ -19,8 +19,8 @@ function App() {
       tokenExpiry: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
     };
 
-    setSession(previewUser);
-  }, [user, setSession]);
+    useAuthStore.getState().setSession(previewUser);
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">

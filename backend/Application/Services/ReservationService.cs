@@ -48,6 +48,20 @@ public class ReservationService(IReservationRepository reservationRepository) : 
             query = query.Where(r => r.Status == parsedStatus);
         }
 
+        if (!string.IsNullOrWhiteSpace(queryParams.SearchTerm))
+        {
+            var term = queryParams.SearchTerm.Trim().ToLower();
+            query = query.Where(r =>
+                (
+                    (r.Client.FirstName + " " + r.Client.LastName)
+                        .ToLower()
+                        .Contains(term)
+                )
+                || r.Client.Email.ToLower().Contains(term)
+                || r.Table.Code.ToLower().Contains(term)
+            );
+        }
+
         var totalCount = await query.CountAsync(ct);
 
         var skipNumber = (queryParams.Page - 1) * queryParams.PageSize;

@@ -45,13 +45,18 @@ export default function Disponibilidad() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { isValid },
   } = useForm<AvailabilityFormValues>({
-    resolver: zodResolver(availabilitySchema) as Resolver<AvailabilityFormValues>,
+    resolver: zodResolver(
+      availabilitySchema,
+    ) as Resolver<AvailabilityFormValues>,
     defaultValues,
+    mode: "onChange",
   });
 
-  const availabilityQuery = useAvailableTables(searchParams, { enabled: false });
+  const availabilityQuery = useAvailableTables(searchParams, {
+    enabled: false,
+  });
 
   useEffect(() => {
     if (!hasSearched) {
@@ -59,7 +64,7 @@ export default function Disponibilidad() {
     }
 
     void availabilityQuery.refetch();
-  }, [hasSearched, searchParams, availabilityQuery.refetch]);
+  }, [hasSearched, searchParams]);
 
   const onSubmit: SubmitHandler<AvailabilityFormValues> = (values) => {
     setSearchParams(values);
@@ -77,24 +82,52 @@ export default function Disponibilidad() {
       />
 
       <section className="filter-bar px-8 py-4">
-        <form className="flex flex-wrap items-end gap-3" onSubmit={handleSubmit(onSubmit)} noValidate>
-          <FormField label="Fecha" icon={<CalendarDays className="size-3.5" />} error={errors.date?.message} required>
-            <Input type="date" min={todayISO()} className="w-40" {...register("date")} />
-          </FormField>
+        <form
+          className="flex flex-wrap items-end justify-between gap-3"
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
+          <div className="flex flex-wrap items-end gap-3">
+            <FormField
+              label="Fecha"
+              icon={<CalendarDays className="size-3.5" />}
+              required
+            >
+              <Input
+                type="date"
+                min={todayISO()}
+                className="w-40"
+                {...register("date")}
+              />
+            </FormField>
 
-          <FormField label="Inicio" icon={<Clock className="size-3.5" />} error={errors.startTime?.message} required>
-            <Input type="time" className="w-30" {...register("startTime")} />
-          </FormField>
+            <FormField
+              label="Inicio"
+              icon={<Clock className="size-3.5" />}
+              required
+            >
+              <Input type="time" className="w-30" {...register("startTime")} />
+            </FormField>
 
-          <FormField label="Fin" icon={<Clock className="size-3.5" />} error={errors.endTime?.message} required>
-            <Input type="time" className="w-30" {...register("endTime")} />
-          </FormField>
+            <FormField label="Fin" icon={<Clock className="size-3.5" />} required>
+              <Input type="time" className="w-30" {...register("endTime")} />
+            </FormField>
 
-          <FormField label="Comensales" icon={<Users className="size-3.5" />} error={errors.numberOfGuests?.message} required>
-            <Input type="number" min={1} className="w-25" {...register("numberOfGuests")} />
-          </FormField>
+            <FormField
+              label="Comensales"
+              icon={<Users className="size-3.5" />}
+              required
+            >
+              <Input
+                type="number"
+                min={1}
+                className="w-25"
+                {...register("numberOfGuests")}
+              />
+            </FormField>
+          </div>
 
-          <Button type="submit">
+          <Button type="submit" disabled={!isValid}>
             <Search className="size-4" />
             Buscar disponibilidad
           </Button>
@@ -108,31 +141,43 @@ export default function Disponibilidad() {
             title="Busca mesas disponibles"
             description="Indica fecha, horario y comensales para ver opciones libres."
           />
-        ) : isLoading ? (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <Skeleton key={index} className="surface-card h-48" />
-            ))}
-          </div>
-        ) : tables.length === 0 ? (
-          <EmptyState
-            icon={<Sparkles className="size-7 text-primary" />}
-            title="No hay mesas disponibles para este horario"
-            description="Prueba otro horario o reduce comensales para ampliar opciones."
-          />
         ) : (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {tables.map((table) => (
-              <TableCard
-                key={table.id}
-                table={table}
-                date={searchParams.date}
-                startTime={searchParams.startTime}
-                endTime={searchParams.endTime}
-                numberOfGuests={searchParams.numberOfGuests}
+          <>
+            <div className="mb-6 flex items-center gap-2 text-sm text-muted-fg">
+              <span className="font-medium text-foreground">{tables.length} mesas disponibles</span>
+              <span>·</span>
+              <span>duración {durationHours(searchParams.startTime, searchParams.endTime).toFixed(1)}h</span>
+              <span>·</span>
+              <span>{searchParams.numberOfGuests} comensales</span>
+            </div>
+
+            {isLoading ? (
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, index) => (
+                  <Skeleton key={index} className="surface-card h-48" />
+                ))}
+              </div>
+            ) : tables.length === 0 ? (
+              <EmptyState
+                icon={<Sparkles className="size-7 text-primary" />}
+                title="No hay mesas disponibles para este horario"
+                description="Prueba otro horario o reduce comensales para ampliar opciones."
               />
-            ))}
-          </div>
+            ) : (
+              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                {tables.map((table) => (
+                  <TableCard
+                    key={table.id}
+                    table={table}
+                    date={searchParams.date}
+                    startTime={searchParams.startTime}
+                    endTime={searchParams.endTime}
+                    numberOfGuests={searchParams.numberOfGuests}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </section>
     </main>

@@ -9,19 +9,37 @@ interface AuthGuardProps {
 export function AuthGuard({ children }: AuthGuardProps) {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
-  const clearSession = useAuthStore((state) => state.clearSession);
 
-  const isExpired =
-    !user?.tokenExpiry ||
-    new Date(user.tokenExpiry).getTime() <= Date.now();
+  const tokenExpiry = user?.tokenExpiry;
 
   useEffect(() => {
-    if (token && isExpired) {
-      clearSession();
+    if (!token || !tokenExpiry) {
+      return;
     }
-  }, [token, isExpired, clearSession]);
 
-  if (!token || isExpired) {
+    const expiresAt = new Date(tokenExpiry).getTime();
+    if (Number.isNaN(expiresAt)) {
+      return;
+    }
+
+    const clearSession = () => useAuthStore.getState().clearSession();
+    const msUntilExpiry = expiresAt - Date.now();
+
+    if (msUntilExpiry <= 0) {
+      const handler = setTimeout(() => {
+        clearSession();
+      }, 0);
+      return () => clearTimeout(handler);
+    }
+
+    const timeoutId = setTimeout(() => {
+      clearSession();
+    }, msUntilExpiry);
+
+    return () => clearTimeout(timeoutId);
+  }, [token, tokenExpiry]);
+
+  if (!token) {
     return <Navigate to="/login" replace />;
   }
 
