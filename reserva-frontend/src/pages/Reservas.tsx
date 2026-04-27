@@ -2,7 +2,14 @@ import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { createColumnHelper } from "@tanstack/react-table";
-import { CalendarDays, Eye, Pencil, Search, SlidersHorizontal, X } from "lucide-react";
+import {
+  CalendarDays,
+  Eye,
+  Pencil,
+  Search,
+  SlidersHorizontal,
+  X,
+} from "lucide-react";
 import { useAuthStore } from "@/store/auth.store";
 import {
   useReservationList,
@@ -177,7 +184,7 @@ export default function Reservas() {
                 className={cn(
                   !canCancel && !canDelete
                     ? "text-muted-fg"
-                    : "text-destructive hover:text-destructive"
+                    : "text-destructive hover:text-destructive",
                 )}
               >
                 <X className="size-4" />
@@ -227,10 +234,7 @@ export default function Reservas() {
       <section className="filter-bar px-8 py-4">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex flex-wrap items-end gap-3">
-            <FormField
-              label="Buscar"
-              icon={<Search className="size-3.5" />}
-            >
+            <FormField label="Buscar" icon={<Search className="size-3.5" />}>
               <Input
                 placeholder="Cliente o mesa"
                 value={searchInput}
@@ -255,15 +259,34 @@ export default function Reservas() {
                   setPage(1);
                 }}
               >
-                <SelectTrigger className="w-45">
-                  <SelectValue placeholder="Todos los estados" />
+                <SelectTrigger className="w-48 h-11 px-3 rounded-md border border-(--color-border) bg-(--color-surface-card) text-sm text-(--color-muted-fg) font-normal flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="size-3 text-(--color-muted-fg)" />
+                    <SelectValue placeholder="Todos los estados" />
+                  </div>
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="Pending">Pendiente</SelectItem>
-                  <SelectItem value="Confirmed">Confirmada</SelectItem>
-                  <SelectItem value="Completed">Completada</SelectItem>
-                  <SelectItem value="Cancelled">Cancelada</SelectItem>
+                <SelectContent
+                  position="popper"
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  className="w-(--radix-select-trigger-width) min-w-(--radix-select-trigger-width) rounded-lg border border-(--color-border) bg-(--color-surface-card) p-1 shadow-md"
+                >
+                  <SelectItem className="px-3 py-2.5" value="all">
+                    Todos los estados
+                  </SelectItem>
+                  <SelectItem className="px-3 py-2.5" value="Pending">
+                    Pendiente
+                  </SelectItem>
+                  <SelectItem className="px-3 py-2.5" value="Confirmed">
+                    Confirmada
+                  </SelectItem>
+                  <SelectItem className="px-3 py-2.5" value="Completed">
+                    Completada
+                  </SelectItem>
+                  <SelectItem className="px-3 py-2.5" value="Cancelled">
+                    Cancelada
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </FormField>
