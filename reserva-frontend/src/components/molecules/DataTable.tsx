@@ -10,14 +10,15 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
-interface DataTableProps<T> {
-  columns: ColumnDef<T, unknown>[]
-  data: T[]
+interface DataTableProps<TData> {
+  // biome-ignore lint/suspicious/noExplicitAny: TanStack tables use heterogeneous accessor value types per column.
+  columns: ColumnDef<TData, any>[]
+  data: TData[]
   loading?: boolean
   className?: string
 }
 
-export function DataTable<T>({ columns, data, loading, className }: DataTableProps<T>) {
+export function DataTable<TData>({ columns, data, loading, className }: DataTableProps<TData>) {
   const table = useReactTable({
     data: loading ? [] : data,
     columns,

@@ -2,9 +2,9 @@ import type { Role } from "@/types"
 
 export const can = {
   deleteReservation: (r: Role) => r === "Admin" || r === "Manager",
-  cancelReservation: (_: Role) => true,
+  cancelReservation: () => true,
   deleteClient: (r: Role) => r === "Admin",
-  editClient: (_: Role) => true,
+  editClient: () => true,
   editTables: (r: Role) => r === "Admin" || r === "Manager",
   deleteTables: (r: Role) => r === "Admin",
   editPricingRules: (r: Role) => r === "Admin" || r === "Manager",

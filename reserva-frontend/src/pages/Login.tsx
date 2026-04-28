@@ -44,7 +44,7 @@ export default function Login() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
-      <section className="surface-card w-full max-w-[420px] p-8 sm:p-10">
+      <section className="surface-card w-full max-w-105 p-8 sm:p-10">
         <div className="flex flex-col items-center text-center">
           <div className="flex size-14 items-center justify-center rounded-full bg-primary text-primary-fg shadow-cta">
             <UtensilsCrossed className="size-6" />

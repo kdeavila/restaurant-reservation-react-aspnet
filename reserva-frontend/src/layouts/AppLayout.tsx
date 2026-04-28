@@ -5,7 +5,7 @@ export function AppLayout() {
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar />
-      <main className="ml-[240px] flex-1 min-h-screen">
+      <main className="ml-60 flex-1 min-h-screen">
         <Outlet />
       </main>
     </div>

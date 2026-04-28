@@ -136,7 +136,10 @@ export default function DetalleReserva() {
     availableTablesQuery.refetch()
   }
 
-  const availableTables = availableTablesQuery.data?.data ?? []
+  const availableTables = useMemo(
+    () => availableTablesQuery.data?.data ?? [],
+    [availableTablesQuery.data],
+  )
 
   const tableOptions = useMemo(() => {
     if (!reservation) return [] as TableDetailed[]
@@ -262,7 +265,7 @@ export default function DetalleReserva() {
               <Field label="Ubicación">{reservation.table.location}</Field>
             </dl>
           </section>
-
+z
           {/* Datos editables */}
           <section className="surface-card p-5">
             <h3 className="font-display text-lg font-semibold mb-4">Datos de la reserva</h3>
