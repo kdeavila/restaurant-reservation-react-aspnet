@@ -1,68 +1,59 @@
-import { useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
-import { useNavigate } from "react-router-dom";
-import { createColumnHelper } from "@tanstack/react-table";
-import {
-  CalendarDays,
-  Eye,
-  Pencil,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
-import { useAuthStore } from "@/store/auth.store";
-import {
-  useReservationList,
-  useDeleteReservation,
-  useUpdateReservation,
-} from "@/hooks/useReservations";
-import { PageHeader } from "@/components/molecules/PageHeader";
-import { FormField } from "@/components/molecules/FormField";
-import { DataTable } from "@/components/molecules/DataTable";
-import { Pagination } from "@/components/molecules/Pagination";
-import { EmptyState } from "@/components/molecules/EmptyState";
-import { ErrorState } from "@/components/molecules/ErrorState";
-import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { createColumnHelper } from "@tanstack/react-table"
+import { CalendarDays, Eye, Pencil, Search, SlidersHorizontal, X } from "lucide-react"
+import { useMemo, useState } from "react"
+import { useNavigate } from "react-router-dom"
+import { StatusBadge } from "@/components/atoms/StatusBadge"
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog"
+import { DataTable } from "@/components/molecules/DataTable"
+import { EmptyState } from "@/components/molecules/EmptyState"
+import { ErrorState } from "@/components/molecules/ErrorState"
+import { FormField } from "@/components/molecules/FormField"
+import { PageHeader } from "@/components/molecules/PageHeader"
+import { Pagination } from "@/components/molecules/Pagination"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { StatusBadge } from "@/components/atoms/StatusBadge";
-import { can } from "@/lib/permissions";
-import { formatCurrency } from "@/lib/format";
-import { usePacerDebouncedValue } from "@/hooks/usePacerDebouncedValue";
-import type { Reservation } from "@/types";
+} from "@/components/ui/select"
+import { usePacerDebouncedValue } from "@/hooks/usePacerDebouncedValue"
+import {
+  useDeleteReservation,
+  useReservationList,
+  useUpdateReservation,
+} from "@/hooks/useReservations"
+import { formatCurrency } from "@/lib/format"
+import { can } from "@/lib/permissions"
+import { cn } from "@/lib/utils"
+import { useAuthStore } from "@/store/auth.store"
+import type { Reservation } from "@/types"
 
-type StatusFilter = "all" | "Pending" | "Confirmed" | "Completed" | "Cancelled";
+type StatusFilter = "all" | "Pending" | "Confirmed" | "Completed" | "Cancelled"
 
-const columnHelper = createColumnHelper<Reservation>();
+const columnHelper = createColumnHelper<Reservation>()
 
 export default function Reservas() {
-  const navigate = useNavigate();
-  const role = useAuthStore((state) => state.role);
-  const deleteReservationMutation = useDeleteReservation();
-  const updateReservationMutation = useUpdateReservation();
+  const navigate = useNavigate()
+  const role = useAuthStore((state) => state.role)
+  const deleteReservationMutation = useDeleteReservation()
+  const updateReservationMutation = useUpdateReservation()
 
-  const [date, setDate] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("all");
-  const [searchInput, setSearchInput] = useState("");
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-  const [reservationToCancel, setReservationToCancel] =
-    useState<Reservation | null>(null);
-  const [reservationToDelete, setReservationToDelete] =
-    useState<Reservation | null>(null);
+  const [date, setDate] = useState("")
+  const [status, setStatus] = useState<StatusFilter>("all")
+  const [searchInput, setSearchInput] = useState("")
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [reservationToCancel, setReservationToCancel] = useState<Reservation | null>(null)
+  const [reservationToDelete, setReservationToDelete] = useState<Reservation | null>(null)
 
   const {
     debouncedValue: debouncedSearch,
     schedule: scheduleSearch,
     setImmediate: setSearchImmediate,
-  } = usePacerDebouncedValue("", { wait: 350 });
+  } = usePacerDebouncedValue("", { wait: 350 })
 
   const queryParams = useMemo(
     () => ({
@@ -75,11 +66,11 @@ export default function Reservas() {
       sortOrder: "desc",
     }),
     [date, debouncedSearch, page, pageSize, status],
-  );
+  )
 
-  const reservationsQuery = useReservationList(queryParams);
-  const reservations = reservationsQuery.data?.data ?? [];
-  const pagination = reservationsQuery.data?.pagination;
+  const reservationsQuery = useReservationList(queryParams)
+  const reservations = reservationsQuery.data?.data ?? []
+  const pagination = reservationsQuery.data?.pagination
 
   const columns = useMemo(
     () => [
@@ -91,9 +82,7 @@ export default function Reservas() {
             <div className="font-medium text-foreground">
               {row.original.client.firstName} {row.original.client.lastName}
             </div>
-            <div className="text-xs text-muted-fg">
-              {row.original.client.email}
-            </div>
+            <div className="text-xs text-muted-fg">{row.original.client.email}</div>
           </div>
         ),
       }),
@@ -104,9 +93,7 @@ export default function Reservas() {
           <div>
             <div className="font-medium">{row.original.table.code}</div>
             {row.original.table.tableType?.name && (
-              <div className="text-xs text-muted-fg">
-                {row.original.table.tableType.name}
-              </div>
+              <div className="text-xs text-muted-fg">{row.original.table.tableType.name}</div>
             )}
           </div>
         ),
@@ -118,8 +105,7 @@ export default function Reservas() {
           <div>
             <div>{row.original.date}</div>
             <div className="text-xs text-muted-fg tabular-nums">
-              {row.original.startTime.slice(0, 5)} –{" "}
-              {row.original.endTime.slice(0, 5)}
+              {row.original.startTime.slice(0, 5)} – {row.original.endTime.slice(0, 5)}
             </div>
           </div>
         ),
@@ -127,9 +113,7 @@ export default function Reservas() {
       columnHelper.accessor((row) => row.numberOfGuests, {
         id: "guests",
         header: "Comensales",
-        cell: ({ row }) => (
-          <span className="tabular-nums">{row.original.numberOfGuests}</span>
-        ),
+        cell: ({ row }) => <span className="tabular-nums">{row.original.numberOfGuests}</span>,
       }),
       columnHelper.accessor((row) => row.totalPrice, {
         id: "total",
@@ -149,15 +133,12 @@ export default function Reservas() {
         id: "actions",
         header: "Acciones",
         cell: ({ row }) => {
-          const reservation = row.original;
+          const reservation = row.original
           const canCancel =
-            (reservation.status === "Pending" ||
-              reservation.status === "Confirmed") &&
-            can.cancelReservation(role ?? "Employee");
-          const canEdit =
-            reservation.status !== "Completed" &&
-            reservation.status !== "Cancelled";
-          const canDelete = role ? can.deleteReservation(role) : false;
+            (reservation.status === "Pending" || reservation.status === "Confirmed") &&
+            can.cancelReservation(role ?? "Employee")
+          const canEdit = reservation.status !== "Completed" && reservation.status !== "Cancelled"
+          const canDelete = role ? can.deleteReservation(role) : false
 
           return (
             <div className="flex items-center justify-end gap-1">
@@ -190,39 +171,39 @@ export default function Reservas() {
                 <X className="size-4" />
               </Button>
             </div>
-          );
+          )
         },
       }),
     ],
     [navigate, role],
-  );
+  )
 
   const clearFilters = () => {
-    setDate("");
-    setStatus("all");
-    setSearchInput("");
-    setSearchImmediate("");
-    setPage(1);
-  };
+    setDate("")
+    setStatus("all")
+    setSearchInput("")
+    setSearchImmediate("")
+    setPage(1)
+  }
 
   const handleCancel = async () => {
-    if (!reservationToCancel) return;
+    if (!reservationToCancel) return
     await updateReservationMutation.mutateAsync({
       id: reservationToCancel.id,
       dto: { status: "Cancelled" },
-    });
-    setReservationToCancel(null);
-  };
+    })
+    setReservationToCancel(null)
+  }
 
   const handleDelete = async () => {
-    if (!reservationToDelete) return;
-    await deleteReservationMutation.mutateAsync(reservationToDelete.id);
-    setReservationToDelete(null);
-  };
+    if (!reservationToDelete) return
+    await deleteReservationMutation.mutateAsync(reservationToDelete.id)
+    setReservationToDelete(null)
+  }
 
-  const hasError = reservationsQuery.isError;
-  const isLoading = reservationsQuery.isLoading;
-  const isFetching = reservationsQuery.isFetching;
+  const hasError = reservationsQuery.isError
+  const isLoading = reservationsQuery.isLoading
+  const isFetching = reservationsQuery.isFetching
 
   return (
     <main>
@@ -239,24 +220,21 @@ export default function Reservas() {
                 placeholder="Cliente o mesa"
                 value={searchInput}
                 onChange={(e) => {
-                  const nextValue = e.target.value;
-                  setSearchInput(nextValue);
-                  scheduleSearch(nextValue);
-                  setPage(1);
+                  const nextValue = e.target.value
+                  setSearchInput(nextValue)
+                  scheduleSearch(nextValue)
+                  setPage(1)
                 }}
                 className="w-65"
               />
             </FormField>
 
-            <FormField
-              label="Estado"
-              icon={<SlidersHorizontal className="size-3.5" />}
-            >
+            <FormField label="Estado" icon={<SlidersHorizontal className="size-3.5" />}>
               <Select
                 value={status}
                 onValueChange={(v) => {
-                  setStatus(v as StatusFilter);
-                  setPage(1);
+                  setStatus(v as StatusFilter)
+                  setPage(1)
                 }}
               >
                 <SelectTrigger className="w-48 h-11 px-3 rounded-md border border-(--color-border) bg-(--color-surface-card) text-sm text-(--color-muted-fg) font-normal flex items-center justify-between">
@@ -291,16 +269,13 @@ export default function Reservas() {
               </Select>
             </FormField>
 
-            <FormField
-              label="Fecha"
-              icon={<CalendarDays className="size-3.5" />}
-            >
+            <FormField label="Fecha" icon={<CalendarDays className="size-3.5" />}>
               <Input
                 type="date"
                 value={date}
                 onChange={(e) => {
-                  setDate(e.target.value);
-                  setPage(1);
+                  setDate(e.target.value)
+                  setPage(1)
                 }}
                 className="w-40"
               />
@@ -330,10 +305,7 @@ export default function Reservas() {
           <div
             className={cn(
               "transition-opacity duration-150",
-              isFetching &&
-                !isLoading &&
-                reservations.length > 0 &&
-                "opacity-50",
+              isFetching && !isLoading && reservations.length > 0 && "opacity-50",
             )}
           >
             <DataTable
@@ -377,5 +349,5 @@ export default function Reservas() {
         onConfirm={handleDelete}
       />
     </main>
-  );
+  )
 }

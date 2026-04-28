@@ -1,12 +1,12 @@
-import { cn } from "@/lib/utils";
-import type { ReservationStatus, TableStatus, EntityStatus } from "@/types";
+import { cn } from "@/lib/utils"
+import type { EntityStatus, ReservationStatus, TableStatus } from "@/types"
 
-type Status = ReservationStatus | TableStatus | EntityStatus;
+type Status = ReservationStatus | TableStatus | EntityStatus
 
 interface StatusBadgeProps {
-  status: Status;
-  className?: string;
-  customLabel?: string;
+  status: Status
+  className?: string
+  customLabel?: string
 }
 
 const statusConfig: Record<Status, { bg: string; text: string; label: string }> = {
@@ -45,15 +45,11 @@ const statusConfig: Record<Status, { bg: string; text: string; label: string }> 
     text: "text-status-maintenance",
     label: "Mantenimiento",
   },
-};
+}
 
-export function StatusBadge({
-  status,
-  className,
-  customLabel,
-}: StatusBadgeProps) {
-  const config = statusConfig[status];
-  const label = customLabel || config.label;
+export function StatusBadge({ status, className, customLabel }: StatusBadgeProps) {
+  const config = statusConfig[status]
+  const label = customLabel || config.label
 
   return (
     <span
@@ -61,11 +57,11 @@ export function StatusBadge({
         "inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-sm font-medium",
         config.bg,
         config.text,
-        className
+        className,
       )}
     >
       <span className={cn("w-1.5 h-1.5 rounded-full bg-current")} />
       {label}
     </span>
-  );
+  )
 }

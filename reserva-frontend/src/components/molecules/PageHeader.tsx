@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from "react"
 
 interface PageHeaderProps {
-  title: string;
-  description?: string;
-  actions?: ReactNode;
+  title: string
+  description?: string
+  actions?: ReactNode
 }
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
@@ -17,5 +17,5 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
         {actions && <div className="ml-4">{actions}</div>}
       </div>
     </div>
-  );
+  )
 }

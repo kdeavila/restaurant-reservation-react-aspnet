@@ -1,22 +1,28 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, ArrowLeft, Lock, Save, Search, X } from "lucide-react";
-import { PageHeader } from "@/components/molecules/PageHeader";
-import { ErrorState } from "@/components/molecules/ErrorState";
-import { ConfirmDialog } from "@/components/molecules/ConfirmDialog";
-import { PriceSummary } from "@/components/atoms/PriceSummary";
-import { StatusBadge } from "@/components/atoms/StatusBadge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useReservationDetail, useUpdateReservation } from "@/hooks/useReservations";
-import { useAvailableTables } from "@/hooks/useTables";
-import { durationHours, formatCurrency, formatDate, todayISO } from "@/lib/format";
-import type { ReservationStatus, TableDetailed, UpdateReservationDto } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { AlertCircle, ArrowLeft, Lock, Save, Search, X } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { type Resolver, type SubmitHandler, useForm } from "react-hook-form"
+import { useNavigate, useParams } from "react-router-dom"
+import { z } from "zod"
+import { PriceSummary } from "@/components/atoms/PriceSummary"
+import { StatusBadge } from "@/components/atoms/StatusBadge"
+import { ConfirmDialog } from "@/components/molecules/ConfirmDialog"
+import { ErrorState } from "@/components/molecules/ErrorState"
+import { PageHeader } from "@/components/molecules/PageHeader"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useReservationDetail, useUpdateReservation } from "@/hooks/useReservations"
+import { useAvailableTables } from "@/hooks/useTables"
+import { durationHours, formatCurrency, formatDate, todayISO } from "@/lib/format"
+import type { ReservationStatus, TableDetailed, UpdateReservationDto } from "@/types"
 
 const detailSchema = z
   .object({
@@ -35,39 +41,39 @@ const detailSchema = z
   .refine((v) => v.date >= todayISO(), {
     path: ["date"],
     message: "La fecha no puede ser anterior a hoy",
-  });
+  })
 
-type DetailFormValues = z.infer<typeof detailSchema>;
+type DetailFormValues = z.infer<typeof detailSchema>
 
 const nextStatusMap: Record<ReservationStatus, ReservationStatus[]> = {
   Pending: ["Confirmed", "Cancelled"],
   Confirmed: ["Cancelled", "Completed"],
   Completed: [],
   Cancelled: [],
-};
+}
 
 const statusLabel: Record<ReservationStatus, string> = {
   Pending: "Pendiente",
   Confirmed: "Confirmada",
   Completed: "Completada",
   Cancelled: "Cancelada",
-};
+}
 
-const toInputTime = (value: string) => value.slice(0, 5);
-const toBackendTime = (value: string) => (value.length === 5 ? `${value}:00` : value);
+const toInputTime = (value: string) => value.slice(0, 5)
+const toBackendTime = (value: string) => (value.length === 5 ? `${value}:00` : value)
 
 export default function DetalleReserva() {
-  const navigate = useNavigate();
-  const { id } = useParams();
-  const reservationId = Number(id);
-  const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const reservationId = Number(id)
+  const [openCancelDialog, setOpenCancelDialog] = useState(false)
 
-  const detailQuery = useReservationDetail(Number.isFinite(reservationId) ? reservationId : 0);
-  const updateMutation = useUpdateReservation();
+  const detailQuery = useReservationDetail(Number.isFinite(reservationId) ? reservationId : 0)
+  const updateMutation = useUpdateReservation()
 
-  const reservation = detailQuery.data?.data;
-  const currentStatus = reservation?.status;
-  const isLocked = currentStatus === "Completed" || currentStatus === "Cancelled";
+  const reservation = detailQuery.data?.data
+  const currentStatus = reservation?.status
+  const isLocked = currentStatus === "Completed" || currentStatus === "Cancelled"
 
   const {
     register,
@@ -87,31 +93,34 @@ export default function DetalleReserva() {
       notes: "",
       status: "Pending",
     },
-  });
+  })
 
   useEffect(() => {
-    if (!reservation) return;
-    reset({
-      tableId: reservation.table.id,
-      date: reservation.date,
-      startTime: toInputTime(reservation.startTime),
-      endTime: toInputTime(reservation.endTime),
-      numberOfGuests: reservation.numberOfGuests,
-      notes: reservation.notes ?? "",
-      status: reservation.status,
-    }, {
-      keepDefaultValues: true,
-      keepDirty: false,
-      keepValues: false,
-    });
-  }, [reservation]);
+    if (!reservation) return
+    reset(
+      {
+        tableId: reservation.table.id,
+        date: reservation.date,
+        startTime: toInputTime(reservation.startTime),
+        endTime: toInputTime(reservation.endTime),
+        numberOfGuests: reservation.numberOfGuests,
+        notes: reservation.notes ?? "",
+        status: reservation.status,
+      },
+      {
+        keepDefaultValues: true,
+        keepDirty: false,
+        keepValues: false,
+      },
+    )
+  }, [reservation, reset])
 
-  const watchDate = watch("date");
-  const watchStartTime = watch("startTime");
-  const watchEndTime = watch("endTime");
-  const watchGuests = watch("numberOfGuests");
-  const watchTableId = watch("tableId");
-  const watchStatus = watch("status");
+  const watchDate = watch("date")
+  const watchStartTime = watch("startTime")
+  const watchEndTime = watch("endTime")
+  const watchGuests = watch("numberOfGuests")
+  const watchTableId = watch("tableId")
+  const watchStatus = watch("status")
 
   const availableTablesQuery = useAvailableTables(
     {
@@ -121,34 +130,34 @@ export default function DetalleReserva() {
       numberOfGuests: watchGuests,
     },
     { enabled: false },
-  );
+  )
 
   const handleFindTables = () => {
-    availableTablesQuery.refetch();
-  };
+    availableTablesQuery.refetch()
+  }
 
-  const availableTables = availableTablesQuery.data?.data ?? [];
+  const availableTables = availableTablesQuery.data?.data ?? []
 
   const tableOptions = useMemo(() => {
-    if (!reservation) return [] as TableDetailed[];
-    const map = new Map<number, TableDetailed>();
-    map.set(reservation.table.id, reservation.table);
-    for (const table of availableTables) map.set(table.id, table);
-    return Array.from(map.values());
-  }, [availableTables, reservation]);
+    if (!reservation) return [] as TableDetailed[]
+    const map = new Map<number, TableDetailed>()
+    map.set(reservation.table.id, reservation.table)
+    for (const table of availableTables) map.set(table.id, table)
+    return Array.from(map.values())
+  }, [availableTables, reservation])
 
   const selectedTable = useMemo(
     () => tableOptions.find((t) => t.id === watchTableId) ?? reservation?.table,
     [reservation?.table, tableOptions, watchTableId],
-  );
+  )
 
   const currentAndNextStatuses = useMemo(() => {
-    if (!reservation) return [] as ReservationStatus[];
-    return [reservation.status, ...nextStatusMap[reservation.status]];
-  }, [reservation]);
+    if (!reservation) return [] as ReservationStatus[]
+    return [reservation.status, ...nextStatusMap[reservation.status]]
+  }, [reservation])
 
   const onSubmit: SubmitHandler<DetailFormValues> = async (values) => {
-    if (!reservation || isLocked) return;
+    if (!reservation || isLocked) return
     const payload: UpdateReservationDto = {
       tableId: values.tableId,
       date: values.date,
@@ -157,22 +166,31 @@ export default function DetalleReserva() {
       numberOfGuests: values.numberOfGuests,
       notes: values.notes,
       status: values.status,
-    };
-    await updateMutation.mutateAsync({ id: reservation.id, dto: payload });
-  };
+    }
+    await updateMutation.mutateAsync({ id: reservation.id, dto: payload })
+  }
 
   const handleCancelReservation = async () => {
-    if (!reservation || (reservation.status !== "Pending" && reservation.status !== "Confirmed")) return;
-    await updateMutation.mutateAsync({ id: reservation.id, dto: { status: "Cancelled" } });
-    setOpenCancelDialog(false);
-  };
+    if (!reservation || (reservation.status !== "Pending" && reservation.status !== "Confirmed"))
+      return
+    await updateMutation.mutateAsync({ id: reservation.id, dto: { status: "Cancelled" } })
+    setOpenCancelDialog(false)
+  }
 
   if (!Number.isFinite(reservationId) || reservationId <= 0) {
-    return <main className="px-8 py-8"><ErrorState message="ID de reserva inválido." /></main>;
+    return (
+      <main className="px-8 py-8">
+        <ErrorState message="ID de reserva inválido." />
+      </main>
+    )
   }
 
   if (detailQuery.isLoading) {
-    return <main className="px-8 py-8"><div className="surface-card h-64 animate-pulse" /></main>;
+    return (
+      <main className="px-8 py-8">
+        <div className="surface-card h-64 animate-pulse" />
+      </main>
+    )
   }
 
   if (detailQuery.isError || !reservation) {
@@ -180,17 +198,22 @@ export default function DetalleReserva() {
       <main className="px-8 py-8">
         <ErrorState message="No se pudo cargar la reserva." onRetry={() => detailQuery.refetch()} />
       </main>
-    );
+    )
   }
 
-  const canCancel = reservation.status === "Pending" || reservation.status === "Confirmed";
-  const hours = durationHours(toInputTime(reservation.startTime), toInputTime(reservation.endTime));
+  const canCancel = reservation.status === "Pending" || reservation.status === "Confirmed"
+  const hours = durationHours(toInputTime(reservation.startTime), toInputTime(reservation.endTime))
 
   return (
     <main>
       <PageHeader
         title={`Reserva #${reservation.id}`}
-        description={[reservation.createdAt && `Creada el ${formatDate(reservation.createdAt)}`, reservation.user?.username && `por ${reservation.user.username}`].filter(Boolean).join(" ")}
+        description={[
+          reservation.createdAt && `Creada el ${formatDate(reservation.createdAt)}`,
+          reservation.user?.username && `por ${reservation.user.username}`,
+        ]
+          .filter(Boolean)
+          .join(" ")}
         actions={
           <>
             <Button variant="ghost" size="sm" onClick={() => navigate("/reservas")}>
@@ -206,14 +229,17 @@ export default function DetalleReserva() {
         <div className="mx-8 mt-6 flex items-center gap-3 rounded-lg border bg-surface-elevated px-4 py-3 text-sm text-muted-fg">
           <Lock className="size-4 shrink-0" />
           <span>
-            Esta reserva está <strong className="text-foreground">{currentStatus === "Completed" ? "completada" : "cancelada"}</strong> y no puede modificarse.
+            Esta reserva está{" "}
+            <strong className="text-foreground">
+              {currentStatus === "Completed" ? "completada" : "cancelada"}
+            </strong>{" "}
+            y no puede modificarse.
           </span>
         </div>
       )}
 
       <div className="p-8 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         <div className="space-y-5">
-
           {/* Cliente — solo lectura */}
           <section className="surface-card p-5">
             <h3 className="font-display text-lg font-semibold mb-4">Cliente</h3>
@@ -243,7 +269,7 @@ export default function DetalleReserva() {
             <fieldset disabled={isLocked} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 space-y-1.5">
-                  <label className="text-sm font-medium">Mesa</label>
+                  <p className="text-sm font-medium">Mesa</p>
                   <div className="flex gap-2">
                     <Select
                       value={String(watchTableId)}
@@ -279,45 +305,62 @@ export default function DetalleReserva() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Fecha</label>
-                  <Input type="date" min={todayISO()} {...register("date")} />
+                  <label htmlFor="detail-reservation-date" className="text-sm font-medium">
+                    Fecha
+                  </label>
+                  <Input
+                    id="detail-reservation-date"
+                    type="date"
+                    min={todayISO()}
+                    {...register("date")}
+                  />
                   {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Comensales</label>
+                  <p className="text-sm font-medium">Comensales</p>
                   <Input type="number" min={1} {...register("numberOfGuests")} />
-                  {errors.numberOfGuests && <p className="text-xs text-destructive">{errors.numberOfGuests.message}</p>}
+                  {errors.numberOfGuests && (
+                    <p className="text-xs text-destructive">{errors.numberOfGuests.message}</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Hora inicio</label>
+                  <p className="text-sm font-medium">Hora inicio</p>
                   <Input type="time" {...register("startTime")} />
-                  {errors.startTime && <p className="text-xs text-destructive">{errors.startTime.message}</p>}
+                  {errors.startTime && (
+                    <p className="text-xs text-destructive">{errors.startTime.message}</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-sm font-medium">Hora fin</label>
+                  <p className="text-sm font-medium">Hora fin</p>
                   <Input type="time" {...register("endTime")} />
-                  {errors.endTime && <p className="text-xs text-destructive">{errors.endTime.message}</p>}
+                  {errors.endTime && (
+                    <p className="text-xs text-destructive">{errors.endTime.message}</p>
+                  )}
                 </div>
 
                 <div className="col-span-2 space-y-1.5">
-                  <label className="text-sm font-medium">Estado</label>
+                  <p className="text-sm font-medium">Estado</p>
                   <Select
                     value={watchStatus}
-                    onValueChange={(v) => setValue("status", v as DetailFormValues["status"], { shouldDirty: true })}
+                    onValueChange={(v) =>
+                      setValue("status", v as DetailFormValues["status"], { shouldDirty: true })
+                    }
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {currentAndNextStatuses.map((s) => (
-                        <SelectItem key={s} value={s}>{statusLabel[s]}</SelectItem>
+                        <SelectItem key={s} value={s}>
+                          {statusLabel[s]}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="col-span-2 space-y-1.5">
-                  <label className="text-sm font-medium">Notas</label>
+                  <p className="text-sm font-medium">Notas</p>
                   <Textarea className="min-h-22.5" {...register("notes")} />
                 </div>
               </div>
@@ -385,11 +428,15 @@ export default function DetalleReserva() {
             <div className="mt-5 space-y-1 border-t pt-5 text-xs text-muted-fg">
               <div className="flex justify-between">
                 <span>Precio base</span>
-                <span className="tabular-nums font-medium text-foreground">{formatCurrency(reservation.basePrice)}</span>
+                <span className="tabular-nums font-medium text-foreground">
+                  {formatCurrency(reservation.basePrice)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Total cobrado</span>
-                <span className="tabular-nums font-medium text-foreground">{formatCurrency(reservation.totalPrice)}</span>
+                <span className="tabular-nums font-medium text-foreground">
+                  {formatCurrency(reservation.totalPrice)}
+                </span>
               </div>
             </div>
           </div>
@@ -407,7 +454,7 @@ export default function DetalleReserva() {
         onConfirm={handleCancelReservation}
       />
     </main>
-  );
+  )
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -416,5 +463,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <dt className="text-[11px] uppercase tracking-wider text-muted-fg mb-1">{label}</dt>
       <dd className="font-medium">{children}</dd>
     </div>
-  );
+  )
 }

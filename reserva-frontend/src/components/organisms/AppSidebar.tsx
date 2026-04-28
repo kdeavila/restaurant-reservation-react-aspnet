@@ -1,35 +1,35 @@
-import { useNavigate, useLocation } from "react-router-dom";
 import {
-  UtensilsCrossed,
+  Armchair,
   CalendarRange,
   ClipboardList,
-  Users,
-  Armchair,
-  Tag,
+  LogOut,
   Percent,
   ShieldCheck,
-  LogOut,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { RoleBadge } from "@/components/atoms/RoleBadge";
-import { useAuthStore } from "@/store/auth.store";
-import { can } from "@/lib/permissions";
-import { cn } from "@/lib/utils";
+  Tag,
+  Users,
+  UtensilsCrossed,
+} from "lucide-react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { RoleBadge } from "@/components/atoms/RoleBadge"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { can } from "@/lib/permissions"
+import { cn } from "@/lib/utils"
+import { useAuthStore } from "@/store/auth.store"
 
 interface NavItem {
-  path: string;
-  label: string;
-  icon: React.ReactNode;
-  show?: boolean;
+  path: string
+  label: string
+  icon: React.ReactNode
+  show?: boolean
 }
 
 export function AppSidebar() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user, role, clearSession } = useAuthStore();
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { user, role, clearSession } = useAuthStore()
 
-  if (!user || !role) return null;
+  if (!user || !role) return null
 
   const initials = user.username
     .split(" ")
@@ -37,7 +37,7 @@ export function AppSidebar() {
     .map((n) => n[0])
     .join("")
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2)
 
   const navItems: NavItem[] = [
     {
@@ -76,12 +76,12 @@ export function AppSidebar() {
       icon: <ShieldCheck className="w-5 h-5" />,
       show: can.seeUsers(role),
     },
-  ];
+  ]
 
   const handleLogout = () => {
-    clearSession();
-    navigate("/login");
-  };
+    clearSession()
+    navigate("/login")
+  }
 
   return (
     <aside className="w-60 fixed inset-y-0 left-0 bg-sidebar text-sidebar-fg flex flex-col">
@@ -91,9 +91,7 @@ export function AppSidebar() {
           <UtensilsCrossed className="w-6 h-6 text-primary" />
           <div>
             <div className="font-display font-bold text-lg">Ristorante</div>
-            <div className="text-xs uppercase tracking-widest text-sidebar-muted">
-              Reservas
-            </div>
+            <div className="text-xs uppercase tracking-widest text-sidebar-muted">Reservas</div>
           </div>
         </div>
       </div>
@@ -141,20 +139,21 @@ export function AppSidebar() {
         </Button>
       </div>
     </aside>
-  );
+  )
 }
 
 interface NavLinkProps {
-  path: string;
-  label: string;
-  icon: React.ReactNode;
-  isActive: boolean;
-  onNavigate: (path: string) => void;
+  path: string
+  label: string
+  icon: React.ReactNode
+  isActive: boolean
+  onNavigate: (path: string) => void
 }
 
 function NavLink({ path, label, icon, isActive, onNavigate }: NavLinkProps) {
   return (
     <button
+      type="button"
       onClick={() => onNavigate(path)}
       className={cn(
         "flex items-center gap-3 px-4 py-2.5 rounded-md text-sm font-medium transition-colors w-full",
@@ -165,5 +164,5 @@ function NavLink({ path, label, icon, isActive, onNavigate }: NavLinkProps) {
       {icon}
       <span>{label}</span>
     </button>
-  );
+  )
 }

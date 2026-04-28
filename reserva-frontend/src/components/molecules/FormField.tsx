@@ -1,26 +1,19 @@
-import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import type { ReactNode } from "react"
+import { cn } from "@/lib/utils"
 
 interface FormFieldProps {
-  label: string;
-  icon?: ReactNode;
-  error?: string;
-  required?: boolean;
-  children: ReactNode;
-  className?: string;
+  label: string
+  icon?: ReactNode
+  error?: string
+  required?: boolean
+  children: ReactNode
+  className?: string
 }
 
-export function FormField({
-  label,
-  icon,
-  error,
-  required,
-  children,
-  className,
-}: FormFieldProps) {
+export function FormField({ label, icon, error, required, children, className }: FormFieldProps) {
   return (
     <div className={cn("space-y-1.5", className)}>
-      <label
+      <div
         className={cn(
           "flex items-center gap-1.5",
           icon
@@ -31,9 +24,9 @@ export function FormField({
         {icon}
         {label}
         {required && <span className="text-destructive ml-0.5">*</span>}
-      </label>
+      </div>
       {children}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
-  );
+  )
 }

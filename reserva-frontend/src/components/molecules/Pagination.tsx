@@ -1,21 +1,21 @@
-import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 interface PaginationProps {
-  page: number;
-  pageSize: number;
-  totalCount: number;
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
-  className?: string;
+  page: number
+  pageSize: number
+  totalCount: number
+  onPageChange: (page: number) => void
+  onPageSizeChange: (size: number) => void
+  className?: string
 }
 
 export function Pagination({
@@ -26,16 +26,16 @@ export function Pagination({
   onPageSizeChange,
   className,
 }: PaginationProps) {
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const start = (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, totalCount);
-  const hasNoun = totalCount !== 1;
+  const totalPages = Math.ceil(totalCount / pageSize)
+  const start = (page - 1) * pageSize + 1
+  const end = Math.min(page * pageSize, totalCount)
+  const hasNoun = totalCount !== 1
 
   return (
     <div
       className={cn(
         "flex justify-between items-center px-8 py-4 border-t border-border/60",
-        className
+        className,
       )}
     >
       <div className="text-sm text-muted-fg">
@@ -47,10 +47,13 @@ export function Pagination({
           <label htmlFor="pageSize" className="text-sm text-muted-fg">
             Filas:
           </label>
-          <Select value={String(pageSize)} onValueChange={(v) => {
-            onPageSizeChange(Number(v));
-            onPageChange(1);
-          }}>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => {
+              onPageSizeChange(Number(v))
+              onPageChange(1)
+            }}
+          >
             <SelectTrigger className="w-16">
               <SelectValue />
             </SelectTrigger>
@@ -87,5 +90,5 @@ export function Pagination({
         </div>
       </div>
     </div>
-  );
+  )
 }

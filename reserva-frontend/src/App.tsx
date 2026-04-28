@@ -1,13 +1,13 @@
-import { useEffect } from "react";
-import { AppSidebar } from "@/components/organisms/AppSidebar";
-import { useAuthStore } from "@/store/auth.store";
-import type { AuthUser } from "@/types";
+import { useEffect } from "react"
+import { AppSidebar } from "@/components/organisms/AppSidebar"
+import { useAuthStore } from "@/store/auth.store"
+import type { AuthUser } from "@/types"
 
 function App() {
-  const { user } = useAuthStore();
+  const { user } = useAuthStore()
 
   useEffect(() => {
-    if (user) return;
+    if (user) return
 
     const previewUser: AuthUser = {
       id: 1,
@@ -17,10 +17,10 @@ function App() {
       status: "Active",
       token: "preview-token",
       tokenExpiry: new Date(Date.now() + 1000 * 60 * 60).toISOString(),
-    };
+    }
 
-    useAuthStore.getState().setSession(previewUser);
-  }, [user]);
+    useAuthStore.getState().setSession(previewUser)
+  }, [user])
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -34,7 +34,7 @@ function App() {
         </section>
       </main>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App

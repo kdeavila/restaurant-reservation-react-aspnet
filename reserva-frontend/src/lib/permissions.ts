@@ -1,4 +1,4 @@
-import type { Role } from "@/types";
+import type { Role } from "@/types"
 
 export const can = {
   deleteReservation: (r: Role) => r === "Admin" || r === "Manager",
@@ -10,4 +10,4 @@ export const can = {
   editPricingRules: (r: Role) => r === "Admin" || r === "Manager",
   seeUsers: (r: Role) => r === "Admin",
   createUser: (r: Role) => r === "Admin",
-};
+}

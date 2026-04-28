@@ -9,4 +9,4 @@ export const qk = {
   tableType: (id: number) => ["table-types", id] as const,
   pricingRules: () => ["pricing-rules"] as const,
   users: () => ["users"] as const,
-};
+}

@@ -1,12 +1,12 @@
-import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency } from "@/lib/format"
+import { cn } from "@/lib/utils"
 
 interface PriceSummaryProps {
-  basePrice: number;
-  totalPrice?: number;
-  hours?: number;
-  pendingNote?: boolean;
-  className?: string;
+  basePrice: number
+  totalPrice?: number
+  hours?: number
+  pendingNote?: boolean
+  className?: string
 }
 
 export function PriceSummary({
@@ -16,8 +16,7 @@ export function PriceSummary({
   pendingNote,
   className,
 }: PriceSummaryProps): React.ReactNode {
-  const surcharge =
-    totalPrice != null ? Math.max(0, totalPrice - basePrice) : null;
+  const surcharge = totalPrice != null ? Math.max(0, totalPrice - basePrice) : null
 
   return (
     <dl className={cn("space-y-2.5 text-sm", className)}>
@@ -30,16 +29,12 @@ export function PriceSummary({
 
       <div className="flex justify-between">
         <dt className="text-[color:var(--color-muted-fg)]">Precio base</dt>
-        <dd className="tabular-nums font-medium">
-          {formatCurrency(Math.max(0, basePrice))}
-        </dd>
+        <dd className="tabular-nums font-medium">{formatCurrency(Math.max(0, basePrice))}</dd>
       </div>
 
       {surcharge !== null && surcharge > 0 && (
         <div className="flex justify-between">
-          <dt className="text-[color:var(--color-muted-fg)]">
-            Recargos aplicados
-          </dt>
+          <dt className="text-[color:var(--color-muted-fg)]">Recargos aplicados</dt>
           <dd className="tabular-nums font-medium text-[color:var(--color-primary)]">
             + {formatCurrency(surcharge)}
           </dd>
@@ -59,5 +54,5 @@ export function PriceSummary({
         </p>
       )}
     </dl>
-  );
+  )
 }

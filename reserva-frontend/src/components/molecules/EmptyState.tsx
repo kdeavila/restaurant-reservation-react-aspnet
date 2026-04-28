@@ -1,14 +1,14 @@
-import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import type { ReactNode } from "react"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface EmptyStateProps {
-  icon?: ReactNode;
-  title: string;
-  description?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-  className?: string;
+  icon?: ReactNode
+  title: string
+  description?: string
+  actionLabel?: string
+  onAction?: () => void
+  className?: string
 }
 
 export function EmptyState({
@@ -21,10 +21,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={cn(
-        "flex flex-col items-center justify-center gap-4 py-12 text-center",
-        className
-      )}
+      className={cn("flex flex-col items-center justify-center gap-4 py-12 text-center", className)}
     >
       {icon && (
         <div className="flex items-center justify-center w-16 h-16 rounded-full bg-muted">
@@ -41,5 +38,5 @@ export function EmptyState({
         </Button>
       )}
     </div>
-  );
+  )
 }

@@ -1,19 +1,19 @@
-import { useNavigate } from "react-router-dom";
-import { MapPin, Users } from "lucide-react";
-import type { TableDetailed } from "@/types";
-import { formatCurrency } from "@/lib/format";
-import { Button } from "@/components/ui/button";
+import { MapPin, Users } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { Button } from "@/components/ui/button"
+import { formatCurrency } from "@/lib/format"
+import type { TableDetailed } from "@/types"
 
 interface TableCardProps {
-  table: TableDetailed;
-  date: string;
-  startTime: string;
-  endTime: string;
-  numberOfGuests: number;
+  table: TableDetailed
+  date: string
+  startTime: string
+  endTime: string
+  numberOfGuests: number
 }
 
 export function TableCard({ table, date, startTime, endTime, numberOfGuests }: TableCardProps) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
   return (
     <article className="surface-card flex h-full flex-col justify-between p-5 transition-shadow hover:shadow-elevated">
@@ -56,5 +56,5 @@ export function TableCard({ table, date, startTime, endTime, numberOfGuests }: T
         Reservar esta mesa
       </Button>
     </article>
-  );
+  )
 }

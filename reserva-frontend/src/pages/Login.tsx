@@ -1,26 +1,26 @@
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Eye, EyeOff, UtensilsCrossed } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useLogin } from "@/hooks/useAuth";
-import { FormField } from "@/components/molecules/FormField";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { Eye, EyeOff, UtensilsCrossed } from "lucide-react"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
+import { z } from "zod"
+import { FormField } from "@/components/molecules/FormField"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useLogin } from "@/hooks/useAuth"
 
 const loginSchema = z.object({
   email: z.string().email("Correo electrónico inválido"),
   password: z.string().min(1, "La contraseña es requerida"),
-});
+})
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormValues = z.infer<typeof loginSchema>
 
 export default function Login() {
-  const navigate = useNavigate();
-  const loginMutation = useLogin();
-  const [showPassword, setShowPassword] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
+  const navigate = useNavigate()
+  const loginMutation = useLogin()
+  const [showPassword, setShowPassword] = useState(false)
+  const [formError, setFormError] = useState<string | null>(null)
 
   const {
     register,
@@ -29,18 +29,18 @@ export default function Login() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
-  });
+  })
 
   const onSubmit = async (values: LoginFormValues) => {
-    setFormError(null);
+    setFormError(null)
 
     try {
-      await loginMutation.mutateAsync(values);
-      navigate("/disponibilidad");
+      await loginMutation.mutateAsync(values)
+      navigate("/disponibilidad")
     } catch {
-      setFormError("Credenciales inválidas. Verifica tu correo y contraseña.");
+      setFormError("Credenciales inválidas. Verifica tu correo y contraseña.")
     }
-  };
+  }
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
@@ -92,8 +92,10 @@ export default function Login() {
           {formError && <p className="text-sm text-destructive">{formError}</p>}
         </form>
 
-        <p className="mt-6 text-center text-sm text-muted-fg">¿Nuevo miembro? Contacta al administrador</p>
+        <p className="mt-6 text-center text-sm text-muted-fg">
+          ¿Nuevo miembro? Contacta al administrador
+        </p>
       </section>
     </main>
-  );
+  )
 }

@@ -1,94 +1,109 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap");
 @import "tailwindcss";
 
 @theme {
   /* Surfaces */
-  --color-background:           hsl(36 33% 97%);
-  --color-surface-card:         hsl(0 0% 100%);
-  --color-surface-elevated:     hsl(36 25% 94%);
+  --color-background: hsl(36 33% 97%);
+  --color-surface-card: hsl(0 0% 100%);
+  --color-surface-elevated: hsl(36 25% 94%);
 
   /* Brand */
-  --color-primary:              hsl(11 47% 52%);
-  --color-primary-hover:        hsl(11 47% 46%);
-  --color-primary-fg:           hsl(36 33% 97%);
-  --color-secondary:            hsl(113 14% 42%);
-  --color-secondary-fg:         hsl(36 33% 97%);
-  --color-accent:               hsl(36 25% 92%);
+  --color-primary: hsl(11 47% 52%);
+  --color-primary-hover: hsl(11 47% 46%);
+  --color-primary-fg: hsl(36 33% 97%);
+  --color-secondary: hsl(113 14% 42%);
+  --color-secondary-fg: hsl(36 33% 97%);
+  --color-accent: hsl(36 25% 92%);
 
   /* Sidebar */
-  --color-sidebar:              hsl(240 5% 11%);
-  --color-sidebar-fg:           hsl(36 25% 88%);
-  --color-sidebar-muted:        hsl(36 10% 60%);
-  --color-sidebar-accent:       hsl(240 4% 18%);
-  --color-sidebar-accent-fg:    hsl(36 33% 97%);
-  --color-sidebar-border:       hsl(240 4% 20%);
+  --color-sidebar: hsl(240 5% 11%);
+  --color-sidebar-fg: hsl(36 25% 88%);
+  --color-sidebar-muted: hsl(36 10% 60%);
+  --color-sidebar-accent: hsl(240 4% 18%);
+  --color-sidebar-accent-fg: hsl(36 33% 97%);
+  --color-sidebar-border: hsl(240 4% 20%);
 
   /* Neutrals */
-  --color-foreground:           hsl(240 6% 11%);
-  --color-muted:                hsl(36 15% 92%);
-  --color-muted-fg:             hsl(240 5% 38%);
-  --color-border:               hsl(36 18% 88%);
-  --color-destructive:          hsl(0 73% 51%);
-  --color-destructive-fg:       hsl(0 0% 100%);
+  --color-foreground: hsl(240 6% 11%);
+  --color-muted: hsl(36 15% 92%);
+  --color-muted-fg: hsl(240 5% 38%);
+  --color-border: hsl(36 18% 88%);
+  --color-destructive: hsl(0 73% 51%);
+  --color-destructive-fg: hsl(0 0% 100%);
 
   /* Status */
-  --color-status-pending:        hsl(32 95% 44%);
-  --color-status-pending-bg:     hsl(32 95% 94%);
-  --color-status-confirmed:      hsl(142 71% 36%);
-  --color-status-confirmed-bg:   hsl(142 71% 92%);
-  --color-status-completed:      hsl(220 9% 46%);
-  --color-status-completed-bg:   hsl(220 9% 92%);
-  --color-status-cancelled:      hsl(0 73% 51%);
-  --color-status-cancelled-bg:   hsl(0 73% 95%);
-  --color-status-maintenance:    hsl(21 90% 48%);
+  --color-status-pending: hsl(32 95% 44%);
+  --color-status-pending-bg: hsl(32 95% 94%);
+  --color-status-confirmed: hsl(142 71% 36%);
+  --color-status-confirmed-bg: hsl(142 71% 92%);
+  --color-status-completed: hsl(220 9% 46%);
+  --color-status-completed-bg: hsl(220 9% 92%);
+  --color-status-cancelled: hsl(0 73% 51%);
+  --color-status-cancelled-bg: hsl(0 73% 95%);
+  --color-status-maintenance: hsl(21 90% 48%);
   --color-status-maintenance-bg: hsl(21 90% 94%);
-  --color-status-active:         hsl(142 71% 36%);
-  --color-status-active-bg:      hsl(142 71% 92%);
-  --color-status-inactive:       hsl(220 9% 46%);
-  --color-status-inactive-bg:    hsl(220 9% 92%);
+  --color-status-active: hsl(142 71% 36%);
+  --color-status-active-bg: hsl(142 71% 92%);
+  --color-status-inactive: hsl(220 9% 46%);
+  --color-status-inactive-bg: hsl(220 9% 92%);
 
   /* shadcn/ui compatibility aliases */
-  --color-primary-foreground:    hsl(36 33% 97%);
-  --color-secondary-foreground:  hsl(36 33% 97%);
-  --color-muted-foreground:      hsl(240 5% 38%);
-  --color-destructive-foreground:hsl(0 0% 100%);
-  --color-accent-foreground:     hsl(240 6% 11%);
-  --color-popover:               hsl(0 0% 100%);
-  --color-popover-foreground:    hsl(240 6% 11%);
-  --color-card:                  hsl(0 0% 100%);
-  --color-card-foreground:       hsl(240 6% 11%);
-  --color-input:                 hsl(36 18% 88%);
-  --color-ring:                  hsl(11 47% 52%);
+  --color-primary-foreground: hsl(36 33% 97%);
+  --color-secondary-foreground: hsl(36 33% 97%);
+  --color-muted-foreground: hsl(240 5% 38%);
+  --color-destructive-foreground: hsl(0 0% 100%);
+  --color-accent-foreground: hsl(240 6% 11%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(240 6% 11%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(240 6% 11%);
+  --color-input: hsl(36 18% 88%);
+  --color-ring: hsl(11 47% 52%);
 
   /* Typography */
-  --font-sans:    "Inter", system-ui, sans-serif;
+  --font-sans: "Inter", system-ui, sans-serif;
   --font-display: "Plus Jakarta Sans", system-ui, sans-serif;
 
   /* Radius and shadows */
-  --radius:          0.625rem;
-  --radius-sm:       calc(var(--radius) - 4px);
-  --radius-md:       calc(var(--radius) - 2px);
-  --radius-lg:       var(--radius);
-  --radius-xl:       calc(var(--radius) + 4px);
-  --shadow-card:     0 1px 2px hsl(240 6% 11% / 0.04), 0 4px 12px hsl(240 6% 11% / 0.04);
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --shadow-card: 0 1px 2px hsl(240 6% 11% / 0.04), 0 4px 12px hsl(240 6% 11% / 0.04);
   --shadow-elevated: 0 4px 16px hsl(240 6% 11% / 0.08), 0 12px 32px hsl(240 6% 11% / 0.06);
-  --shadow-cta:      0 4px 14px hsl(11 47% 52% / 0.28);
+  --shadow-cta: 0 4px 14px hsl(11 47% 52% / 0.28);
 }
 
 @layer base {
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
     border-color: var(--color-border);
   }
-  html, body, #root { min-height: 100vh; }
+  html,
+  body,
+  #root {
+    min-height: 100vh;
+  }
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
-  ::selection { background: color-mix(in srgb, var(--color-primary) 20%, transparent); }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-display);
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
 }
 
 @layer components {

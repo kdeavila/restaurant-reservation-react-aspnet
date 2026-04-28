@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
-import { useForm, type Resolver, type SubmitHandler } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { FormField } from "@/components/molecules/FormField";
-import { PageHeader } from "@/components/molecules/PageHeader";
-import { ClientSearchSelect } from "@/components/molecules/ClientSearchSelect";
-import { PriceSummary } from "@/components/atoms/PriceSummary";
-import { useCreateReservation } from "@/hooks/useReservations";
-import { useTableDetail } from "@/hooks/useTables";
-import { durationHours, formatCurrency, formatDate, todayISO } from "@/lib/format";
-import type { Client, TableDetailed } from "@/types";
+import { zodResolver } from "@hookform/resolvers/zod"
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
+import { useEffect, useState } from "react"
+import { type Resolver, type SubmitHandler, useForm } from "react-hook-form"
+import { useLocation, useNavigate } from "react-router-dom"
+import { z } from "zod"
+import { PriceSummary } from "@/components/atoms/PriceSummary"
+import { ClientSearchSelect } from "@/components/molecules/ClientSearchSelect"
+import { FormField } from "@/components/molecules/FormField"
+import { PageHeader } from "@/components/molecules/PageHeader"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { useCreateReservation } from "@/hooks/useReservations"
+import { useTableDetail } from "@/hooks/useTables"
+import { durationHours, formatCurrency, formatDate, todayISO } from "@/lib/format"
+import type { Client, TableDetailed } from "@/types"
 
 const createReservaSchema = z
   .object({
@@ -33,33 +33,33 @@ const createReservaSchema = z
   .refine((v) => durationHours(v.startTime, v.endTime) >= 0.5, {
     path: ["endTime"],
     message: "La duración mínima es 30 minutos",
-  });
+  })
 
-type CreateReservaFormValues = z.infer<typeof createReservaSchema>;
+type CreateReservaFormValues = z.infer<typeof createReservaSchema>
 
 interface LocationState {
-  tableId?: number;
-  date?: string;
-  startTime?: string;
-  endTime?: string;
-  numberOfGuests?: number;
+  tableId?: number
+  date?: string
+  startTime?: string
+  endTime?: string
+  numberOfGuests?: number
 }
 
 export default function CrearReserva() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const state = (location.state || {}) as LocationState;
+  const navigate = useNavigate()
+  const location = useLocation()
+  const state = (location.state || {}) as LocationState
 
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [selectedTable, setSelectedTable] = useState<TableDetailed | null>(null);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
+  const [selectedTable, setSelectedTable] = useState<TableDetailed | null>(null)
 
-  const createMutation = useCreateReservation();
-  const tableDetailQuery = useTableDetail(state.tableId ?? 0);
+  const createMutation = useCreateReservation()
+  const tableDetailQuery = useTableDetail(state.tableId ?? 0)
 
-  const defaultDate = state.date ?? todayISO();
-  const defaultStartTime = state.startTime ?? "19:00";
-  const defaultEndTime = state.endTime ?? "21:00";
-  const defaultGuests = state.numberOfGuests ?? 2;
+  const defaultDate = state.date ?? todayISO()
+  const defaultStartTime = state.startTime ?? "19:00"
+  const defaultEndTime = state.endTime ?? "21:00"
+  const defaultGuests = state.numberOfGuests ?? 2
 
   const {
     register,
@@ -78,23 +78,23 @@ export default function CrearReserva() {
       numberOfGuests: defaultGuests,
       notes: "",
     },
-  });
+  })
 
-  const watchDate = watch("date");
-  const watchStartTime = watch("startTime");
-  const watchEndTime = watch("endTime");
-  const watchClientId = watch("clientId");
+  const watchDate = watch("date")
+  const watchStartTime = watch("startTime")
+  const watchEndTime = watch("endTime")
+  const watchClientId = watch("clientId")
 
   useEffect(() => {
     if (state.tableId && tableDetailQuery.data?.data) {
-      setSelectedTable(tableDetailQuery.data.data);
+      setSelectedTable(tableDetailQuery.data.data)
     }
-  }, [state.tableId, tableDetailQuery.data]);
+  }, [state.tableId, tableDetailQuery.data])
 
-  const hours = durationHours(watchStartTime, watchEndTime);
+  const hours = durationHours(watchStartTime, watchEndTime)
   const basePrice = selectedTable
     ? selectedTable.tableType.basePricePerHour * Math.max(0, hours)
-    : 0;
+    : 0
 
   const onSubmit: SubmitHandler<CreateReservaFormValues> = async (values) => {
     try {
@@ -106,15 +106,15 @@ export default function CrearReserva() {
         endTime: values.endTime,
         numberOfGuests: values.numberOfGuests,
         notes: values.notes,
-      });
+      })
 
       if (response.data?.id) {
-        navigate(`/reservas/${response.data.id}`);
+        navigate(`/reservas/${response.data.id}`)
       }
     } catch (error) {
-      console.error("Error creating reservation:", error);
+      console.error("Error creating reservation:", error)
     }
-  };
+  }
 
   return (
     <main>
@@ -134,17 +134,19 @@ export default function CrearReserva() {
           <input type="hidden" {...register("clientId")} />
           <section className="surface-card p-5 space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">1</div>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                1
+              </div>
               <h3 className="font-display text-lg font-semibold">Cliente</h3>
             </div>
             <ClientSearchSelect
               value={watchClientId || null}
               onChange={(id, client) => {
-                setSelectedClient(client);
+                setSelectedClient(client)
                 if (id) {
-                  setValue("clientId", id);
+                  setValue("clientId", id)
                 } else {
-                  setValue("clientId", 0);
+                  setValue("clientId", 0)
                 }
               }}
             />
@@ -152,7 +154,9 @@ export default function CrearReserva() {
 
           <section className="surface-card p-5 space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">2</div>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                2
+              </div>
               <h3 className="font-display text-lg font-semibold">Mesa y horario</h3>
             </div>
 
@@ -203,11 +207,16 @@ export default function CrearReserva() {
 
           <section className="surface-card p-5 space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">3</div>
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold shrink-0">
+                3
+              </div>
               <h3 className="font-display text-lg font-semibold">Notas</h3>
             </div>
             <FormField label="Notas adicionales" error={errors.notes?.message}>
-              <Textarea placeholder="Ej: aniversario, petición especial..." {...register("notes")} />
+              <Textarea
+                placeholder="Ej: aniversario, petición especial..."
+                {...register("notes")}
+              />
             </FormField>
           </section>
         </form>
@@ -227,9 +236,7 @@ export default function CrearReserva() {
                 {selectedTable ? (
                   <span>
                     {selectedTable.code} ·{" "}
-                    <span className="text-(--color-muted-fg)">
-                      {selectedTable.tableType.name}
-                    </span>
+                    <span className="text-(--color-muted-fg)">{selectedTable.tableType.name}</span>
                   </span>
                 ) : (
                   <Muted>Sin seleccionar</Muted>
@@ -240,7 +247,12 @@ export default function CrearReserva() {
                 {watchStartTime} – {watchEndTime}
               </Row>
               <Row label="Comensales">
-                {watch("numberOfGuests")} {selectedTable && <span className="text-sm text-(--color-muted-fg)">máx {selectedTable.capacity}</span>}
+                {watch("numberOfGuests")}{" "}
+                {selectedTable && (
+                  <span className="text-sm text-(--color-muted-fg)">
+                    máx {selectedTable.capacity}
+                  </span>
+                )}
               </Row>
             </dl>
 
@@ -264,43 +276,25 @@ export default function CrearReserva() {
                 </>
               )}
             </Button>
-            <Button
-              variant="ghost"
-              className="w-full mt-2"
-              onClick={() => navigate(-1)}
-            >
+            <Button variant="ghost" className="w-full mt-2" onClick={() => navigate(-1)}>
               Cancelar
             </Button>
           </div>
         </aside>
       </section>
     </main>
-  );
+  )
 }
 
-function Row({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}): React.ReactNode {
+function Row({ label, children }: { label: string; children: React.ReactNode }): React.ReactNode {
   return (
     <div className="flex justify-between gap-3">
       <dt className="text-(--color-muted-fg) shrink-0">{label}</dt>
       <dd className="text-right font-medium">{children}</dd>
     </div>
-  );
+  )
 }
 
-function Muted({
-  children,
-}: {
-  children: React.ReactNode;
-}): React.ReactNode {
-  return (
-    <span className="text-(--color-muted-fg) italic font-normal">
-      {children}
-    </span>
-  );
+function Muted({ children }: { children: React.ReactNode }): React.ReactNode {
+  return <span className="text-(--color-muted-fg) italic font-normal">{children}</span>
 }

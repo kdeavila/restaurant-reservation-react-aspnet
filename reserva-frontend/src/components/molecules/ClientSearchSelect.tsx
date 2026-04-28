@@ -1,97 +1,84 @@
-import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Search, X } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { StatusBadge } from "@/components/atoms/StatusBadge";
-import type { Client } from "@/types";
-import { useClientList } from "@/hooks/useClients";
-import { usePacerDebouncedValue } from "@/hooks/usePacerDebouncedValue";
+import { Check, ChevronsUpDown, Search, X } from "lucide-react"
+import { useMemo, useState } from "react"
+import { StatusBadge } from "@/components/atoms/StatusBadge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { useClientList } from "@/hooks/useClients"
+import { usePacerDebouncedValue } from "@/hooks/usePacerDebouncedValue"
+import { cn } from "@/lib/utils"
+import type { Client } from "@/types"
 
 interface ClientSearchSelectProps {
-  value: number | null;
-  onChange: (id: number | null, client: Client | null) => void;
-  className?: string;
+  value: number | null
+  onChange: (id: number | null, client: Client | null) => void
+  className?: string
 }
 
-const EMPTY_CLIENTS: Client[] = [];
+const EMPTY_CLIENTS: Client[] = []
 
-export function ClientSearchSelect({
-  value,
-  onChange,
-  className,
-}: ClientSearchSelectProps) {
-  const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState("");
-  const [selectedClientState, setSelectedClientState] = useState<Client | null>(
-    null,
-  );
+export function ClientSearchSelect({ value, onChange, className }: ClientSearchSelectProps) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState("")
+  const [selectedClientState, setSelectedClientState] = useState<Client | null>(null)
 
   const {
     debouncedValue: debouncedSearch,
     schedule: scheduleSearch,
     setImmediate: setSearchImmediate,
-  } = usePacerDebouncedValue("", { wait: 350 });
+  } = usePacerDebouncedValue("", { wait: 350 })
 
   const { data: listData } = useClientList({
     firstName: debouncedSearch,
     pageSize: 10,
-  });
+  })
 
-  const clients = useMemo(
-    () => listData?.data ?? EMPTY_CLIENTS,
-    [listData?.data],
-  );
+  const clients = useMemo(() => listData?.data ?? EMPTY_CLIENTS, [listData?.data])
 
   const selectedClient = useMemo(() => {
     if (value == null) {
-      return null;
+      return null
     }
 
     if (selectedClientState?.id === value) {
-      return selectedClientState;
+      return selectedClientState
     }
 
-    return clients.find((c) => c.id === value) ?? null;
-  }, [clients, selectedClientState, value]);
+    return clients.find((c) => c.id === value) ?? null
+  }, [clients, selectedClientState, value])
 
   const results: Client[] = useMemo(() => {
-    if (!search.trim()) return clients.slice(0, 6);
-    const term = search.trim().toLowerCase();
+    if (!search.trim()) return clients.slice(0, 6)
+    const term = search.trim().toLowerCase()
     return clients
       .filter(
         (c) =>
           `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) ||
           c.email.toLowerCase().includes(term),
       )
-      .slice(0, 8);
-  }, [clients, search]);
+      .slice(0, 8)
+  }, [clients, search])
 
   const handleSearchChange = (value: string) => {
-    setSearch(value);
-    scheduleSearch(value);
-  };
+    setSearch(value)
+    scheduleSearch(value)
+  }
 
   const handleSelect = (client: Client) => {
-    if (client.status === "Inactive") return;
-    setSelectedClientState(client);
-    onChange(client.id, client);
-    setOpen(false);
-    setSearchImmediate("");
-    setSearch("");
-  };
+    if (client.status === "Inactive") return
+    setSelectedClientState(client)
+    onChange(client.id, client)
+    setOpen(false)
+    setSearchImmediate("")
+    setSearch("")
+  }
 
   const handleClear = () => {
-    setSelectedClientState(null);
-    onChange(null, null);
-    setSearchImmediate("");
-    setSearch("");
-  };
+    setSelectedClientState(null)
+    onChange(null, null)
+    setSearchImmediate("")
+    setSearch("")
+  }
 
   // Estado seleccionado: mostrar tarjeta con datos
   if (selectedClient) {
@@ -110,23 +97,14 @@ export function ClientSearchSelect({
           <div className="text-sm font-medium truncate">
             {selectedClient.firstName} {selectedClient.lastName}
           </div>
-          <div className="text-xs text-(--color-muted-fg) truncate">
-            {selectedClient.email}
-          </div>
+          <div className="text-xs text-(--color-muted-fg) truncate">{selectedClient.email}</div>
         </div>
-        {selectedClient.status === "Inactive" && (
-          <StatusBadge status="Inactive" />
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="shrink-0 h-8 px-2"
-          onClick={handleClear}
-        >
+        {selectedClient.status === "Inactive" && <StatusBadge status="Inactive" />}
+        <Button variant="ghost" size="sm" className="shrink-0 h-8 px-2" onClick={handleClear}>
           <X className="h-4 w-4" /> Cambiar
         </Button>
       </div>
-    );
+    )
   }
 
   // Estado sin seleccionar: input de búsqueda
@@ -148,10 +126,7 @@ export function ClientSearchSelect({
           <ChevronsUpDown className="h-4 w-4 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent
-        className="w-(--radix-popover-trigger-width) p-0"
-        align="start"
-      >
+      <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
         <div className="p-2 border-b border-(--color-border)">
           <Input
             autoFocus
@@ -170,6 +145,7 @@ export function ClientSearchSelect({
             results.map((client: Client) => (
               <button
                 key={client.id}
+                type="button"
                 onClick={() => handleSelect(client)}
                 disabled={client.status === "Inactive"}
                 className={cn(
@@ -185,9 +161,7 @@ export function ClientSearchSelect({
                   <div className="text-sm font-medium truncate">
                     {client.firstName} {client.lastName}
                   </div>
-                  <div className="text-xs text-(--color-muted-fg) truncate">
-                    {client.email}
-                  </div>
+                  <div className="text-xs text-(--color-muted-fg) truncate">{client.email}</div>
                 </div>
                 {client.status === "Inactive" ? (
                   <StatusBadge status="Inactive" />
@@ -200,5 +174,5 @@ export function ClientSearchSelect({
         </div>
       </PopoverContent>
     </Popover>
-  );
+  )
 }

@@ -1,24 +1,24 @@
-import { lazy, Suspense, type ReactNode } from "react";
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { AppLayout } from "@/layouts/AppLayout";
-import { AuthGuard } from "@/layouts/AuthGuard";
-import { RoleGuard } from "@/layouts/RoleGuard";
-import { LoadingSpinner } from "@/components/atoms/LoadingSpinner";
+import { lazy, type ReactNode, Suspense } from "react"
+import { createBrowserRouter, Navigate } from "react-router-dom"
+import { LoadingSpinner } from "@/components/atoms/LoadingSpinner"
+import { AppLayout } from "@/layouts/AppLayout"
+import { AuthGuard } from "@/layouts/AuthGuard"
+import { RoleGuard } from "@/layouts/RoleGuard"
 
-const LoginPage = lazy(() => import("@/pages/Login"));
-const DisponibilidadPage = lazy(() => import("@/pages/Disponibilidad"));
-const ReservasPage = lazy(() => import("@/pages/Reservas"));
-const CrearReservaPage = lazy(() => import("@/pages/CrearReserva"));
-const DetalleReservaPage = lazy(() => import("@/pages/DetalleReserva"));
-const ClientesPage = lazy(() => import("@/pages/Clientes"));
-const MesasPage = lazy(() => import("@/pages/Mesas"));
-const TiposDeMesaPage = lazy(() => import("@/pages/TiposDeMesa"));
-const ReglasDePrecioPage = lazy(() => import("@/pages/ReglasDePrecio"));
-const UsuariosPage = lazy(() => import("@/pages/Usuarios"));
-const NotFoundPage = lazy(() => import("@/pages/NotFound"));
+const LoginPage = lazy(() => import("@/pages/Login"))
+const DisponibilidadPage = lazy(() => import("@/pages/Disponibilidad"))
+const ReservasPage = lazy(() => import("@/pages/Reservas"))
+const CrearReservaPage = lazy(() => import("@/pages/CrearReserva"))
+const DetalleReservaPage = lazy(() => import("@/pages/DetalleReserva"))
+const ClientesPage = lazy(() => import("@/pages/Clientes"))
+const MesasPage = lazy(() => import("@/pages/Mesas"))
+const TiposDeMesaPage = lazy(() => import("@/pages/TiposDeMesa"))
+const ReglasDePrecioPage = lazy(() => import("@/pages/ReglasDePrecio"))
+const UsuariosPage = lazy(() => import("@/pages/Usuarios"))
+const NotFoundPage = lazy(() => import("@/pages/NotFound"))
 
 function LazyPage({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>;
+  return <Suspense fallback={<LoadingSpinner />}>{children}</Suspense>
 }
 
 export const router = createBrowserRouter([
@@ -125,4 +125,4 @@ export const router = createBrowserRouter([
       </LazyPage>
     ),
   },
-]);
+])

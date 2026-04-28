@@ -1,9 +1,9 @@
-import { cn } from "@/lib/utils";
-import type { Role } from "@/types";
+import { cn } from "@/lib/utils"
+import type { Role } from "@/types"
 
 interface RoleBadgeProps {
-  role: Role;
-  className?: string;
+  role: Role
+  className?: string
 }
 
 const roleConfig: Record<Role, { bg: string; text: string; label: string }> = {
@@ -22,10 +22,10 @@ const roleConfig: Record<Role, { bg: string; text: string; label: string }> = {
     text: "text-muted-fg",
     label: "Empleado",
   },
-};
+}
 
 export function RoleBadge({ role, className }: RoleBadgeProps) {
-  const config = roleConfig[role];
+  const config = roleConfig[role]
 
   return (
     <span
@@ -33,10 +33,10 @@ export function RoleBadge({ role, className }: RoleBadgeProps) {
         "inline-flex items-center px-2.5 py-1 rounded-full text-sm font-medium",
         config.bg,
         config.text,
-        className
+        className,
       )}
     >
       {config.label}
     </span>
-  );
+  )
 }

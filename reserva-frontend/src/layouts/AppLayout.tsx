@@ -1,5 +1,5 @@
-import { Outlet } from "react-router-dom";
-import { AppSidebar } from "@/components/organisms/AppSidebar";
+import { Outlet } from "react-router-dom"
+import { AppSidebar } from "@/components/organisms/AppSidebar"
 
 export function AppLayout() {
   return (
@@ -9,5 +9,5 @@ export function AppLayout() {
         <Outlet />
       </main>
     </div>
-  );
+  )
 }

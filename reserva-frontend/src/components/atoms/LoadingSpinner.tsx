@@ -1,7 +1,7 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 interface LoadingSpinnerProps {
-  className?: string;
+  className?: string
 }
 
 export function LoadingSpinner({ className }: LoadingSpinnerProps) {
@@ -10,8 +10,8 @@ export function LoadingSpinner({ className }: LoadingSpinnerProps) {
       className={cn(
         "w-6 h-6 border-2 border-border rounded-full animate-spin",
         "border-t-primary border-r-primary",
-        className
+        className,
       )}
     />
-  );
+  )
 }

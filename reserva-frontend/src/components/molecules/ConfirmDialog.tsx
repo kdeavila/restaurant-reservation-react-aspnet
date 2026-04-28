@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -7,18 +6,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 
 interface ConfirmDialogProps {
-  open: boolean;
-  onOpenChange: (value: boolean) => void;
-  title: string;
-  description: string;
-  onConfirm: () => void;
-  confirmLabel?: string;
-  cancelLabel?: string;
-  variant?: "default" | "destructive";
-  loading?: boolean;
+  open: boolean
+  onOpenChange: (value: boolean) => void
+  title: string
+  description: string
+  onConfirm: () => void
+  confirmLabel?: string
+  cancelLabel?: string
+  variant?: "default" | "destructive"
+  loading?: boolean
 }
 
 export function ConfirmDialog({
@@ -40,9 +40,7 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>
-            {cancelLabel}
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
           <Button
             onClick={onConfirm}
             disabled={loading}
@@ -53,5 +51,5 @@ export function ConfirmDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  );
+  )
 }
