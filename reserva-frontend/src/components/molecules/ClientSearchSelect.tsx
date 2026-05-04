@@ -16,6 +16,7 @@ interface ClientSearchSelectProps {
 }
 
 const EMPTY_CLIENTS: Client[] = []
+const CLIENT_RESULTS_LIMIT = 10
 
 export function ClientSearchSelect({ value, onChange, className }: ClientSearchSelectProps) {
   const [open, setOpen] = useState(false)
@@ -28,9 +29,10 @@ export function ClientSearchSelect({ value, onChange, className }: ClientSearchS
     setImmediate: setSearchImmediate,
   } = usePacerDebouncedValue("", { wait: 350 })
 
+  const normalizedSearch = debouncedSearch.trim()
   const { data: listData } = useClientList({
-    firstName: debouncedSearch,
-    pageSize: 10,
+    searchParam: normalizedSearch || undefined,
+    pageSize: CLIENT_RESULTS_LIMIT,
   })
 
   const clients = useMemo(() => listData?.data ?? EMPTY_CLIENTS, [listData?.data])
@@ -48,7 +50,7 @@ export function ClientSearchSelect({ value, onChange, className }: ClientSearchS
   }, [clients, selectedClientState, value])
 
   const results: Client[] = useMemo(() => {
-    if (!search.trim()) return clients.slice(0, 6)
+    if (!search.trim()) return clients.slice(0, CLIENT_RESULTS_LIMIT)
     const term = search.trim().toLowerCase()
     return clients
       .filter(
@@ -56,7 +58,7 @@ export function ClientSearchSelect({ value, onChange, className }: ClientSearchS
           `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) ||
           c.email.toLowerCase().includes(term),
       )
-      .slice(0, 8)
+      .slice(0, CLIENT_RESULTS_LIMIT)
   }, [clients, search])
 
   const handleSearchChange = (value: string) => {

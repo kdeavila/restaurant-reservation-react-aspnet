@@ -3,8 +3,8 @@ import { toast } from "sonner"
 import { clientsApi } from "@/api/clients.api"
 import { qk } from "./query-keys"
 
-export const useClientList = (params: Record<string, unknown>) =>
-  useQuery({ queryKey: qk.clients(params), queryFn: () => clientsApi.list(params) })
+export const useClientList = (params: Record<string, unknown>, enabled = true) =>
+  useQuery({ queryKey: qk.clients(params), queryFn: () => clientsApi.list(params), enabled })
 
 export const useClientDetail = (id: number) =>
   useQuery({ queryKey: qk.client(id), queryFn: () => clientsApi.detail(id), enabled: !!id })

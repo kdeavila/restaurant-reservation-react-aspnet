@@ -56,6 +56,14 @@ public class ClientService(IClientRepository clientRepository) : IClientService
     {
         var query = _clientRepository.Query();
 
+        if (!string.IsNullOrWhiteSpace(queryParams.SearchParam))
+        {
+            var term = queryParams.SearchParam.Trim().ToLower();
+            query = query.Where(c =>
+                c.FirstName.ToLower().Contains(term) || c.LastName.ToLower().Contains(term)
+            );
+        }
+
         if (!string.IsNullOrWhiteSpace(queryParams.FirstName))
         {
             var term = queryParams.FirstName.Trim().ToLower();

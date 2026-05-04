@@ -121,7 +121,8 @@ public class ReservationService(IReservationRepository reservationRepository) : 
         // Ensure date is UTC for PostgreSQL compatibility
         var utcDate = DateTime.SpecifyKind(dto.Date, DateTimeKind.Utc);
         var reservationDateTime = utcDate.Date + dto.StartTime;
-        if (reservationDateTime <= DateTime.UtcNow)
+        // Compare with local time since dto.StartTime is in local timezone
+        if (reservationDateTime <= DateTime.Now)
             return Result.Failure<Reservation>("Reservation date must be in the future.", 400);
 
         if (basePrice < 0 || totalPrice < 0)

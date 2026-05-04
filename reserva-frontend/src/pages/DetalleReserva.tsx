@@ -265,7 +265,7 @@ export default function DetalleReserva() {
               <Field label="Ubicación">{reservation.table.location}</Field>
             </dl>
           </section>
-z
+
           {/* Datos editables */}
           <section className="surface-card p-5">
             <h3 className="font-display text-lg font-semibold mb-4">Datos de la reserva</h3>

@@ -4,6 +4,7 @@ namespace RestaurantReservation.Application.DTOs.Client;
 
 public class ClientQueryParams
 {
+    public string? SearchParam { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Email { get; set; }
